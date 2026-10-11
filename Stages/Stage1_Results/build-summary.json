@@ -1,0 +1,14 @@
+{
+  "versionName": "0.2.0-stage1",
+  "versionCode": 3,
+  "applicationId": "com.karthi.sungmobile.stage0",
+  "apk": "app/build/outputs/apk/debug/app-debug.apk",
+  "bytes": 20740284,
+  "sha256": "d15b7da23fa32d463f056476f65c446fa5679e18bde63317020a6d210dd6ba14",
+  "tests": {
+    "passed": 40,
+    "skipped": 4,
+    "failed": 0
+  },
+  "renderCount": 21
+}

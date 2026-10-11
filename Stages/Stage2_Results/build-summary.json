@@ -1,0 +1,48 @@
+{
+  "versionName": "0.3.0-stage2",
+  "versionCode": 4,
+  "applicationId": "com.karthi.sungmobile.stage0",
+  "apk": "Stages/Stage2_Results/Sung-0.3.0-stage2-debug.apk",
+  "bytes": 22266355,
+  "sha256": "1cae675ec6b06cc94f82fc40062f62abe3cbca6b10c880b4afd77cf4afca9be5",
+  "tests": {
+    "core/model": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "core/youtube": {
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "core/playback": {
+      "tests": 26,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "core/data": {
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "app": {
+      "tests": 18,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 13,
+    "warningsKind": "newer dependency/tool versions"
+  },
+  "deviceVerification": "Pending user manual test; no phone installation performed",
+  "liveProviderTests": "4 opt-in probes skipped; provider code unchanged",
+  "buildNote": "final-core-checks.log ends with pre-fix lint errors; final-app-build.log verifies corrected lint and final APK"
+}

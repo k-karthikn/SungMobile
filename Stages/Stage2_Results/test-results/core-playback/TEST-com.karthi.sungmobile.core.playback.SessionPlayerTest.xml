@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.core.playback.SessionPlayerTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-11T15:00:45.692Z" hostname="archlinux" time="12.002">
+  <properties/>
+  <testcase name="mediaButtonsControlTheSameQueueAndMetadata" classname="com.karthi.sungmobile.core.playback.SessionPlayerTest" time="9.575"/>
+  <testcase name="resolvingCanBePausedFromNotificationWithoutLatePlayback" classname="com.karthi.sungmobile.core.playback.SessionPlayerTest" time="0.069"/>
+  <testcase name="repeatMappingAndShuffleAreConsistentAcrossSession" classname="com.karthi.sungmobile.core.playback.SessionPlayerTest" time="0.055"/>
+  <testcase name="standardPlaylistCommandsKeepDuplicateInstancesDistinct" classname="com.karthi.sungmobile.core.playback.SessionPlayerTest" time="0.062"/>
+  <testcase name="errorCanBeRetriedThroughStandardPlayCommand" classname="com.karthi.sungmobile.core.playback.SessionPlayerTest" time="0.048"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

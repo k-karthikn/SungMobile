@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.SearchHostTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-11T15:03:16.302Z" hostname="archlinux" time="2.05">
+  <properties/>
+  <testcase name="unavailableCatalogOffersRetryAndBack" classname="com.karthi.sungmobile.SearchHostTest" time="1.464"/>
+  <testcase name="collectionRowOpensItsActualProviderIdentity" classname="com.karthi.sungmobile.SearchHostTest" time="0.347"/>
+  <testcase name="unavailableArtistOffersSongSearchWithoutRetryLoop" classname="com.karthi.sungmobile.SearchHostTest" time="0.232"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.app.SungViewModelTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-10-11T15:03:18.364Z" hostname="archlinux" time="0.102">
+  <properties/>
+  <testcase name="staleSearchCannotReplaceLatestResults" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.089"/>
+  <testcase name="paginationFailurePreservesItemsAndRetryDeduplicates" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.005"/>
+  <testcase name="unavailableArtistSearchesTheSelectedArtistAndClearsCollection" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.004"/>
+  <testcase name="collectionRetryDoesNotDuplicateBackHistory" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

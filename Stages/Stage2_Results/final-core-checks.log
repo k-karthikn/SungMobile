@@ -1,0 +1,370 @@
+Calculating task graph as no cached configuration is available for tasks: :core:model:test :core:youtube:test :core:playback:testDebugUnitTest :core:data:testDebugUnitTest :app:testDebugUnitTest --tests *SungViewModelTest --tests *SearchHostTest --tests *AppearanceTest --tests *QueueScreenTest --tests *MediaControllerIntegrationTest :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug
+> Task :core:playback:generateDebugAssets UP-TO-DATE
+> Task :core:data:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:data:preBuild UP-TO-DATE
+> Task :core:playback:preBuild UP-TO-DATE
+> Task :core:playback:generateDebugUnitTestAssets UP-TO-DATE
+> Task :core:youtube:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:data:generateDebugAssets UP-TO-DATE
+> Task :core:model:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:data:preDebugBuild UP-TO-DATE
+> Task :core:model:processTestResources NO-SOURCE
+> Task :core:model:processResources NO-SOURCE
+> Task :core:youtube:processResources NO-SOURCE
+> Task :core:data:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:playback:preDebugBuild UP-TO-DATE
+> Task :core:playback:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:youtube:processTestResources NO-SOURCE
+> Task :core:data:generateDebugResources UP-TO-DATE
+> Task :core:data:writeDebugAarMetadata UP-TO-DATE
+> Task :core:data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:data:processDebugNavigationResources UP-TO-DATE
+> Task :core:data:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:data:javaPreCompileDebug UP-TO-DATE
+> Task :core:playback:mapDebugUnitTestSourceSetPaths UP-TO-DATE
+> Task :core:playback:generateDebugResources UP-TO-DATE
+> Task :core:playback:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:playback:javaPreCompileDebug UP-TO-DATE
+> Task :core:playback:processDebugNavigationResources UP-TO-DATE
+> Task :core:playback:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:playback:writeDebugAarMetadata UP-TO-DATE
+> Task :core:playback:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:playback:extractDeepLinksDebug UP-TO-DATE
+> Task :core:data:generateDebugUnitTestResources UP-TO-DATE
+> Task :core:playback:mergeDebugAssets UP-TO-DATE
+> Task :core:data:extractDeepLinksDebug UP-TO-DATE
+> Task :core:playback:processDebugManifest UP-TO-DATE
+> Task :core:playback:packageDebugResources UP-TO-DATE
+> Task :core:data:packageDebugResources UP-TO-DATE
+> Task :core:model:compileKotlin UP-TO-DATE
+> Task :core:data:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:data:processDebugManifest UP-TO-DATE
+> Task :core:data:parseDebugLocalResources UP-TO-DATE
+> Task :core:data:mergeDebugAssets UP-TO-DATE
+> Task :core:data:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:data:generateDebugRFile UP-TO-DATE
+> Task :core:playback:checkDebugUnitTestAarMetadata UP-TO-DATE
+> Task :core:data:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:model:compileJava NO-SOURCE
+> Task :core:playback:parseDebugLocalResources UP-TO-DATE
+> Task :core:model:classes UP-TO-DATE
+> Task :core:playback:compileDebugLibraryResources UP-TO-DATE
+> Task :core:data:compileDebugLibraryResources UP-TO-DATE
+> Task :core:model:jar UP-TO-DATE
+> Task :core:designsystem:preBuild UP-TO-DATE
+> Task :core:data:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :core:data:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :core:designsystem:preDebugBuild UP-TO-DATE
+> Task :core:playback:generateDebugRFile UP-TO-DATE
+> Task :core:data:processDebugUnitTestManifest UP-TO-DATE
+> Task :core:designsystem:processDebugNavigationResources UP-TO-DATE
+> Task :core:youtube:compileKotlin UP-TO-DATE
+> Task :core:model:compileTestKotlin UP-TO-DATE
+> Task :core:designsystem:javaPreCompileDebug UP-TO-DATE
+> Task :core:playback:mergeDebugUnitTestAssets UP-TO-DATE
+> Task :core:designsystem:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :core:youtube:compileJava NO-SOURCE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :core:youtube:classes UP-TO-DATE
+> Task :core:designsystem:writeDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :core:model:compileTestJava NO-SOURCE
+> Task :core:data:compileDebugKotlin UP-TO-DATE
+> Task :core:model:testClasses UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :core:model:test UP-TO-DATE
+> Task :core:designsystem:packageDebugResources UP-TO-DATE
+> Task :core:designsystem:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :core:designsystem:processDebugManifest UP-TO-DATE
+> Task :core:data:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core:designsystem:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:youtube:jar UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :core:designsystem:parseDebugLocalResources UP-TO-DATE
+> Task :core:data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:data:processDebugJavaRes UP-TO-DATE
+> Task :core:playback:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:playback:mergeDebugUnitTestResources UP-TO-DATE
+> Task :core:playback:compileDebugKotlin UP-TO-DATE
+> Task :core:data:processDebugUnitTestResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :core:designsystem:generateDebugRFile UP-TO-DATE
+> Task :core:designsystem:compileDebugLibraryResources UP-TO-DATE
+> Task :core:data:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :core:playback:processDebugUnitTestManifest UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :core:playback:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:data:generateDebugUnitTestConfig UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:playback:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:designsystem:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :core:playback:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:designsystem:mergeDebugAssets UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :core:data:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :core:playback:processDebugJavaRes UP-TO-DATE
+> Task :app:l8DexDesugarLibDebug UP-TO-DATE
+> Task :core:designsystem:compileDebugKotlin UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core:designsystem:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:data:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core:designsystem:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :core:playback:mergeDebugJniLibFolders UP-TO-DATE
+> Task :core:designsystem:processDebugJavaRes UP-TO-DATE
+> Task :core:designsystem:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:data:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :core:designsystem:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :core:designsystem:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :core:playback:bundleLibRuntimeToDirDebug
+> Task :core:data:mergeDebugNativeLibs NO-SOURCE
+> Task :core:designsystem:mergeDebugNativeLibs NO-SOURCE
+> Task :core:playback:mergeDebugNativeLibs NO-SOURCE
+> Task :core:data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :core:data:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :core:data:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :core:playback:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :core:designsystem:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugAndroidTestAssets UP-TO-DATE
+> Task :app:processDebugUnitTestManifest UP-TO-DATE
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestResources UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:processDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :app:javaPreCompileDebugAndroidTest UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:mergeDebugAndroidTestAssets UP-TO-DATE
+> Task :core:playback:processDebugUnitTestResources UP-TO-DATE
+> Task :app:packageDebugAndroidTestResources UP-TO-DATE
+> Task :app:generateDebugAndroidTestGlobalSynthetics UP-TO-DATE
+> Task :app:compressDebugAndroidTestAssets UP-TO-DATE
+> Task :app:parseDebugAndroidTestLocalResources UP-TO-DATE
+> Task :core:playback:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:desugarDebugAndroidTestFileDependencies UP-TO-DATE
+> Task :app:checkDebugAndroidTestAarMetadata UP-TO-DATE
+> Task :core:playback:generateDebugUnitTestConfig UP-TO-DATE
+> Task :app:mapDebugAndroidTestSourceSetPaths UP-TO-DATE
+> Task :core:designsystem:checkDebugAarMetadata UP-TO-DATE
+> Task :app:checkDebugAndroidTestDuplicateClasses UP-TO-DATE
+> Task :app:generateDebugAndroidTestRFile UP-TO-DATE
+> Task :core:data:testDebugUnitTest UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:mergeDebugAndroidTestResources UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:compileDebugAndroidTestNavigationResources UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:writeDebugAndroidTestSigningConfigVersions UP-TO-DATE
+> Task :app:mergeDebugAndroidTestManifest UP-TO-DATE
+> Task :app:validateSigningDebugAndroidTest UP-TO-DATE
+> Task :app:processDebugAndroidTestManifest UP-TO-DATE
+> Task :app:mergeDebugAndroidTestJniLibFolders UP-TO-DATE
+> Task :core:designsystem:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :core:designsystem:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :core:designsystem:prepareDebugArtProfile UP-TO-DATE
+> Task :app:mergeExtDexDebugAndroidTest UP-TO-DATE
+> Task :app:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:designsystem:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :core:data:checkDebugAarMetadata UP-TO-DATE
+> Task :core:designsystem:extractDebugAnnotations UP-TO-DATE
+> Task :core:data:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :core:data:prepareDebugArtProfile UP-TO-DATE
+> Task :app:mergeDebugAndroidTestNativeLibs NO-SOURCE
+> Task :core:designsystem:prepareLintJarForPublish UP-TO-DATE
+> Task :core:data:prepareLintJarForPublish UP-TO-DATE
+> Task :app:stripDebugAndroidTestDebugSymbols NO-SOURCE
+> Task :core:data:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :core:designsystem:mergeDebugJavaResource UP-TO-DATE
+> Task :app:processDebugAndroidTestResources UP-TO-DATE
+> Task :core:data:mergeDebugJavaResource UP-TO-DATE
+> Task :core:data:extractDebugAnnotations UP-TO-DATE
+> Task :core:data:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :core:playback:extractDeepLinksForAarDebug UP-TO-DATE
+> Task :core:playback:checkDebugAarMetadata UP-TO-DATE
+> Task :core:data:syncDebugLibJars UP-TO-DATE
+> Task :core:designsystem:syncDebugLibJars UP-TO-DATE
+> Task :core:playback:mergeDebugGeneratedProguardFiles UP-TO-DATE
+> Task :core:data:createFullJarDebug UP-TO-DATE
+> Task :core:playback:prepareLintJarForPublish UP-TO-DATE
+> Task :core:playback:mergeDebugJavaResource UP-TO-DATE
+> Task :core:data:writeDebugLintModelMetadata UP-TO-DATE
+> Task :core:designsystem:bundleDebugLocalLintAar UP-TO-DATE
+> Task :core:designsystem:writeDebugLintModelMetadata UP-TO-DATE
+> Task :core:playback:prepareDebugArtProfile UP-TO-DATE
+> Task :core:designsystem:createFullJarDebug UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :core:playback:mergeDebugConsumerProguardFiles UP-TO-DATE
+> Task :core:data:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:designsystem:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:data:extractProguardFiles UP-TO-DATE
+> Task :core:playback:writeDebugLintModelMetadata UP-TO-DATE
+> Task :core:data:bundleDebugLocalLintAar UP-TO-DATE
+> Task :core:designsystem:extractProguardFiles UP-TO-DATE
+> Task :core:playback:extractProguardFiles UP-TO-DATE
+> Task :core:playback:extractDebugAnnotations
+> Task :core:playback:createFullJarDebug
+> Task :core:data:generateDebugLintModel UP-TO-DATE
+> Task :core:data:lintAnalyzeDebug UP-TO-DATE
+> Task :core:data:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :core:data:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :core:designsystem:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:playback:syncDebugLibJars
+> Task :core:designsystem:generateDebugLintModel UP-TO-DATE
+> Task :core:designsystem:generateDebugAndroidTestLintModel UP-TO-DATE
+> Task :core:playback:generateDebugLintModel
+> Task :core:designsystem:generateDebugUnitTestLintModel UP-TO-DATE
+> Task :core:designsystem:lintAnalyzeDebug UP-TO-DATE
+> Task :core:playback:preDebugAndroidTestBuild UP-TO-DATE
+> Task :core:playback:bundleDebugLocalLintAar
+> Task :core:playback:generateDebugAndroidTestLintModel
+> Task :core:playback:generateDebugUnitTestLintModel
+> Task :app:mergeLibDexDebugAndroidTest UP-TO-DATE
+> Task :app:mergeLibDexDebug
+> Task :core:data:lintAnalyzeDebugAndroidTest
+> Task :core:designsystem:lintAnalyzeDebugAndroidTest
+> Task :core:designsystem:lintAnalyzeDebugUnitTest
+> Task :core:youtube:compileTestKotlin
+> Task :core:youtube:compileTestJava NO-SOURCE
+> Task :core:youtube:testClasses UP-TO-DATE
+> Task :app:compileDebugKotlin
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :core:playback:compileDebugUnitTestKotlin
+> Task :core:playback:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :core:playback:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:generateDebugLintReportModel
+> Task :core:playback:lintAnalyzeDebugAndroidTest
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:dexBuilderDebug
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:mergeProjectDexDebug
+> Task :app:compileDebugAndroidTestKotlin
+> Task :app:compileDebugAndroidTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugAndroidTestJavaRes UP-TO-DATE
+> Task :app:dexBuilderDebugAndroidTest UP-TO-DATE
+> Task :app:mergeProjectDexDebugAndroidTest UP-TO-DATE
+> Task :app:mergeDebugAndroidTestJavaResource UP-TO-DATE
+> Task :app:packageDebugAndroidTest
+> Task :app:assembleDebugAndroidTest
+> Task :app:createDebugAndroidTestApkListingFileRedirect
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+> Task :app:packageDebug
+> Task :app:assembleDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :core:data:lintAnalyzeDebugUnitTest
+
+> Task :core:youtube:test
+
+ExtractorDownloaderTest > cancellationClosesInFlightHttpCall PASSED
+
+ExtractorDownloaderTest > rateLimitIsTypedAndOversizedResponseIsRejected PASSED
+
+ExtractorDownloaderTest > suppliedHeadersOverrideDefaultsAndBodyIsPreserved PASSED
+
+LiveProviderTest > albumsAndPlaylists SKIPPED
+
+LiveProviderTest > artistCapabilityProbe SKIPPED
+
+LiveProviderTest > reportedArtistsOfferWorkingSongSearch SKIPPED
+
+LiveProviderTest > songsPageAndTwoPlayableStreams SKIPPED
+
+> Task :app:lintAnalyzeDebugAndroidTest
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.robolectric.nativeruntime.DefaultNativeRuntimeLoader in an unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.robolectric.nativeruntime.DefaultNativeRuntimeLoader in an unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+> Task :core:playback:lintAnalyzeDebugUnitTest
+> Task :app:lintAnalyzeDebugUnitTest
+> Task :core:playback:lintAnalyzeDebug
+> Task :core:playback:testDebugUnitTest
+> Task :app:testDebugUnitTest
+> Task :app:lintAnalyzeDebug
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///home/karthi/Projects/SungMobile/app/build/reports/lint-results-debug.html
+Wrote SARIF report to file:///home/karthi/Projects/SungMobile/app/build/reports/lint-results-debug.sarif
+Lint found 2 errors and 14 warnings. First failure:
+/home/karthi/Projects/SungMobile/app/src/main/java/com/karthi/sungmobile/playback/PlaybackSessionCallback.kt:40: Error: Must be one of: SessionResult.RESULT_SUCCESS, SessionError.INFO_CANCELLED, SessionError.ERROR_UNKNOWN, SessionError.ERROR_INVALID_STATE, SessionError.ERROR_BAD_VALUE, SessionError.ERROR_PERMISSION_DENIED, SessionError.ERROR_IO, SessionError.ERROR_SESSION_DISCONNECTED, SessionError.ERROR_NOT_SUPPORTED, SessionError.ERROR_SESSION_AUTHENTICATION_EXPIRED, SessionError.ERROR_SESSION_PREMIUM_ACCOUNT_REQUIRED, SessionError.ERROR_SESSION_CONCURRENT_STREAM_LIMIT, SessionError.ERROR_SESSION_PARENTAL_CONTROL_RESTRICTED, SessionError.ERROR_SESSION_NOT_AVAILABLE_IN_REGION, SessionError.ERROR_SESSION_SKIP_LIMIT_REACHED, SessionError.ERROR_SESSION_SETUP_REQUIRED [WrongConstant]
+This issue has been automatically fixed.
+        if (controller.uid != ownUid) return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_PERMISSION_DENIED))
+                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+> Task :app:lintDebug FAILED
+Lint found 2 errors, 14 warnings. First failure:
+
+/home/karthi/Projects/SungMobile/app/src/main/java/com/karthi/sungmobile/playback/PlaybackSessionCallback.kt:40: Error: Must be one of: SessionResult.RESULT_SUCCESS, SessionError.INFO_CANCELLED, SessionError.ERROR_UNKNOWN, SessionError.ERROR_INVALID_STATE, SessionError.ERROR_BAD_VALUE, SessionError.ERROR_PERMISSION_DENIED, SessionError.ERROR_IO, SessionError.ERROR_SESSION_DISCONNECTED, SessionError.ERROR_NOT_SUPPORTED, SessionError.ERROR_SESSION_AUTHENTICATION_EXPIRED, SessionError.ERROR_SESSION_PREMIUM_ACCOUNT_REQUIRED, SessionError.ERROR_SESSION_CONCURRENT_STREAM_LIMIT, SessionError.ERROR_SESSION_PARENTAL_CONTROL_RESTRICTED, SessionError.ERROR_SESSION_NOT_AVAILABLE_IN_REGION, SessionError.ERROR_SESSION_SKIP_LIMIT_REACHED, SessionError.ERROR_SESSION_SETUP_REQUIRED [WrongConstant]
+        if (controller.uid != ownUid) return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_PERMISSION_DENIED))
+                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The full lint text report is located at:
+  /home/karthi/Projects/SungMobile/app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:lintDebug' (registered by plugin 'com.android.internal.application').
+> Lint found errors in the project; aborting build.
+  
+  Fix the issues identified by lint, or create a baseline to see only new errors.
+  To create a baseline, run `gradlew updateLintBaseline` after adding the following to the module's build.gradle file:
+  ```
+  android {
+      lint {
+          baseline = file("lint-baseline.xml")
+      }
+  }
+  ```
+  For more details, see https://developer.android.com/studio/write/lint#snapshot
+  
+  Lint found 2 errors, 14 warnings. First failure:
+  
+  /home/karthi/Projects/SungMobile/app/src/main/java/com/karthi/sungmobile/playback/PlaybackSessionCallback.kt:40: Error: Must be one of: SessionResult.RESULT_SUCCESS, SessionError.INFO_CANCELLED, SessionError.ERROR_UNKNOWN, SessionError.ERROR_INVALID_STATE, SessionError.ERROR_BAD_VALUE, SessionError.ERROR_PERMISSION_DENIED, SessionError.ERROR_IO, SessionError.ERROR_SESSION_DISCONNECTED, SessionError.ERROR_NOT_SUPPORTED, SessionError.ERROR_SESSION_AUTHENTICATION_EXPIRED, SessionError.ERROR_SESSION_PREMIUM_ACCOUNT_REQUIRED, SessionError.ERROR_SESSION_CONCURRENT_STREAM_LIMIT, SessionError.ERROR_SESSION_PARENTAL_CONTROL_RESTRICTED, SessionError.ERROR_SESSION_NOT_AVAILABLE_IN_REGION, SessionError.ERROR_SESSION_SKIP_LIMIT_REACHED, SessionError.ERROR_SESSION_SETUP_REQUIRED [WrongConstant]
+          if (controller.uid != ownUid) return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_PERMISSION_DENIED))
+                                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  The full lint text report is located at:
+    /home/karthi/Projects/SungMobile/app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 42s
+237 actionable tasks: 40 executed, 197 up-to-date
+Configuration cache entry stored.

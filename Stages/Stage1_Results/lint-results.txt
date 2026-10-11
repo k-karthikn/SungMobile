@@ -1,0 +1,48 @@
+/home/karthi/Projects/SungMobile/gradle/wrapper/gradle-wrapper.properties:5: Warning: A newer version of Gradle than 9.6.0 is available: 9.8.1 [AndroidGradlePluginVersion]
+distributionUrl=https\://services.gradle.org/distributions/gradle-9.6.0-bin.zip
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "AndroidGradlePluginVersion":
+   This detector looks for usage of the Android Gradle Plugin where the
+   version you are using is not the current stable release. Using older
+   versions is fine, and there are cases where you deliberately want to stick
+   with an older version. However, you may simply not be aware that a more
+   recent version is available, and that is what this lint check helps find.
+
+/home/karthi/Projects/SungMobile/gradle/libs.versions.toml:9: Warning: A newer version of org.jetbrains.kotlin.jvm than 2.2.10 is available: 2.4.21 [NewerVersionAvailable]
+kotlin = "2.2.10"
+         ~~~~~~~~
+/home/karthi/Projects/SungMobile/gradle/libs.versions.toml:9: Warning: A newer version of org.jetbrains.kotlin.plugin.compose than 2.2.10 is available: 2.4.21 [NewerVersionAvailable]
+kotlin = "2.2.10"
+         ~~~~~~~~
+/home/karthi/Projects/SungMobile/gradle/libs.versions.toml:14: Warning: A newer version of com.squareup.okhttp3:mockwebserver than 4.12.0 is available: 5.5.0 [NewerVersionAvailable]
+okhttp = "4.12.0"
+         ~~~~~~~~
+/home/karthi/Projects/SungMobile/gradle/libs.versions.toml:14: Warning: A newer version of com.squareup.okhttp3:okhttp than 4.12.0 is available: 5.5.0 [NewerVersionAvailable]
+okhttp = "4.12.0"
+         ~~~~~~~~
+/home/karthi/Projects/SungMobile/gradle/libs.versions.toml:15: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-android than 1.10.2 is available: 1.11.0 [NewerVersionAvailable]
+coroutines = "1.10.2"
+             ~~~~~~~~
+/home/karthi/Projects/SungMobile/gradle/libs.versions.toml:15: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-core than 1.10.2 is available: 1.11.0 [NewerVersionAvailable]
+coroutines = "1.10.2"
+             ~~~~~~~~
+/home/karthi/Projects/SungMobile/gradle/libs.versions.toml:15: Warning: A newer version of org.jetbrains.kotlinx:kotlinx-coroutines-test than 1.10.2 is available: 1.11.0 [NewerVersionAvailable]
+coroutines = "1.10.2"
+             ~~~~~~~~
+/home/karthi/Projects/SungMobile/gradle/libs.versions.toml:17: Warning: A newer version of io.coil-kt.coil3:coil-compose than 3.3.0 is available: 3.6.3 [NewerVersionAvailable]
+coil = "3.3.0"
+       ~~~~~~~
+/home/karthi/Projects/SungMobile/gradle/libs.versions.toml:17: Warning: A newer version of io.coil-kt.coil3:coil-network-okhttp than 3.3.0 is available: 3.6.3 [NewerVersionAvailable]
+coil = "3.3.0"
+       ~~~~~~~
+
+   Explanation for issues of type "NewerVersionAvailable":
+   This detector checks with a central repository to see if there are newer
+   versions available for the dependencies used by this project. This is
+   similar to the GradleDependency check, which checks for newer versions
+   available in the Android SDK tools and libraries, but this works with any
+   MavenCentral dependency, and connects to the library every time, which
+   makes it more flexible but also much slower.
+
+0 errors, 10 warnings

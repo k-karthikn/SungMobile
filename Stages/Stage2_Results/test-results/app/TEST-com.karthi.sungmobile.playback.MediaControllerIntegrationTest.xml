@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.playback.MediaControllerIntegrationTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-11T15:03:18.472Z" hostname="archlinux" time="0.578">
+  <properties/>
+  <testcase name="untrustedClientsCannotConnectOrInjectMedia" classname="com.karthi.sungmobile.playback.MediaControllerIntegrationTest" time="0.301"/>
+  <testcase name="controllerEditsQueueReceivesUndoAndDisconnectDoesNotStopAudio" classname="com.karthi.sungmobile.playback.MediaControllerIntegrationTest" time="0.268"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.DesignFoundationTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-11T15:03:02.454Z" hostname="archlinux" time="12.462">
+  <properties/>
+  <testcase name="appearanceIsReachableFromHome" classname="com.karthi.sungmobile.DesignFoundationTest" time="9.721"/>
+  <testcase name="freshInstallHasUsefulSearchAndHonestLibrary" classname="com.karthi.sungmobile.DesignFoundationTest" time="1.674"/>
+  <testcase name="miniPlayerAndFullPlayerUseTheSameCallbacks" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.932"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

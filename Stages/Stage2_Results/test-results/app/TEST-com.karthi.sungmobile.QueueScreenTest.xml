@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.QueueScreenTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-11T15:03:14.925Z" hostname="archlinux" time="1.372">
+  <properties/>
+  <testcase name="duplicateSongMenuActsOnTheChosenOccurrence" classname="com.karthi.sungmobile.QueueScreenTest" time="0.574"/>
+  <testcase name="playerQueueAndNextControlsAreReachable" classname="com.karthi.sungmobile.QueueScreenTest" time="0.532"/>
+  <testcase name="largeTextKeepsQueueActionsReachable" classname="com.karthi.sungmobile.QueueScreenTest" time="0.258"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

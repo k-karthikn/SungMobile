@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.core.playback.PlaybackCoordinatorTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-11T15:00:44.550Z" hostname="archlinux" time="0.468">
+  <properties/>
+  <testcase name="expiredResolvedUrlIsNeverLoaded" classname="com.karthi.sungmobile.core.playback.PlaybackCoordinatorTest" time="0.396"/>
+  <testcase name="pauseDuringResolutionPreventsLateAutoplay" classname="com.karthi.sungmobile.core.playback.PlaybackCoordinatorTest" time="0.01"/>
+  <testcase name="stopDuringRecoveryCannotRestartPlayback" classname="com.karthi.sungmobile.core.playback.PlaybackCoordinatorTest" time="0.013"/>
+  <testcase name="networkErrorDoesNotRetryAndSeekingIsClamped" classname="com.karthi.sungmobile.core.playback.PlaybackCoordinatorTest" time="0.006"/>
+  <testcase name="expiredHttpResponseRefreshesOnlyOnceAndPreservesPosition" classname="com.karthi.sungmobile.core.playback.PlaybackCoordinatorTest" time="0.007"/>
+  <testcase name="pausedBufferingCanResumeAndFinishedTrackCanReplay" classname="com.karthi.sungmobile.core.playback.PlaybackCoordinatorTest" time="0.009"/>
+  <testcase name="replacingTrackCancelsOldResolution" classname="com.karthi.sungmobile.core.playback.PlaybackCoordinatorTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

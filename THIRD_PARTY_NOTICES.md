@@ -1,0 +1,36 @@
+# Third-party notices — Stage 2
+
+SungMobile uses GPL-3.0-or-later for its original application code. The full GPL version 3 text is in `LICENSE`; the application permits version 3 or any later version. Dependencies retain their own licenses and copyrights.
+
+## Primary runtime components
+
+| Component | Pinned version | License / source |
+| --- | --- | --- |
+| NewPipeExtractor | v0.26.5 | GPL-3.0-or-later — [TeamNewPipe](https://github.com/TeamNewPipe/NewPipeExtractor/tree/v0.26.5) |
+| AndroidX Compose / Material 3 | BOM 2026.09.00 / Material 3 1.5.0-beta01 | Apache-2.0 — [AndroidX](https://android.googlesource.com/platform/frameworks/support/) |
+| AndroidX Media3 | 1.11.1 | Apache-2.0 — [Media3](https://github.com/androidx/media) |
+| AndroidX Room / SQLite | Room 2.8.4; SQLite from resolved graph | Apache-2.0 — [AndroidX](https://android.googlesource.com/platform/frameworks/support/) |
+| AndroidX DataStore | 1.2.0 | Apache-2.0 — [AndroidX](https://android.googlesource.com/platform/frameworks/support/) |
+| AndroidX Activity / Lifecycle / Core | See version catalog | Apache-2.0 — [AndroidX](https://android.googlesource.com/platform/frameworks/support/) |
+| Kotlin / kotlinx.coroutines | Compiler 2.2.10 / coroutines 1.10.2 | Apache-2.0 — [Kotlin](https://github.com/JetBrains/kotlin), [coroutines](https://github.com/Kotlin/kotlinx.coroutines) |
+| OkHttp / Okio | See resolved runtime graph (also used by Coil) | Apache-2.0 — [Square](https://github.com/square/okhttp) |
+| Coil | 3.3.0 | Apache-2.0 — [Coil](https://github.com/coil-kt/coil/tree/3.3.0) |
+| Core library desugaring NIO | 2.1.5 | See [upstream licenses](https://github.com/google/desugar_jdk_libs/blob/master/LICENSE) for Apache-2.0 and included OpenJDK notices. |
+
+NewPipeExtractor also brings nanojson (MIT), jsoup (MIT), protobuf-javalite (BSD-3-Clause), JSR-305 annotations (BSD-3-Clause), and Rhino/Rhino Engine (MPL-2.0). Their resolved versions are recorded by `:core:youtube:dependencies --configuration runtimeClasspath`. Build tools and test dependencies have separate upstream notices; they are not all shipped in the application APK.
+
+## Reference and assets
+
+The Sung Linux code and documentation informed behavior and architecture. Stage 1 converts 14 of its Material Symbols Rounded SVG files to Android vectors, preserving path data and the original viewBox translation. Material Symbols are Google assets under Apache-2.0: [upstream](https://github.com/google/material-design-icons). A full license is bundled at `core/designsystem/src/main/assets/licenses/MaterialSymbols-LICENSE.txt`. The launcher remains the Android Studio template icon.
+
+Google Sans Flex is bundled unmodified from [Google Fonts](https://github.com/google/fonts/tree/main/ofl/googlesansflex). Font Git blob: `1d8d8ae5a7c6d0e48312d2a0a478bad92caee73a`; SHA-256: `a9ac770798857d5e8ac593ced42b22e40a7c08cec98319f92b0eccc2783a77ba`. Its SIL Open Font License and upstream trademark notice are bundled in the same licenses directory. The font is not relicensed under the application's GPL.
+
+The blue role tables were generated using Google's Apache-2.0 [Material Color Utilities](https://github.com/material-foundation/material-color-utilities), JavaScript package 0.3.0, Tonal Spot scheme, seed `#79D2F5`, normal contrast. The generator is not a runtime dependency. Material shape paths are provided by AndroidX Material 3, not copied into application code.
+
+Catalog metadata and artwork belong to their respective sources/rightsholders, not this application's license. Two small YouTube video thumbnail fixtures are used only for offline UI tests: Coldplay “The Scientist” (`RB-RcX5DS5A`) and “Viva La Vida” (`dvgZkm1xWPE`), fetched from `i.ytimg.com/vi/<id>/mqdefault.jpg`. They are under `app/src/test/resources/artwork`, are not APK resources, and are not offered as redistributable application artwork.
+
+Host rendering uses Robolectric 4.17 (MIT) and Roborazzi 1.76.0 (Apache-2.0); these test dependencies are not shipped in the app.
+
+## Public release gate
+
+Before distributing a public APK, produce a complete inventory from the resolved release dependency graph, preserve every required license/NOTICE text, add attribution for any assets reused in later stages, and publish the exact corresponding source and build instructions. No public distribution or account sign-in is performed by Stage 2.
