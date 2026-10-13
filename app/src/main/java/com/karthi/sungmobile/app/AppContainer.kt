@@ -14,7 +14,10 @@ class AppContainer(context: Context) {
     var playbackShutdown: kotlinx.coroutines.Job? = null
         internal set
     val catalog by lazy { YouTubeSource() }
-    val queueStore by lazy { RoomQueueStore(context) }
+    val database by lazy { com.karthi.sungmobile.core.data.db.DatabaseProvider.open(context) }
+    val queueStore by lazy { RoomQueueStore(database) }
+    val library by lazy { com.karthi.sungmobile.core.data.library.RoomLibraryRepository(database) }
+    val history by lazy { com.karthi.sungmobile.core.data.history.RoomHistoryRepository(database) }
     val settings by lazy { SettingsRepository(context) }
     val appearance by lazy { AppearanceStore(settings, applicationScope) }
 }

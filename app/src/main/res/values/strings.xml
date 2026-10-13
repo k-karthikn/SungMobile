@@ -51,8 +51,6 @@
     <string name="home_empty_title">Start with a song</string>
     <string name="home_empty_body">Search for an old favorite or something new. Your search results will appear here.</string>
     <string name="find_music">Find music</string>
-    <string name="library_empty_title">A place for your favorites</string>
-    <string name="library_empty_body">Saving likes and playlists is coming in a later update. For now, explore music through Search.</string>
     <string name="now_playing">Now playing</string>
     <string name="close_player">Close player</string>
     <string name="back_ten">−10 sec</string>

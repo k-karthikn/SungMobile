@@ -36,10 +36,10 @@ class PlaybackPersistence(
         player.setConnected(true)
         observer = serviceScope.launch {
             player.state.distinctUntilChangedBy {
-                listOf(it.queue, it.engine.positionMs / 5_000, it.engine.playRequested, it.engine.ended)
+                listOf(it.passId, it.queue, it.engine.positionMs / 5_000, it.engine.playRequested, it.engine.ended)
             }.drop(if (readFailed) 1 else 0).collect {
                 writable = true
-                writes.send(QueueSnapshot(it.queue, it.engine.positionMs))
+                writes.send(QueueSnapshot(it.queue, it.engine.positionMs, it.passId))
             }
         }
     }
@@ -47,7 +47,7 @@ class PlaybackPersistence(
     /** The application writer drains after the service scope is cancelled. Never blocks Main. */
     fun close(): Job {
         observer?.cancel()
-        if (restored && writable) writes.trySend(player.state.value.let { QueueSnapshot(it.queue, it.engine.positionMs) })
+        if (restored && writable) writes.trySend(player.state.value.let { QueueSnapshot(it.queue, it.engine.positionMs, it.passId) })
         writes.close()
         return writer
     }

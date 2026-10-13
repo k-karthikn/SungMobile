@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 interface PlaybackControl {
     val state: StateFlow<PlaybackState>
     fun select(tracks: List<CatalogItem>, index: Int)
+    fun playCollection(tracks: List<CatalogItem>, shuffle: Boolean)
+    fun enqueueAll(tracks: List<CatalogItem>, next: Boolean)
     fun toggle()
     fun seekTo(positionMs: Long)
     fun stop()

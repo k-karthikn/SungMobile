@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.karthi.sungmobile.app.*
+import com.karthi.sungmobile.feature.library.*
+import com.karthi.sungmobile.feature.history.*
 import com.karthi.sungmobile.playback.PlaybackConnection
 import com.karthi.sungmobile.core.designsystem.theme.SungTheme
 import kotlinx.coroutines.*
@@ -30,10 +32,24 @@ class MainActivity : ComponentActivity() {
         })[SungViewModel::class.java]
     }
 
+    private fun <T : ViewModel> obtain(type: Class<T>, create: () -> T): T =
+        ViewModelProvider(this, object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <V : ViewModel> create(modelClass: Class<V>): V = create() as V
+        })[type]
+    private val libraryBrowser by lazy { obtain(LibraryBrowserViewModel::class.java) { LibraryBrowserViewModel(container.library) } }
+    private val libraryActions by lazy { obtain(LibraryActionsViewModel::class.java) { LibraryActionsViewModel(container.library, model.player) } }
+    private val history by lazy { obtain(HistoryViewModel::class.java) { HistoryViewModel(container.history) } }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        model.onSearchSubmitted = history::submitted
         setContent {
+            val libraryPage = libraryBrowser.page.collectAsStateWithLifecycle().value
+            val historyPolicy = history.policy.collectAsStateWithLifecycle().value
+            val historyError = history.error.collectAsStateWithLifecycle().value
+            val recentSearches = history.searches.collectAsStateWithLifecycle().value
             val catalog = model.catalogState.collectAsStateWithLifecycle().value
             val player = model.player.state.collectAsStateWithLifecycle().value
             val preferences = container.appearance.state.collectAsStateWithLifecycle().value
@@ -47,6 +63,7 @@ class MainActivity : ComponentActivity() {
                         isAppearanceLightNavigationBars = light
                     }
                 }
+                LibraryHost(container.library, libraryActions, player) {
                 SungApp(catalog, player,
                     CatalogActions(model::editQuery, model::chooseKind, model::search, model::open,
                         model::loadMore, model::back, model::retry, model::searchArtistSongs,
@@ -55,7 +72,12 @@ class MainActivity : ComponentActivity() {
                         model.player::next, model.player::previous, model.player::setRepeat, model.player::setShuffle,
                         model.player::jump, model.player::remove, model.player::move, model.player::clearUpcoming,
                         model.player::undo, { (model.player as PlaybackConnection).connect() }),
-                    preferences, container.appearance::update, settingsError)
+                    preferences, container.appearance::update, settingsError,
+                    libraryContent = { modifier, openHistory -> LibraryScreen(libraryBrowser, libraryPage, libraryActions, openHistory, modifier) },
+                    historyContent = { modifier, back -> HistoryScreen(historyPolicy, history, back, modifier) },
+                    privateMode = historyPolicy?.privateMode == true, historyError = historyError,
+                    recentSearches = { RecentSearches(recentSearches, { model.recall(it.query, it.kind) }, history::removeSearch) })
+                }
             }
         }
     }

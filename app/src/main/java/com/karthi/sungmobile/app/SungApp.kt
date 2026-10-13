@@ -28,12 +28,16 @@ private enum class Destination(val label: Int, val icon: SungSymbol, val selecte
     SEARCH(R.string.search, SungSymbol.Search, SungSymbol.Search),
     LIBRARY(R.string.library, SungSymbol.LibraryOutline, SungSymbol.Library),
 }
-private enum class Overlay { NONE, PLAYER, APPEARANCE, QUEUE }
+private enum class Overlay { NONE, PLAYER, APPEARANCE, QUEUE, HISTORY }
 
 /** Navigation belongs to the UI. Playback is observed from the service across destination changes. */
 @Composable
 fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: CatalogActions,
-    playerActions: PlayerActions, appearance: Appearance, onAppearance: (Appearance) -> Unit, settingsError: Boolean = false) {
+    playerActions: PlayerActions, appearance: Appearance, onAppearance: (Appearance) -> Unit, settingsError: Boolean = false,
+    libraryContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
+    historyContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
+    privateMode: Boolean = false, historyError: Boolean = false,
+    recentSearches: @Composable () -> Unit = {}) {
     var destination by rememberSaveable { mutableStateOf(Destination.HOME) }
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
     LaunchedEffect(playback.track, overlay) { if (playback.track == null && overlay == Overlay.PLAYER) overlay = Overlay.NONE }
@@ -90,11 +94,14 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                                 TextButton(playerActions.reconnect) { Text(stringResource(R.string.retry)) }
                             }
                         }
+                        if (privateMode) Text("Private mode is on • Queue restoration still saves", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.labelMedium)
+                        if (historyError || playback.historyError) Text("History could not be saved. Please retry the action.", Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
                         if (playback.storageError || settingsError) Text(stringResource(R.string.storage_error),
                             Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
                         when (overlay) {
                             Overlay.PLAYER -> PlayerScreen(playback, playerActions, back, Modifier.weight(1f), { overlay = Overlay.QUEUE })
                             Overlay.QUEUE -> QueueScreen(playback, playerActions, back, Modifier.weight(1f))
+                            Overlay.HISTORY -> historyContent?.invoke(content, back)
                             Overlay.APPEARANCE -> AppearanceScreen(appearance, onAppearance, back, content)
                             Overlay.NONE -> when (destination) {
                                 Destination.HOME -> HomeScreen(playback.track, catalog.page?.items.orEmpty(), catalog.inCollection,
@@ -102,8 +109,9 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                                         catalogActions.open(item)
                                         if (item.kind != CatalogKind.SONG) destination = Destination.SEARCH
                                     }, { overlay = Overlay.APPEARANCE }, content)
-                                Destination.SEARCH -> SearchScreen(catalog, playback.track?.id, catalogActions, Modifier.weight(1f), playback.connected)
-                                Destination.LIBRARY -> LibraryScreen({ destination = Destination.SEARCH }, content)
+                                Destination.SEARCH -> SearchScreen(catalog, playback.track?.id, catalogActions, Modifier.weight(1f), playback.connected, recentSearches)
+                                Destination.LIBRARY -> if (libraryContent != null) libraryContent(Modifier.weight(1f)) { overlay = Overlay.HISTORY }
+                                    else Text("Your local library is ready for liked songs and playlists.", Modifier.padding(24.dp))
                             }
                         }
                     }

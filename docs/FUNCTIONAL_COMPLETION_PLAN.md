@@ -2,7 +2,7 @@
 
 Prepared: 11 October 2026.
 
-Status: implementation authorized on 11 October 2026. Stage 2A–2B code and host verification are complete; device acceptance remains pending. The user confirmed the direction and scope: complete the first-release features **and** the previously deferred advanced features, through separate functional milestones. See `STAGE2_REPORT.md` for the delivered code and verification status.
+Status: implementation authorized on 11 October 2026. Stage 2A–2B code and host verification are complete. On 12 October 2026 the user reported that the entire supplied phone checklist worked without problems; Stage 2 is accepted. Stage 3 implementation details are proposed in `STAGE3_PLAN.md`; this follow-up is planning only. The user confirmed the direction and scope: complete the first-release features **and** the previously deferred advanced features, through separate functional milestones. See `STAGE2_REPORT.md` for the delivered code and verification status.
 
 This plan supersedes the design-led delivery order and visual-polish gates in `ANDROID_PLAN.md`. That document remains a record of the original direction and source/architecture decisions. Stage 0 and Stage 1 are retained as the starting point.
 

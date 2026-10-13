@@ -96,9 +96,9 @@ class DesignFoundationTest {
         compose.onNodeWithTag("search_input").assertIsDisplayed()
         capture("search-empty", waitForArtwork = false)
         compose.onNodeWithTag("nav_library").performClick()
-        compose.onNodeWithText("A place for your favorites").assertIsDisplayed()
+        compose.onNodeWithText("Your local library is ready for liked songs and playlists.").assertIsDisplayed()
         capture("library-empty", waitForArtwork = false)
-        compose.onNodeWithText("Find music").performClick()
+        compose.onNodeWithTag("nav_search").performClick()
         compose.onNodeWithTag("search_input").assertIsDisplayed()
     }
 

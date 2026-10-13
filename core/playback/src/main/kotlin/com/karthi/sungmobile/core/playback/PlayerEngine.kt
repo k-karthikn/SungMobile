@@ -30,6 +30,8 @@ data class PlaybackState(
     val canUndo: Boolean = false,
     val connected: Boolean = true,
     val storageError: Boolean = false,
+    val historyError: Boolean = false,
+    val passId: String? = null,
 )
 
 /** All player operations and state emissions are confined to the application's main dispatcher. */

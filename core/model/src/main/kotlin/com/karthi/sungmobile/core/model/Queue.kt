@@ -67,7 +67,7 @@ data class QueueState(
     }
 }
 
-data class QueueSnapshot(val queue: QueueState = QueueState(), val positionMs: Long = 0)
+data class QueueSnapshot(val queue: QueueState = QueueState(), val positionMs: Long = 0, val passId: String? = null)
 
 interface QueueStore {
     suspend fun read(): QueueSnapshot

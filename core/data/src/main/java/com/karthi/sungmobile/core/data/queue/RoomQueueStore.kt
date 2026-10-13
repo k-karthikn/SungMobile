@@ -8,8 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class RoomQueueStore(private val database: SungDatabase) : QueueStore {
-    constructor(context: Context) : this(Room.databaseBuilder(context.applicationContext,
-        SungDatabase::class.java, "sung.db").build())
+    constructor(context: Context) : this(DatabaseProvider.open(context))
 
     override suspend fun read(): QueueSnapshot = withContext(Dispatchers.IO) {
         val stored = database.queueDao().read()
@@ -21,13 +20,14 @@ class RoomQueueStore(private val database: SungDatabase) : QueueStore {
         QueueSnapshot(QueueState(entries, header.currentId,
             RepeatMode.entries.find { it.name == header.repeatMode } ?: RepeatMode.OFF,
             header.shuffled, stored.entries.sortedBy { it.originalIndex }.map { it.entryId }),
-            header.positionMs.coerceAtLeast(0))
+            header.positionMs.coerceAtLeast(0), header.playbackPassId)
     }
 
     override suspend fun write(snapshot: QueueSnapshot) = withContext(Dispatchers.IO) {
         val queue = snapshot.queue
         val header = QueueHeaderEntity().apply {
             currentId = queue.currentId
+            playbackPassId = snapshot.passId
             positionMs = snapshot.positionMs.coerceAtLeast(0)
             repeatMode = queue.repeat.name
             shuffled = queue.shuffled

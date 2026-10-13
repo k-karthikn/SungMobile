@@ -37,6 +37,7 @@ fun PlayerScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Uni
             Text(stringResource(state.statusLabel()), Modifier.testTag("player_status"), style = MaterialTheme.typography.bodyMedium,
                 color = if (state.sourceError != null || state.engine.error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        state.track?.let { com.karthi.sungmobile.feature.library.TrackLibraryButtons(it) }
         PlayerSeek(state, actions.seek)
         val largeText = LocalDensity.current.fontScale > 1.3f
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,

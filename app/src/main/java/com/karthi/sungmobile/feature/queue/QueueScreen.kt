@@ -18,6 +18,7 @@ import com.karthi.sungmobile.core.playback.PlaybackState
 /** Deliberately simple: explicit accessible actions instead of a custom drag interaction. */
 @Composable
 fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val library = com.karthi.sungmobile.feature.library.LocalLibraryUi.current
     val queue = state.queue
     val motion = LocalSungMotionEnabled.current
     var confirmClear by remember { mutableStateOf(false) }
@@ -36,6 +37,7 @@ fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit
                 TextButton({ confirmClear = true }, enabled = queue.currentIndex < queue.entries.lastIndex) { Text(stringResource(R.string.clear_upcoming)) }
                 TextButton(actions.undo, enabled = state.canUndo, modifier = Modifier.testTag("queue_undo")) { Text(stringResource(R.string.undo)) }
             }
+            TextButton(library.saveQueue, enabled = queue.entries.isNotEmpty()) { Text("Save queue as playlist") }
             if (queue.entries.isEmpty()) Text(stringResource(R.string.queue_empty))
         }
         itemsIndexed(queue.entries, key = { _, entry -> entry.id }) { index, entry ->
@@ -53,6 +55,7 @@ fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit
                     Box {
                         TextButton({ menu = true }, Modifier.testTag("queue_options_$index")) { Text(stringResource(R.string.options)) }
                         DropdownMenu(menu, { menu = false }) {
+                            com.karthi.sungmobile.feature.library.LibraryMenuItems(entry.track) { menu = false }
                             DropdownMenuItem(text = { Text(stringResource(R.string.move_up)) }, enabled = index > 0,
                                 onClick = { actions.move(entry.id, -1); menu = false })
                             DropdownMenuItem(text = { Text(stringResource(R.string.move_down)) }, enabled = index < queue.entries.lastIndex,

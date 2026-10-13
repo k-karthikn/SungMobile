@@ -1,6 +1,6 @@
 # Stage 2 — Persistent queue and background playback
 
-Implemented on **11 October 2026**. **Code and host verification are complete; physical-device acceptance is pending.** The user chose to test the APK manually. No APK was installed on the phone during this milestone.
+Implemented on **11 October 2026**. **Code, host verification and user-reported POCO acceptance are complete.** On 12 October 2026 the user reported completing the supplied checklist with everything working and no problems. The device result is user-reported, not an automated run; no phone installation was performed by the agent.
 
 ## Delivered
 
@@ -28,7 +28,7 @@ Implemented on **11 October 2026**. **Code and host verification are complete; p
 | Debug APK and instrumentation APK | Built successfully |
 | APK signature | Verified, v2 scheme |
 | Android lint | 0 errors; 13 dependency/tool-version advisories |
-| POCO audio/background/system-control scenarios | Pending manual checks |
+| POCO supplied checklist | User reported all checks working without problems, 12 October 2026 |
 
 The session/controller test uses the real Media3 protocol with fake network resolution and audio decoding. It verifies initial Play after setting an empty queue, duplicate removal, Undo status delivery, storage-error delivery, pause/seek/resume and audio continuing after the controller disconnects. It also verifies rejection of an untrusted controller. It does not claim real-device audio or foreground-service execution.
 
@@ -49,8 +49,8 @@ The exported service follows Media3's connection model. Its callback accepts the
 
 ## Device acceptance and limits
 
-Use the [phone checklist](../Stages/Stage2_Results/PHONE_TEST_CHECKLIST.md). Install as an update without uninstalling first, so appearance migration is exercised.
+The user reported successful completion of the [phone checklist](../Stages/Stage2_Results/PHONE_TEST_CHECKLIST.md) on 12 October 2026. The checklist remains available for later regression tests.
 
-The remaining acceptance checks are actual YouTube playback, leaving/locking the POCO, automatic next with the screen off, system media controls, audio focus/headphone disconnects, rapid changes, process restoration and network failure recovery. OEM battery management has not been changed or verified. An abrupt process kill may lose up to approximately one checkpoint interval of position; force-stop is expected to stop audio and requires an explicit resume.
+The supplied checklist covers actual YouTube playback, leaving/locking the POCO, automatic next with the screen off, system media controls, audio focus/headphone disconnects, rapid changes, process restoration and network failure recovery. The user reported the checklist working without problems; no per-case logs or independent automated device results were supplied. The agent made no OEM battery-management changes. An abrupt process kill may lose up to approximately one checkpoint interval of position; force-stop is expected to stop audio and requires an explicit resume.
 
-This milestone does not add likes/playlists, lyrics, downloads, crossfade or the rest of the expanded plan. They remain scheduled in separate stages. Artist catalog limitations from Stage 0 are unchanged. Completion of Stage 2's device acceptance should precede Stage 3.
+This milestone does not add likes/playlists, lyrics, downloads, crossfade or the rest of the expanded plan. They remain scheduled in separate stages. Artist catalog limitations from Stage 0 are unchanged. Stage 2 is accepted for progression to Stage 3; this is not a claim of coverage across every device or provider condition.

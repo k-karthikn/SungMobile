@@ -1,5 +1,7 @@
 package com.karthi.sungmobile.core.playback
 
+import android.os.Bundle
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import com.karthi.sungmobile.core.model.*
@@ -63,6 +65,22 @@ class SessionPlayerTest {
         assertTrue(coordinator.state.value.queue.shuffled)
         session.release(); coordinator.release()
     }
+    @Test fun collectionShuffleRequestIsAppliedOnlyOnceAtTheSessionBoundary() = runTest {
+        val coordinator = PlaybackCoordinator(resolver, Engine(), backgroundScope)
+        val session = SessionPlayer(coordinator, backgroundScope)
+        val items = songs.mapIndexed { index, song ->
+            val item = QueueEntry("entry-$index", song).toMediaItem()
+            if (index == 0) item.buildUpon().setRequestMetadata(MediaItem.RequestMetadata.Builder()
+                .setExtras(Bundle().apply { putBoolean(PlaybackCommands.COLLECTION_SHUFFLE, true) }).build()).build() else item
+        }
+        session.setMediaItems(items)
+        runCurrent()
+        assertTrue(coordinator.state.value.queue.shuffled)
+        assertEquals(setOf("a", "b"), coordinator.state.value.queue.entries.map { it.track.id }.toSet())
+        assertEquals(coordinator.state.value.queue.currentId, session.currentMediaItem?.mediaId)
+        session.release(); coordinator.release()
+    }
+
     @Test fun standardPlaylistCommandsKeepDuplicateInstancesDistinct() = runTest {
         val coordinator = PlaybackCoordinator(resolver, Engine(), backgroundScope)
         val session = SessionPlayer(coordinator, backgroundScope)

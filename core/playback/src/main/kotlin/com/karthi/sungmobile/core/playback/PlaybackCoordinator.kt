@@ -1,6 +1,7 @@
 package com.karthi.sungmobile.core.playback
 
 import com.karthi.sungmobile.core.model.*
+import java.util.UUID
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -46,13 +47,24 @@ class PlaybackCoordinator(
         replace(tracks.map { QueueEntry(track = it) }, index, 0, play = true)
     }
 
-    fun replace(entries: List<QueueEntry>, index: Int, position: Long, play: Boolean) {
+    fun replace(entries: List<QueueEntry>, index: Int, position: Long, play: Boolean, startShuffled: Boolean? = null) {
         resetUndo()
         val old = state.value.queue
-        val queue = QueueState(entries, entries.getOrNull(index.coerceIn(0, entries.lastIndex.coerceAtLeast(0)))?.id,
-            repeat = old.repeat).shuffle(old.shuffled)
+        val queue = if (startShuffled == true && entries.isNotEmpty()) {
+            val shuffled = entries.shuffled()
+            QueueState(shuffled, shuffled.first().id, old.repeat, true, entries.map { it.id })
+        } else QueueState(entries, entries.getOrNull(index.coerceIn(0, entries.lastIndex.coerceAtLeast(0)))?.id,
+            repeat = old.repeat).shuffle(startShuffled ?: old.shuffled)
         mutableState.update { it.copy(queue = queue) }
         if (queue.currentId == null) stopEmpty() else activate(requireNotNull(queue.currentId), play, position)
+    }
+
+    override fun playCollection(tracks: List<CatalogItem>, shuffle: Boolean) {
+        if (tracks.isNotEmpty()) replace(tracks.map { QueueEntry(track = it) }, 0, 0, true, shuffle)
+    }
+    override fun enqueueAll(tracks: List<CatalogItem>, next: Boolean) {
+        val queue = state.value.queue
+        insert(if (next) queue.currentIndex + 1 else queue.entries.size, tracks.map { QueueEntry(track = it) })
     }
 
     fun restore(snapshot: QueueSnapshot) {
@@ -61,11 +73,12 @@ class PlaybackCoordinator(
         wantsPlayback = false
         engine.stop()
         resumePositionMs = snapshot.positionMs
-        mutableState.value = PlaybackState(track = snapshot.queue.current?.track, queue = snapshot.queue,
+        mutableState.value = PlaybackState(track = snapshot.queue.current?.track, queue = snapshot.queue, passId = snapshot.passId,
             engine = EngineSnapshot(positionMs = resumePositionMs, durationMs = snapshot.queue.current?.track?.durationMs ?: 0))
     }
 
     fun setStorageError(failed: Boolean) { mutableState.update { it.copy(storageError = failed) } }
+    fun setHistoryError(failed: Boolean) { mutableState.update { it.copy(historyError = failed) } }
     fun setConnected(ready: Boolean) { mutableState.update { it.copy(connected = ready) } }
 
     private fun activate(id: String, play: Boolean, position: Long = 0) {
@@ -78,7 +91,7 @@ class PlaybackCoordinator(
         engine.stop()
         resumePositionMs = position.coerceAtLeast(0)
         val updated = queue.copy(currentId = id)
-        mutableState.update { it.copy(track = updated.current?.track, queue = updated, sourceError = null,
+        mutableState.update { it.copy(track = updated.current?.track, queue = updated, sourceError = null, passId = UUID.randomUUID().toString(),
             resolving = false, engine = EngineSnapshot(positionMs = resumePositionMs,
                 durationMs = updated.current?.track?.durationMs ?: 0)) }
         if (play) resolve(resumePositionMs)
@@ -119,6 +132,8 @@ class PlaybackCoordinator(
     fun play() {
         val current = state.value
         wantsPlayback = true
+        if (current.track != null && (current.passId == null || current.engine.ended))
+            mutableState.update { it.copy(passId = UUID.randomUUID().toString()) }
         if (current.resolving) return
         if (!loaded || current.sourceError != null || current.engine.error != null) {
             refreshes = 0
@@ -223,7 +238,7 @@ class PlaybackCoordinator(
         loaded = false
         resumePositionMs = 0
         engine.stop()
-        mutableState.update { it.copy(resolving = false, sourceError = null, engine = EngineSnapshot()) }
+        mutableState.update { it.copy(resolving = false, sourceError = null, engine = EngineSnapshot(), passId = null) }
     }
     fun release() { cancelResolution(); observation.cancel(); engine.release() }
 }

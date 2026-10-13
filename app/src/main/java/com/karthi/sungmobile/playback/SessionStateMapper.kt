@@ -20,6 +20,7 @@ internal fun MediaController.playbackSnapshot(): PlaybackState? {
         resolving = extras?.getBoolean(PlaybackCommands.RESOLVING) == true,
         sourceError = extras?.getString(PlaybackCommands.SOURCE_ERROR)?.let { name -> SourceFailure.entries.find { it.name == name } },
         canUndo = extras?.getBoolean(PlaybackCommands.CAN_UNDO) == true,
+        historyError = extras.getBoolean(PlaybackCommands.HISTORY_ERROR),
         storageError = extras?.getBoolean(PlaybackCommands.STORAGE_ERROR) == true,
         connected = player.isCommandAvailable(Player.COMMAND_SET_MEDIA_ITEM),
         engine = EngineSnapshot(playing = player.isPlaying, ready = player.playbackState == Player.STATE_READY,

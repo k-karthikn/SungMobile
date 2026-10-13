@@ -21,6 +21,7 @@ class SungViewModel(
     private var catalogJob: Job? = null
     private var generation = 0
     private val history = ArrayDeque<CatalogPage?>()
+    var onSearchSubmitted: (String, CatalogKind) -> Unit = { _, _ -> }
     private var retryAction: (() -> Unit)? = null
 
     fun editQuery(query: String) { mutableCatalog.update { it.copy(query = query.take(500)) } }
@@ -30,13 +31,20 @@ class SungViewModel(
         if (catalogState.value.query.isNotBlank()) search()
     }
 
-    fun search() {
+    fun search() = search(recordHistory = true)
+
+    fun recall(query: String, kind: CatalogKind) {
+        mutableCatalog.update { it.copy(query = query, kind = kind) }; search()
+    }
+
+    private fun search(recordHistory: Boolean) {
         val current = catalogState.value
         val query = current.query.trim()
         if (query.isEmpty()) return
+        if (recordHistory) onSearchSubmitted(query, current.kind)
         val isLink = query.contains("://") || query.startsWith("www.")
         history.clear()
-        request(clear = true, inCollection = isLink, retry = ::search) {
+        request(clear = true, inCollection = isLink, retry = { search(recordHistory = true) }) {
             if (isLink) catalog.open(query) else catalog.search(query, current.kind)
         }
     }

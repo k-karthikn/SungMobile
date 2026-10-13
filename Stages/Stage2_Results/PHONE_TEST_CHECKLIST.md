@@ -2,7 +2,7 @@
 
 Build: **0.3.0-stage2**, version code **4**. Install `Sung-0.3.0-stage2-debug.apk` as an update to your existing Sung app. Do not uninstall first: this check includes preserving Stage 1 appearance settings.
 
-Phone verification is pending. The automated tests use fake audio/network for player transitions; they do not replace these checks.
+Completed according to the user on 12 October 2026: all checklist checks worked without problems. Retained for future regression checks. The automated host tests use fake audio/network for player transitions; they do not replace device checks.
 
 ## Main checks
 

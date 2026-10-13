@@ -17,6 +17,7 @@ class SungPlaybackService : MediaSessionService() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val restored = SettableFuture.create<Unit>()
     private lateinit var playback: PlaybackCoordinator
+    private var historyRecording: com.karthi.sungmobile.core.playback.history.HistoryRecording? = null
     private lateinit var persistence: PlaybackPersistence
     private lateinit var sessionPlayer: SessionPlayer
     private var session: MediaSession? = null
@@ -37,6 +38,9 @@ class SungPlaybackService : MediaSessionService() {
         serviceScope.launch {
             container.playbackShutdown?.join()
             persistence.restore()
+            historyRecording = com.karthi.sungmobile.core.playback.history.HistoryRecording(
+                playback.state, container.history, serviceScope, android.os.SystemClock::elapsedRealtime)
+            serviceScope.launch { historyRecording!!.error.collect { playback.setHistoryError(it) } }
             restored.set(Unit)
         }
     }
@@ -44,7 +48,10 @@ class SungPlaybackService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo) = session
 
     override fun onDestroy() {
-        (application as SungApplication).container.playbackShutdown = persistence.close()
+        val container = (application as SungApplication).container
+        val queueFlush = persistence.close()
+        val historyFlush = historyRecording?.close(container.applicationScope)
+        container.playbackShutdown = container.applicationScope.launch { queueFlush.join(); historyFlush?.join() }
         restored.cancel(false)
         session?.release()
         sessionPlayer.release()

@@ -25,6 +25,19 @@ class QueuePlaybackTest {
         override suspend fun resolve(track: CatalogItem) = ResolvedStream(track, "https://example.test/audio", null, emptyMap(), 128, null)
     }
 
+    @Test fun collectionPlaybackAndBulkEnqueueKeepQueueOperationsAtomic() = runTest {
+        val engine = Engine(); val player = PlaybackCoordinator(resolver, engine, backgroundScope)
+        player.playCollection(songs, shuffle = true); runCurrent()
+        assertTrue(player.state.value.queue.shuffled)
+        assertEquals(songs.map { it.id }.toSet(), player.state.value.queue.entries.map { it.track.id }.toSet())
+        val current = player.state.value.queue.currentId
+        player.enqueueAll(listOf(songs[1], songs[2]), next = true)
+        assertEquals(current, player.state.value.queue.currentId)
+        assertEquals(listOf("two", "three"), player.state.value.queue.entries
+            .drop(player.state.value.queue.currentIndex + 1).take(2).map { it.track.id })
+        assertEquals(1, engine.loads)
+    }
+
     @Test fun completionAdvancesOnceAndQueueEndStops() = runTest {
         val engine = Engine(); val player = PlaybackCoordinator(resolver, engine, backgroundScope)
         player.select(songs, 0); runCurrent()

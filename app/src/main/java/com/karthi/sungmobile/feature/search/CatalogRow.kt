@@ -32,6 +32,7 @@ internal fun CatalogRow(item: CatalogItem, selected: Boolean, onClick: () -> Uni
                 Box {
                     IconButton({ expanded = true }, enabled = enabled) { SungIcon(SungSymbol.Plus, stringResource(R.string.queue_actions)) }
                     DropdownMenu(expanded, { expanded = false }) {
+                        com.karthi.sungmobile.feature.library.LibraryMenuItems(item) { expanded = false }
                         DropdownMenuItem(text = { Text(stringResource(R.string.play_next)) }, onClick = { playNext(); expanded = false })
                         DropdownMenuItem(text = { Text(stringResource(R.string.add_queue)) }, onClick = { append(); expanded = false })
                     }

@@ -42,7 +42,7 @@
     "warnings": 13,
     "warningsKind": "newer dependency/tool versions"
   },
-  "deviceVerification": "Pending user manual test; no phone installation performed",
+  "deviceVerification": "User reported completing all supplied POCO checklist checks with no problems on 2026-10-12; no automated device run or agent installation",
   "liveProviderTests": "4 opt-in probes skipped; provider code unchanged",
   "buildNote": "final-core-checks.log ends with pre-fix lint errors; final-app-build.log verifies corrected lint and final APK"
 }

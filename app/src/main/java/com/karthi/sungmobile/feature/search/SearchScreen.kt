@@ -23,7 +23,7 @@ import com.karthi.sungmobile.core.designsystem.icon.*
 import com.karthi.sungmobile.core.model.*
 
 @Composable
-fun SearchScreen(state: CatalogState, selectedId: String?, actions: CatalogActions, modifier: Modifier = Modifier, playbackReady: Boolean = true) {
+fun SearchScreen(state: CatalogState, selectedId: String?, actions: CatalogActions, modifier: Modifier = Modifier, playbackReady: Boolean = true, recentSearches: @Composable () -> Unit = {}) {
     val keyboard = LocalSoftwareKeyboardController.current
     val submit = { keyboard?.hide(); actions.search() }
     LazyColumn(modifier.fillMaxSize().testTag("catalog_list"),
@@ -51,6 +51,7 @@ fun SearchScreen(state: CatalogState, selectedId: String?, actions: CatalogActio
                 }
             }
         }
+        if (state.page == null && !state.loading) item { recentSearches() }
         if (state.inCollection) item {
             TextButton(actions.back) { SungIcon(SungSymbol.Back); Text(stringResource(R.string.back_results)) }
         }

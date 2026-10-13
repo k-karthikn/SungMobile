@@ -54,3 +54,16 @@ Changes to the database require an explicit Room migration and an updated export
 Pure queue/coordinator tests cover order, duplicates, transitions and cancellation. Room tests use a real on-disk database and verify reopen/transaction rollback. Media3 tests exercise both the player adapter and an actual session/controller connection with only network/decoding replaced. Compose tests check action reachability and duplicate-entry targeting.
 
 These checks do not establish physical-device audio focus, OEM background behavior, lock-screen controls or real YouTube playback. Use the Stage 2 phone checklist for those checks.
+
+
+## Stage 3 local library
+
+The Room database is now version 2. `DatabaseProvider.open` always registers `LibraryMigration`; never use a destructive fallback for user queue or library data. Keep the version 1 schema under `core/data/schemas` as the migration source. The migration adds `playbackPassId` to the queue header and creates library/history tables. Appearance remains in DataStore.
+
+Use `CatalogItem.libraryKey()` only for validated YouTube songs. A liked video is unique by video ID, while `PlaylistEntryEntity.id` gives every playlist occurrence its own stable identity. Read list pages through `LibraryRepository.songs` and `playlists`; use `snapshot` for an explicit Play action. A playback snapshot is independent of later playlist edits. Bulk writes belong in one repository transaction.
+
+The service owns `HistoryRecording`; UI and activities must not measure listening time. It uses monotonic elapsed time and persists bounded checkpoints. Repositories compare the captured history epoch inside each write transaction, so an old recorder or search submission cannot restore data cleared or suppressed by a newer privacy setting. Private mode affects listening and search history; queue recovery still persists.
+
+Library browser/actions and history each have separate ViewModels. `LibraryHost` supplies shared song actions to Search, Now Playing and Queue through a CompositionLocal. Keep catalog requests in `SungViewModel`, playback mutations behind `PlaybackControl`, and UI state out of Room DAOs.
+
+See [STAGE3_REPORT.md](STAGE3_REPORT.md) for feature behavior and the phone acceptance checklist.

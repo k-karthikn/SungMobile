@@ -1,6 +1,6 @@
 # Stage 2 results
 
-**0.3.0-stage2**, version code **4**. Host checks pass; user phone verification is pending.
+**0.3.0-stage2**, version code **4**. Host checks pass. On 12 October 2026 the user reported completing the supplied POCO checklist with everything working and no problems. This is user-reported acceptance, not an automated device run.
 
 - `Sung-0.3.0-stage2-debug.apk`: install as an update to the existing Sung app.
 - `PHONE_TEST_CHECKLIST.md`: manual POCO verification steps and expected behavior.
