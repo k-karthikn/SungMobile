@@ -65,6 +65,17 @@ class PlaybackConnection(private val context: Context, private val scope: Corout
             play()
         }
     }
+    override fun playAt(track: CatalogItem, positionMs: Long) {
+        if (!state.value.connected) return
+        controller?.apply {
+            val item = QueueEntry(track = track).toMediaItem().buildUpon().setRequestMetadata(
+                androidx.media3.common.MediaItem.RequestMetadata.Builder().setExtras(Bundle().apply {
+                    putBoolean(PlaybackCommands.COLLECTION_SHUFFLE, false)
+                }).build()).build()
+            setMediaItems(listOf(item), 0, positionMs.coerceIn(0, track.durationMs ?: 86_400_000))
+            prepare(); play()
+        }
+    }
     override fun playCollection(tracks: List<CatalogItem>, shuffle: Boolean) {
         if (!state.value.connected || tracks.isEmpty()) return
         val items = tracks.map { QueueEntry(track = it).toMediaItem() }.toMutableList()

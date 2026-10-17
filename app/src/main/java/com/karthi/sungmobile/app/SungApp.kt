@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -28,7 +29,7 @@ private enum class Destination(val label: Int, val icon: SungSymbol, val selecte
     SEARCH(R.string.search, SungSymbol.Search, SungSymbol.Search),
     LIBRARY(R.string.library, SungSymbol.LibraryOutline, SungSymbol.Library),
 }
-private enum class Overlay { NONE, PLAYER, APPEARANCE, QUEUE, HISTORY }
+private enum class Overlay { NONE, PLAYER, APPEARANCE, QUEUE, HISTORY, COLLECTION }
 
 /** Navigation belongs to the UI. Playback is observed from the service across destination changes. */
 @Composable
@@ -37,13 +38,32 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     libraryContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
     historyContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
     privateMode: Boolean = false, historyError: Boolean = false,
-    recentSearches: @Composable () -> Unit = {}) {
+    recentSearches: @Composable () -> Unit = {},
+    detailId: String? = null, closeDetail: () -> Unit = {},
+    collectionContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
+    homeContent: (@Composable (Modifier, () -> Unit, () -> Unit, () -> Unit, () -> Unit) -> Unit)? = null,
+    searchRequest: Int = 0) {
+    val screenState = rememberSaveableStateHolder()
     var destination by rememberSaveable { mutableStateOf(Destination.HOME) }
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
+    DisposableEffect(detailId) {
+        val key = detailId?.let { "collection:$it" }
+        onDispose { key?.let(screenState::removeState) }
+    }
+    var shownDetail by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(detailId) {
+        if (detailId == shownDetail) return@LaunchedEffect
+        shownDetail = detailId
+        if (detailId != null) overlay = Overlay.COLLECTION
+        else if (overlay == Overlay.COLLECTION) overlay = Overlay.NONE
+    }
+    LaunchedEffect(searchRequest) { if (searchRequest > 0) { destination = Destination.SEARCH; overlay = Overlay.NONE } }
     LaunchedEffect(playback.track, overlay) { if (playback.track == null && overlay == Overlay.PLAYER) overlay = Overlay.NONE }
     val back = {
         when {
             overlay == Overlay.QUEUE -> overlay = Overlay.PLAYER
+            overlay == Overlay.COLLECTION -> { closeDetail(); overlay = Overlay.NONE }
+            overlay == Overlay.PLAYER && detailId != null -> overlay = Overlay.COLLECTION
             overlay != Overlay.NONE -> overlay = Overlay.NONE
             destination == Destination.SEARCH && catalog.inCollection -> catalogActions.back()
             else -> destination = Destination.HOME
@@ -99,17 +119,20 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                         if (playback.storageError || settingsError) Text(stringResource(R.string.storage_error),
                             Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
                         when (overlay) {
+                            Overlay.COLLECTION -> screenState.SaveableStateProvider("collection:$detailId") { collectionContent?.invoke(Modifier.weight(1f)) { overlay = Overlay.PLAYER } }
                             Overlay.PLAYER -> PlayerScreen(playback, playerActions, back, Modifier.weight(1f), { overlay = Overlay.QUEUE })
                             Overlay.QUEUE -> QueueScreen(playback, playerActions, back, Modifier.weight(1f))
                             Overlay.HISTORY -> historyContent?.invoke(content, back)
                             Overlay.APPEARANCE -> AppearanceScreen(appearance, onAppearance, back, content)
                             Overlay.NONE -> when (destination) {
-                                Destination.HOME -> HomeScreen(playback.track, catalog.page?.items.orEmpty(), catalog.inCollection,
+                                Destination.HOME -> if (homeContent != null) homeContent(Modifier.weight(1f),
+                                    { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { overlay = Overlay.APPEARANCE }, { destination = Destination.LIBRARY })
+                                    else HomeScreen(playback.track, catalog.page?.items.orEmpty(), catalog.inCollection,
                                     { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { item ->
                                         catalogActions.open(item)
                                         if (item.kind != CatalogKind.SONG) destination = Destination.SEARCH
                                     }, { overlay = Overlay.APPEARANCE }, content)
-                                Destination.SEARCH -> SearchScreen(catalog, playback.track?.id, catalogActions, Modifier.weight(1f), playback.connected, recentSearches)
+                                Destination.SEARCH -> screenState.SaveableStateProvider("search") { SearchScreen(catalog, playback.track?.id, catalogActions, Modifier.weight(1f), playback.connected, recentSearches) }
                                 Destination.LIBRARY -> if (libraryContent != null) libraryContent(Modifier.weight(1f)) { overlay = Overlay.HISTORY }
                                     else Text("Your local library is ready for liked songs and playlists.", Modifier.padding(24.dp))
                             }

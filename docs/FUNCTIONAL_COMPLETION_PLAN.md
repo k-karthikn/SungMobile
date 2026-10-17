@@ -2,7 +2,7 @@
 
 Prepared: 11 October 2026.
 
-Status: implementation authorized on 11 October 2026. Stage 2A–2B code and host verification are complete. On 12 October 2026 the user reported that the entire supplied phone checklist worked without problems; Stage 2 is accepted. Stage 3 implementation details are proposed in `STAGE3_PLAN.md`; this follow-up is planning only. The user confirmed the direction and scope: complete the first-release features **and** the previously deferred advanced features, through separate functional milestones. See `STAGE2_REPORT.md` for the delivered code and verification status.
+Status: functionality-first implementation was authorized on 11 October 2026, including advanced features in separate milestones. Stage 2 was accepted from the user's phone results on 12 October 2026. Stage 3 was accepted on 13 October 2026 after the user reported every supplied checklist item working without problems. Stage 4 is implemented with provider limitations and pending manual phone acceptance; see `STAGE4_REPORT.md` for implementation and verification.
 
 This plan supersedes the design-led delivery order and visual-polish gates in `ANDROID_PLAN.md`. That document remains a record of the original direction and source/architecture decisions. Stage 0 and Stage 1 are retained as the starting point.
 
@@ -97,4 +97,4 @@ The final flow includes search → collection → play → background/lock → q
 
 Reference-perfect Home/Now Playing compositions, custom layout variants, animated covers/backdrops, palette refinements, bespoke transitions, decorative visualizers, elaborate statistics charts and poster/sing-along styling are outside this functional pass. A later UI redesign can consume the same repositories, playback controller and typed state without rewriting the core.
 
-Implementation starts with **2A and 2B**. Finish their verification before moving to Stage 3; do not reopen Stage 1 as a design project.
+Stages 2 and 3 are accepted. Stage 4 is implemented and awaiting POCO acceptance. After acceptance, plan **Stage 5: Lyrics and essential settings**. Continue using the established design foundation.

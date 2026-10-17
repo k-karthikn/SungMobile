@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.core.youtube.LiveProviderTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-14T09:46:52.747Z" hostname="archlinux" time="19.155">
+  <properties/>
+  <testcase name="albumsAndPlaylists" classname="com.karthi.sungmobile.core.youtube.LiveProviderTest" time="5.571"/>
+  <testcase name="artistCapabilityProbe" classname="com.karthi.sungmobile.core.youtube.LiveProviderTest" time="1.108"/>
+  <testcase name="longPlaylistHasWorkingContinuation" classname="com.karthi.sungmobile.core.youtube.LiveProviderTest" time="2.493"/>
+  <testcase name="reportedArtistsOfferWorkingSongSearch" classname="com.karthi.sungmobile.core.youtube.LiveProviderTest" time="3.214"/>
+  <testcase name="songsPageAndTwoPlayableStreams" classname="com.karthi.sungmobile.core.youtube.LiveProviderTest" time="6.76"/>
+  <system-out><![CDATA[PASS ALBUM: Album – A Sky Full of Stars; 1 entries; total=1; partial=false
+PASS PLAYLIST: Coldplay: B-Sides, EPs, and Non-Album Singles; 40 entries; total=45; partial=true
+ARTIST: Coldplay - Topic; entries=0; notice=ArtistBrowseUnavailable(artistName=Coldplay - Topic)
+PASS long playlist: NCS : The Top 50 Biggest Songs ]]>&#x1f4c8;<![CDATA[; first=101; next=15; total=120
+PASS artist fallback search: John michel - Topic
+PASS artist fallback search: John Michael Howell - Topic
+PASS stream: Easy To Please; audio/webm; 160 kbps
+PASS stream: Hymn for the Weekend; audio/webm; 160 kbps
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

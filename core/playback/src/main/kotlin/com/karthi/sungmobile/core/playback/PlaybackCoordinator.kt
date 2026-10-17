@@ -59,6 +59,9 @@ class PlaybackCoordinator(
         if (queue.currentId == null) stopEmpty() else activate(requireNotNull(queue.currentId), play, position)
     }
 
+    override fun playAt(track: CatalogItem, positionMs: Long) {
+        replace(listOf(QueueEntry(track = track)), 0, positionMs.coerceIn(0, track.durationMs ?: 86_400_000), true, false)
+    }
     override fun playCollection(tracks: List<CatalogItem>, shuffle: Boolean) {
         if (tracks.isNotEmpty()) replace(tracks.map { QueueEntry(track = it) }, 0, 0, true, shuffle)
     }

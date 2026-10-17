@@ -26,6 +26,8 @@ data class CatalogPage(
     val next: PageToken? = null,
     val partial: Boolean = false,
     val notice: CatalogNotice? = null,
+    val details: com.karthi.sungmobile.core.model.catalog.CatalogDetails? = null,
+    val unavailable: List<com.karthi.sungmobile.core.model.catalog.UnavailableCatalogEntry> = emptyList(),
 )
 
 interface CatalogSource {

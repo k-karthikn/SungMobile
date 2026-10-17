@@ -9,6 +9,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
@@ -24,9 +26,11 @@ import com.karthi.sungmobile.core.model.*
 
 @Composable
 fun SearchScreen(state: CatalogState, selectedId: String?, actions: CatalogActions, modifier: Modifier = Modifier, playbackReady: Boolean = true, recentSearches: @Composable () -> Unit = {}) {
+    val listState = rememberLazyListState()
+    DisposableEffect(Unit) { actions.active(true); onDispose { actions.active(false) } }
     val keyboard = LocalSoftwareKeyboardController.current
     val submit = { keyboard?.hide(); actions.search() }
-    LazyColumn(modifier.fillMaxSize().testTag("catalog_list"),
+    LazyColumn(modifier.fillMaxSize().testTag("catalog_list"), state = listState,
         contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { SectionHeading(stringResource(R.string.search)) }
         item {

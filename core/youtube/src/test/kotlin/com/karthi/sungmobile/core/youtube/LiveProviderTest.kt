@@ -43,8 +43,34 @@ class LiveProviderTest {
                 assertTrue("No $kind results", results.items.isNotEmpty())
                 val detail = source.open(results.items.first().url)
                 assertTrue("No $kind detail tracks", detail.items.isNotEmpty())
-                println("PASS $kind: ${detail.title}; ${detail.items.size} entries")
+                assertNotNull(detail.details)
+                println("PASS $kind: ${detail.title}; ${detail.items.size} entries; total=${detail.details?.totalCount}; partial=${detail.partial}")
+                detail.next?.let { token ->
+                    val next = source.nextPage(token)
+                    assertTrue("Empty continuation for $kind", next.items.isNotEmpty())
+                    println("PASS $kind collection paging: ${next.items.size} entries")
+                }
             }
+        }
+    }
+
+    @Test fun longPlaylistHasWorkingContinuation() = runBlocking {
+        assumeTrue(System.getProperty("sung.live") == "true")
+        YouTubeSource().use { source ->
+            val results = source.search("NoCopyrightSounds all songs", CatalogKind.PLAYLIST)
+            var verified = false
+            for (playlist in results.items.take(5)) {
+                val detail = source.open(playlist.url)
+                val token = detail.next ?: continue
+                val next = source.nextPage(token)
+                assertTrue("Empty collection continuation", next.items.isNotEmpty())
+                assertNotEquals("Repeated continuation", token, next.next)
+                assertEquals(detail.details, next.details)
+                println("PASS long playlist: ${detail.title}; first=${detail.items.size}; next=${next.items.size}; total=${detail.details?.totalCount}")
+                verified = true
+                break
+            }
+            assertTrue("No paginated playlist found in the bounded live sample", verified)
         }
     }
 

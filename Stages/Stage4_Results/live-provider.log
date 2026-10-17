@@ -1,0 +1,37 @@
+Reusing configuration cache.
+> Task :core:model:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:youtube:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:youtube:processResources NO-SOURCE
+> Task :core:youtube:processTestResources NO-SOURCE
+> Task :core:model:processResources NO-SOURCE
+> Task :core:model:compileKotlin UP-TO-DATE
+> Task :core:model:compileJava NO-SOURCE
+> Task :core:model:classes UP-TO-DATE
+> Task :core:model:jar UP-TO-DATE
+> Task :core:youtube:compileKotlin UP-TO-DATE
+> Task :core:youtube:compileJava NO-SOURCE
+> Task :core:youtube:classes UP-TO-DATE
+> Task :core:youtube:jar UP-TO-DATE
+> Task :core:youtube:compileTestKotlin
+> Task :core:youtube:compileTestJava NO-SOURCE
+> Task :core:youtube:testClasses UP-TO-DATE
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::arrayBaseOffset has been called by com.google.protobuf.UnsafeUtil (file:/home/karthi/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protobuf-javalite/4.35.1/7d7bbb391dd9a8fcdfdbd688834f37dbc4368941/protobuf-javalite-4.35.1.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.protobuf.UnsafeUtil
+WARNING: sun.misc.Unsafe::arrayBaseOffset will be removed in a future release
+
+> Task :core:youtube:test
+
+LiveProviderTest > albumsAndPlaylists PASSED
+
+LiveProviderTest > artistCapabilityProbe PASSED
+
+LiveProviderTest > longPlaylistHasWorkingContinuation PASSED
+
+LiveProviderTest > reportedArtistsOfferWorkingSongSearch PASSED
+
+LiveProviderTest > songsPageAndTwoPlayableStreams PASSED
+
+BUILD SUCCESSFUL in 23s
+6 actionable tasks: 2 executed, 4 up-to-date
+Configuration cache entry reused.

@@ -15,6 +15,9 @@ sealed interface YouTubeLink {
     }
 
     data class Artist(override val url: String) : YouTubeLink
+    data class Browse(val browseId: String) : YouTubeLink {
+        override val url = "https://music.youtube.com/browse/$browseId"
+    }
 
     companion object {
         private val hosts = setOf("youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com")
@@ -45,13 +48,18 @@ sealed interface YouTubeLink {
                     if (!videoId.matches(id)) invalid()
                     return Song(id)
                 }
+                if (host == "music.youtube.com" && path.startsWith("/browse/")) {
+                    val browse = path.removePrefix("/browse/")
+                    if (!Regex("(?:MPREb_|UC|MPLA)[A-Za-z0-9_-]{5,190}").matches(browse)) invalid()
+                    return Browse(browse)
+                }
                 if (path == "/playlist" && host in hosts) {
                     val list = query["list"] ?: invalid()
                     if (!playlistId.matches(list)) invalid()
                     return Playlist(list)
                 }
-                if (host in hosts && (path.startsWith("/channel/") || path.startsWith("/@")) &&
-                    path.length > 2
+                if (host in hosts && (Regex("/channel/UC[A-Za-z0-9_-]{22}(?:/videos)?").matches(path) ||
+                    Regex("/@[^/\\s?#]{1,100}(?:/videos)?").matches(path))
                 ) return Artist("https://www.youtube.com$path")
                 invalid()
             } catch (error: SourceException) {

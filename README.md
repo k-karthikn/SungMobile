@@ -1,10 +1,10 @@
 # SungMobile
 
-A native Kotlin / Jetpack Compose Android music app, developed in functional milestones from the Sung Linux reference. **Stage 2 implements service-owned playback and a persistent queue.** The user reported all supplied POCO checklist checks working without problems on 12 October 2026.
+A native Kotlin / Jetpack Compose Android music app, developed in functional milestones from the Sung Linux reference. **Stage 4 adds responsive search, shared YouTube links, collection actions and real local Home sections.** The user reported every Stage 3 POCO checklist item working on 13 October 2026.
 
-The next milestone is described in the [Stage 3 library plan](docs/STAGE3_PLAN.md). Implementation of that plan has not started.
+The current build is **0.5.0-stage4**. It uses the M3 Expressive foundation with simple functional controls. Stage 4 host verification is complete; manual phone acceptance is pending. See the [Stage 4 report](docs/STAGE4_REPORT.md) and [phone checklist](Stages/Stage4_Results/PHONE_TEST_CHECKLIST.md).
 
-The current build is **0.3.0-stage2**. It reuses the M3 Expressive foundation and adds simple functional controls. See the [revised completion plan](docs/FUNCTIONAL_COMPLETION_PLAN.md), [playback code guide](docs/PLAYBACK_GUIDE.md), [Stage 2 report](docs/STAGE2_REPORT.md), and [phone checklist](Stages/Stage2_Results/PHONE_TEST_CHECKLIST.md).
+See the [completion roadmap](docs/FUNCTIONAL_COMPLETION_PLAN.md), [code guide](docs/PLAYBACK_GUIDE.md), [Stage 3 report](docs/STAGE3_REPORT.md), and [accepted phone checklist](Stages/Stage3_Results/PHONE_TEST_CHECKLIST.md).
 
 ## Structure
 
@@ -48,7 +48,7 @@ Without `live=true`, device tests cover deterministic UI states and skip live pl
 
 This build supports search, collection browsing, service-owned play/pause/seek, automatic queue progression, shuffle/repeat, queue editing/Undo and paused queue restoration. The user reported successful completion of this milestone's physical-device checklist, covering background playback, media controls and interruptions. The UI does not pause playback when it leaves the foreground.
 
-It does not yet provide library likes/playlists, downloading, sign-in, lyrics, or complete artist discographies/home recommendations. Those follow in the functional plan; Stage 2 does not claim the entire app is complete.
+It also provides persistent likes, local playlists, pins, bulk library actions, listening/search history and privacy controls. Stage 4 adds debounced search, validated shared/pasted links, paged collection actions with explicit partial-load choices, and privacy-aware local mixes. Downloads, lyrics and complete artist/discovery support follow in the functional plan. Account sign-in is outside the current local-library scope.
 
 SungMobile is licensed under **GPL-3.0-or-later**, matching the selected NewPipeExtractor dependency. See [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md). This development APK is not a public release. The release stage must package the corresponding source and complete dependency/asset notices before public distribution.
 

@@ -54,42 +54,72 @@ class SungViewModelTest {
         assertNull(model.catalogState.value.error)
     }
 
-    @Test fun unavailableArtistSearchesTheSelectedArtistAndClearsCollection() = runTest(dispatcher) {
-        val requests = mutableListOf<Pair<String, CatalogKind>>()
+    @Test fun previewDebouncesWithoutHistoryAndOpeningCommitsOnce() = runTest(dispatcher) {
+        var requests = 0
+        val song = CatalogItem("1", CatalogKind.SONG, "Song", "Artist", "https://example.test")
         val source = object : EmptySource() {
             override suspend fun search(query: String, kind: CatalogKind): CatalogPage {
-                requests += query to kind
-                return CatalogPage(query, emptyList())
+                requests++; return CatalogPage(query, listOf(song))
             }
-            override suspend fun open(url: String) = CatalogPage("John Michael Howell", emptyList(),
-                notice = CatalogNotice.ArtistBrowseUnavailable("John Michael Howell"))
         }
-        val model = model(source)
-        model.open(CatalogItem("artist", CatalogKind.ARTIST, "John Michael Howell", "", "https://example.test"))
-        runCurrent()
-        assertTrue(model.catalogState.value.inCollection)
-        model.searchArtistSongs("John Michael Howell"); runCurrent()
-        assertEquals(listOf("John Michael Howell" to CatalogKind.SONG), requests)
-        assertFalse(model.catalogState.value.inCollection)
-        assertNull(model.catalogState.value.error)
+        val model = model(source); model.setActive(true)
+        val history = mutableListOf<String>(); model.onSearchSubmitted = { text, _ -> history += text }
+        model.editQuery("mu"); advanceTimeBy(200); model.editQuery("music")
+        advanceTimeBy(349); runCurrent(); assertEquals(0, requests)
+        advanceTimeBy(1); runCurrent(); assertEquals(1, requests); assertTrue(history.isEmpty())
+        model.open(song); model.open(song)
+        assertEquals(listOf("music"), history)
     }
 
-    @Test fun collectionRetryDoesNotDuplicateBackHistory() = runTest(dispatcher) {
-        var attempts = 0
-        val source = object : EmptySource() {
-            override suspend fun open(url: String): CatalogPage {
-                if (++attempts == 1) throw SourceException(SourceFailure.NETWORK)
-                return CatalogPage("Album", emptyList())
+    @Test fun editImmediatelyInvalidatesSlowResultBeforeNewDebounce() = runTest(dispatcher) {
+        val old = CompletableDeferred<CatalogPage>()
+        val model = model(object : EmptySource() {
+            override suspend fun search(query: String, kind: CatalogKind) =
+                withContext(NonCancellable) { old.await() }
+        })
+        model.setActive(true); model.editQuery("old"); model.search(); runCurrent()
+        model.editQuery("new"); old.complete(CatalogPage("old", emptyList())); runCurrent()
+        assertNull(model.catalogState.value.page)
+        model.setActive(false)
+    }
+
+    @Test fun submitOverridesDebounceAndHiddenSearchCancelsPreview() = runTest(dispatcher) {
+        val queries = mutableListOf<String>()
+        val model = model(object : EmptySource() {
+            override suspend fun search(query: String, kind: CatalogKind): CatalogPage {
+                queries += query; return CatalogPage(query, emptyList())
             }
-        }
-        val model = model(source)
-        model.editQuery("Original search"); model.search(); runCurrent()
-        model.open(CatalogItem("album", CatalogKind.ALBUM, "Album", "", "https://example.test")); runCurrent()
-        model.retry(); runCurrent()
-        model.back(); runCurrent()
-        assertEquals("Original search", model.catalogState.value.page?.title)
-        assertFalse(model.catalogState.value.inCollection)
-        assertNull(model.catalogState.value.error)
+        })
+        model.setActive(true); model.editQuery("one"); model.search(); advanceUntilIdle()
+        assertEquals(listOf("one"), queries)
+        model.editQuery("two"); model.setActive(false); advanceUntilIdle()
+        assertEquals(listOf("one"), queries)
+        model.setActive(true); advanceUntilIdle(); assertEquals(listOf("one", "two"), queries)
+        model.editQuery(""); advanceUntilIdle(); assertNull(model.catalogState.value.page)
+    }
+
+    @Test fun openingCollectionRetainsSearchSnapshotAndCategory() = runTest(dispatcher) {
+        val model = model(EmptySource())
+        model.editQuery("Original"); model.chooseKind(CatalogKind.ALBUM); runCurrent()
+        val before = model.catalogState.value
+        var opened: CatalogItem? = null; model.onOpenCollection = { opened = it }
+        val album = CatalogItem("album", CatalogKind.ALBUM, "Album", "", "https://example.test")
+        model.open(album); runCurrent(); model.setActive(true); runCurrent()
+        assertEquals(album, opened); assertEquals(before, model.catalogState.value)
+    }
+
+    @Test fun enteringSearchDoesNotDuplicateAnExplicitRequestAlreadyInProgress() = runTest(dispatcher) {
+        var requests = 0
+        val pending = CompletableDeferred<CatalogPage>()
+        val model = model(object : EmptySource() {
+            override suspend fun search(query: String, kind: CatalogKind): CatalogPage {
+                requests++; return pending.await()
+            }
+        })
+        model.recall("Artist", CatalogKind.SONG); runCurrent()
+        model.setActive(true); advanceTimeBy(500); runCurrent()
+        assertEquals(1, requests)
+        pending.complete(CatalogPage("Artist", emptyList())); runCurrent()
     }
 
     private fun model(source: CatalogSource): SungViewModel {
@@ -98,7 +128,7 @@ class SungViewModelTest {
         }
         val scope = CoroutineScope(SupervisorJob() + dispatcher)
         val player = PlaybackCoordinator(resolver, NoopEngine(), scope)
-        return SungViewModel(source, player) { player.release(); scope.cancel() }.also { store.put("model", it) }
+        return SungViewModel(source, player, androidx.lifecycle.SavedStateHandle()) { player.release(); scope.cancel() }.also { store.put("model", it) }
     }
 
     private open class EmptySource : CatalogSource {

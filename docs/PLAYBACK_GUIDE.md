@@ -67,3 +67,15 @@ The service owns `HistoryRecording`; UI and activities must not measure listenin
 Library browser/actions and history each have separate ViewModels. `LibraryHost` supplies shared song actions to Search, Now Playing and Queue through a CompositionLocal. Keep catalog requests in `SungViewModel`, playback mutations behind `PlaybackControl`, and UI state out of Room DAOs.
 
 See [STAGE3_REPORT.md](STAGE3_REPORT.md) for feature behavior and the phone acceptance checklist.
+
+## Stage 4 catalog and Home
+
+`SungViewModel` now owns Search only. Use `CollectionViewModel.open(CollectionRoute(...))` for online details and `LinkIntakeViewModel.receive` for pasted/shared links. Neither starts audio. The activity supplies `SavedStateHandle` through its ViewModel factory; do not create feature ViewModels in composables.
+
+For a complete online collection action, call `CollectionActionsViewModel.begin(details, action)`. It loads through the pure `CollectionBatchLoader`, then commits a validated snapshot through the existing `PlaybackControl`. Handle partial batches through its dialog; do not directly play a first page while labelling it as the whole playlist. `CatalogEntry.id` identifies a loaded occurrence and must be used for collection row keys. `CatalogItem.id` still identifies the song and may repeat.
+
+`MusicLinks.extract(text)` returns validated destinations, including separate song/playlist choices and a bounded starting position. Show the choices before calling `CollectionViewModel.open`. Use `PlaybackControl.playAt` only after a user Play action for a timestamped single-song preview.
+
+Home reads `AppContainer.home` (a `RoomHomeRepository`) through `HomeViewModel`. This query shares the existing database and privacy policy. Build future recommendation/statistics features on those privacy barriers; do not maintain a separate unbounded listening cache in the UI. The local mix function is pure and deterministic for a candidate set and seed.
+
+Provider mappings, details and continuation callbacks are isolated under `core:youtube/catalog`; `StreamExtractor` retains audio resolution. A provider-specific improvement belongs there, behind the catalog contracts, rather than in a screen or playback service. Check [STAGE4_REPORT.md](STAGE4_REPORT.md) for current capability limits.

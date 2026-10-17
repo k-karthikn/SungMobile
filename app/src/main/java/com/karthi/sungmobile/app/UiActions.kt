@@ -14,6 +14,7 @@ data class CatalogActions(
     val searchArtistSongs: (String) -> Unit,
     val playNext: (CatalogItem) -> Unit = {},
     val append: (CatalogItem) -> Unit = {},
+    val active: (Boolean) -> Unit = {},
 )
 
 data class PlayerActions(

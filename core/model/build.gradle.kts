@@ -9,4 +9,5 @@ java {
 dependencies {
     api(libs.coroutines.core)
     testImplementation(libs.junit)
+    testImplementation(libs.coroutines.test)
 }

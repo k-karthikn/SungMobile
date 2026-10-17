@@ -18,6 +18,7 @@ class AppContainer(context: Context) {
     val queueStore by lazy { RoomQueueStore(database) }
     val library by lazy { com.karthi.sungmobile.core.data.library.RoomLibraryRepository(database) }
     val history by lazy { com.karthi.sungmobile.core.data.history.RoomHistoryRepository(database) }
+    val home by lazy { com.karthi.sungmobile.core.data.discovery.RoomHomeRepository(database) }
     val settings by lazy { SettingsRepository(context) }
     val appearance by lazy { AppearanceStore(settings, applicationScope) }
 }

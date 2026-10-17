@@ -11,8 +11,8 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /** NewPipe is synchronous. Each operation owns its calls, so cancellation closes sockets too. */
-internal class ExtractorRunner : Closeable {
-    private val executor = ThreadPoolExecutor(3, 3, 0, TimeUnit.MILLISECONDS, LinkedBlockingQueue(24)) { task ->
+internal class ExtractorRunner(threads: Int = 3) : Closeable {
+    private val executor = ThreadPoolExecutor(threads, threads, 0, TimeUnit.MILLISECONDS, LinkedBlockingQueue(24)) { task ->
         Thread(task, "sung-extractor").apply { isDaemon = true }
     }
 

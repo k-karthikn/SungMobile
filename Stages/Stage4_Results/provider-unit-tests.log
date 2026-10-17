@@ -1,0 +1,47 @@
+Calculating task graph as no cached configuration is available for tasks: :core:youtube:test
+> Task :core:youtube:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:model:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:youtube:processTestResources NO-SOURCE
+> Task :core:youtube:processResources NO-SOURCE
+> Task :core:model:processResources NO-SOURCE
+> Task :core:model:compileKotlin UP-TO-DATE
+> Task :core:model:compileJava NO-SOURCE
+> Task :core:model:classes UP-TO-DATE
+> Task :core:model:jar UP-TO-DATE
+> Task :core:youtube:compileKotlin UP-TO-DATE
+> Task :core:youtube:compileJava NO-SOURCE
+> Task :core:youtube:classes UP-TO-DATE
+> Task :core:youtube:jar UP-TO-DATE
+> Task :core:youtube:compileTestKotlin UP-TO-DATE
+> Task :core:youtube:compileTestJava NO-SOURCE
+> Task :core:youtube:testClasses UP-TO-DATE
+
+> Task :core:youtube:test
+
+ExtractorDownloaderTest > cancellationClosesInFlightHttpCall PASSED
+
+ExtractorDownloaderTest > rateLimitIsTypedAndOversizedResponseIsRejected PASSED
+
+ExtractorDownloaderTest > suppliedHeadersOverrideDefaultsAndBodyIsPreserved PASSED
+
+LiveProviderTest > albumsAndPlaylists SKIPPED
+
+LiveProviderTest > artistCapabilityProbe SKIPPED
+
+LiveProviderTest > longPlaylistHasWorkingContinuation SKIPPED
+
+LiveProviderTest > reportedArtistsOfferWorkingSongSearch SKIPPED
+
+LiveProviderTest > songsPageAndTwoPlayableStreams SKIPPED
+
+CatalogPagesTest > continuationStorageIsBoundedAndPartialErrorsRetainUsableRows PASSED
+
+CatalogPagesTest > collectionMappingRetainsOccurrencesWhileSearchDeduplicates PASSED
+
+CatalogPagesTest > restrictedRowsRetainExposedInformationAndMarkPartialContent PASSED
+
+CatalogPagesTest > repeatedContinuationHasStableIdentityAndClearExpiresIt PASSED
+
+BUILD SUCCESSFUL in 3s
+6 actionable tasks: 1 executed, 5 up-to-date
+Configuration cache entry stored.
