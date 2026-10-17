@@ -1,5 +1,7 @@
 # SungMobile
 
+**Restoring after an OS change or continuing in a new session? Start with [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md)** for progress, backup requirements, environment setup and the exact next steps.
+
 A native Kotlin / Jetpack Compose Android music app, developed in functional milestones from the Sung Linux reference. **Stage 4 adds responsive search, shared YouTube links, collection actions and real local Home sections.** The user reported every Stage 3 POCO checklist item working on 13 October 2026.
 
 The current build is **0.5.0-stage4**. It uses the M3 Expressive foundation with simple functional controls. Stage 4 host verification is complete; manual phone acceptance is pending. See the [Stage 4 report](docs/STAGE4_REPORT.md) and [phone checklist](Stages/Stage4_Results/PHONE_TEST_CHECKLIST.md).
