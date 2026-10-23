@@ -8,5 +8,6 @@ class SungApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         configureSungImages()
+        com.karthi.sungmobile.updates.AppUpdates.get(this).start()
     }
 }

@@ -152,6 +152,7 @@ class DesignFoundationTest {
         capture(name)
         if (fullPlayer) {
             compose.onNodeWithTag("play_pause").performScrollTo().assertWidthIsAtLeast(48.dp).assertHeightIsAtLeast(48.dp)
+            compose.onNodeWithTag("player_more").performScrollTo().performClick()
             compose.onNodeWithTag("stop").performScrollTo().assertIsDisplayed()
             capture("$name-controls")
         }

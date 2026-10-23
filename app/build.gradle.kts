@@ -1,6 +1,14 @@
+import java.io.File
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+val productionSigning = Properties().apply {
+    val settings = File(System.getProperty("user.home"), ".android/sungmobile-release/signing.properties")
+    if (settings.isFile) settings.inputStream().use(::load)
 }
 
 android {
@@ -13,20 +21,33 @@ android {
         applicationId = "com.karthi.sungmobile"
         minSdk = 26
         targetSdk = 37
-        versionCode = 6
-        versionName = "0.5.0-stage4"
+        versionCode = 23
+        versionName = "0.12.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("production") {
+            if (productionSigning.isNotEmpty()) {
+                storeFile = file(productionSigning.getProperty("storeFile"))
+                storePassword = productionSigning.getProperty("storePassword")
+                keyAlias = productionSigning.getProperty("keyAlias")
+                keyPassword = productionSigning.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         debug {
             applicationIdSuffix = ".stage0"
+            versionNameSuffix = "-icon"
         }
         release {
+            signingConfig = signingConfigs.getByName("production")
             optimization {
                 enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
+                packageScope = setOf("com.karthi.sungmobile.**", "androidx.**", "kotlin.**", "kotlinx.**")
             }
         }
     }

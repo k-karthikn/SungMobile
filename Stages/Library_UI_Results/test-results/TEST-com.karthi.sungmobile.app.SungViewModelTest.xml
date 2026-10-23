@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.app.SungViewModelTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-10-21T15:10:42.928Z" hostname="cachyos" time="0.089">
+  <properties/>
+  <testcase name="previewDebouncesWithoutHistoryAndOpeningCommitsOnce" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.074"/>
+  <testcase name="staleSearchCannotReplaceLatestResults" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.003"/>
+  <testcase name="openingCollectionRetainsSearchSnapshotAndCategory" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.001"/>
+  <testcase name="enteringSearchDoesNotDuplicateAnExplicitRequestAlreadyInProgress" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.002"/>
+  <testcase name="editImmediatelyInvalidatesSlowResultBeforeNewDebounce" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.002"/>
+  <testcase name="paginationFailurePreservesItemsAndRetryDeduplicates" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.002"/>
+  <testcase name="submitOverridesDebounceAndHiddenSearchCancelsPreview" classname="com.karthi.sungmobile.app.SungViewModelTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

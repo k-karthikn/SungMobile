@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.library.*
+import com.karthi.sungmobile.core.designsystem.component.SungConfirmDialog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.collectLatest
 
@@ -27,9 +28,7 @@ fun PlaylistNameDialog(title: String, initial: String = "", help: String = "", d
 
 @Composable
 fun ConfirmLibraryChange(title: String, body: String, dismiss: () -> Unit, confirm: () -> Unit) {
-    AlertDialog(onDismissRequest = dismiss, title = { Text(title) }, text = { Text(body) },
-        confirmButton = { TextButton({ confirm(); dismiss() }) { Text("Confirm") } },
-        dismissButton = { TextButton(dismiss) { Text("Cancel") } })
+    SungConfirmDialog(title, body, "Confirm", { confirm(); dismiss() }, dismiss)
 }
 
 /** Paged chooser observes edits while open and never loads an entire large library. */

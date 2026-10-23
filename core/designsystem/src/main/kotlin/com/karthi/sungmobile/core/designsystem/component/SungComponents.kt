@@ -3,6 +3,7 @@ package com.karthi.sungmobile.core.designsystem.component
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -24,9 +25,15 @@ fun SectionHeading(text: String, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SungLoading(label: String, modifier: Modifier = Modifier) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(SungSpacing.small)) {
-        if (LocalSungMotionEnabled.current) LoadingIndicator(Modifier.size(SungSpacing.touchTarget))
-        Text(label, style = MaterialTheme.typography.bodyMedium)
+fun SungLoading(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        if (LocalSungMotionEnabled.current) {
+            LoadingIndicator(
+                Modifier.size(SungSpacing.touchTarget)
+            )
+        }
     }
 }

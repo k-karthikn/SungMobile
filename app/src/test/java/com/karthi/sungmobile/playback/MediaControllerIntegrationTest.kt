@@ -9,6 +9,7 @@ import com.google.common.util.concurrent.SettableFuture
 import com.karthi.sungmobile.core.model.*
 import com.karthi.sungmobile.core.playback.*
 import com.karthi.sungmobile.core.playback.session.*
+import com.karthi.sungmobile.app.AppContainer
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import org.junit.Assert.*
@@ -33,7 +34,7 @@ class MediaControllerIntegrationTest {
         override fun stop() { state.value = EngineSnapshot() }
         override fun release() = Unit
     }
-    private val song = CatalogItem("a", CatalogKind.SONG, "Track", "Artist", "https://www.youtube.com/watch?v=a", durationMs = 100_000)
+    private val song = CatalogItem("a", CatalogKind.SONG, "Track", "Artist", "https://www.youtube.com/watch?v=dQw4w9WgXcQ", durationMs = 100_000)
     private val resolver = object : StreamResolver {
         override suspend fun resolve(track: CatalogItem) = ResolvedStream(track, "https://example.test/audio", null, emptyMap(), 128, null)
     }
@@ -43,10 +44,12 @@ class MediaControllerIntegrationTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
         val engine = Engine()
         val coordinator = PlaybackCoordinator(resolver, engine, scope)
+        val timer = SleepTimerController(coordinator, scope, android.os.SystemClock::elapsedRealtime)
+        val container = AppContainer(context)
         val bridge = SessionPlayer(coordinator, scope)
         val ready = SettableFuture.create<Unit>().apply { set(Unit) }
         val session = MediaSession.Builder(context, bridge)
-            .setCallback(PlaybackSessionCallback(context.applicationInfo.uid, ready, coordinator)).build()
+            .setCallback(PlaybackSessionCallback(context.applicationInfo.uid, ready, coordinator, timer, container, scope)).build()
         scope.launch { coordinator.state.map { it.sessionStatus() }.distinctUntilChanged().collect { session.setSessionExtras(it.toBundle()) } }
         val future = MediaController.Builder(context, session.token).buildAsync()
         try {
@@ -57,8 +60,19 @@ class MediaControllerIntegrationTest {
             await { controller.isPlaying && controller.mediaItemCount == 2 }
             assertEquals("Artist", controller.mediaMetadata.artist)
             assertTrue(controller.playbackSnapshot()!!.connected)
+            val beforeClock = controller.playbackSnapshot()!!
+            controller.seekTo(9_000)
+            await { engine.state.value.positionMs == 9_000L && bridge.currentPosition >= 9_000L }
+            // Remote position delivery is scheduled on Android's clock. Real Thread.sleep in
+            // await() does not advance Robolectric's virtual clock or deliver that heartbeat.
+            shadowOf(Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(3))
+            await { controller.currentPosition >= 9_000L }
+            val clock = controller.positionSnapshot(beforeClock)!!
+            assertSame(beforeClock.queue, clock.queue)
+            assertTrue(clock.engine.positionMs >= 9_000L)
             controller.removeMediaItem(0)
             await { controller.currentMediaItem?.mediaId == "second" && controller.playbackSnapshot()?.canUndo == true }
+            assertNull(controller.positionSnapshot(beforeClock))
             controller.sendCustomCommand(SessionCommand(PlaybackCommands.UNDO, Bundle.EMPTY), Bundle.EMPTY)
             await { controller.mediaItemCount == 2 && controller.playbackSnapshot()?.canUndo == false }
             assertEquals("second", controller.currentMediaItem?.mediaId)
@@ -66,6 +80,28 @@ class MediaControllerIntegrationTest {
             await { controller.playbackSnapshot()?.storageError == true }
             controller.pause(); await { !engine.state.value.playRequested }
             controller.seekTo(12_000); await { engine.state.value.positionMs == 12_000L }
+            controller.play(); await { engine.state.value.playing }
+            controller.sendCustomCommand(SessionCommand(PlaybackCommands.SPEED, Bundle.EMPTY), Bundle().apply {
+                putInt(PlaybackCommands.SPEED_TENTHS, 12)
+                putBoolean(PlaybackCommands.PRESERVE_PITCH, false)
+            })
+            await { controller.playbackSnapshot()?.speed == PlaybackSpeed(12, false) }
+            controller.sendCustomCommand(SessionCommand(PlaybackCommands.TIMER, Bundle.EMPTY), Bundle().apply {
+                putString(PlaybackCommands.TIMER_MODE, SleepMode.END_TRACK.name)
+            })
+            await { controller.playbackSnapshot()?.sleepTimer?.mode == SleepMode.END_TRACK }
+            val saved = kotlinx.coroutines.runBlocking {
+                container.convenience.save("Test session", QueueSnapshot(coordinator.state.value.queue, 12_000), PlaybackSpeed(12, false))
+            }
+            val restored = controller.sendCustomCommand(SessionCommand(PlaybackCommands.RESTORE_SESSION, Bundle.EMPTY), Bundle().apply {
+                putString(PlaybackCommands.SESSION_ID, saved.id)
+            })
+            await { restored.isDone }
+            assertEquals(SessionResult.RESULT_SUCCESS, restored.get().resultCode)
+            assertEquals(12_000L, coordinator.state.value.engine.positionMs)
+            await { controller.currentMediaItem?.mediaId == "second" }
+            assertFalse(engine.state.value.playing)
+            assertEquals("second", controller.currentMediaItem?.mediaId)
             controller.play(); await { engine.state.value.playing }
             MediaController.releaseFuture(future)
             shadowOf(Looper.getMainLooper()).idle()

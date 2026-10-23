@@ -7,6 +7,14 @@ import com.karthi.sungmobile.core.model.*
 import com.karthi.sungmobile.core.playback.*
 import com.karthi.sungmobile.core.playback.session.*
 
+/** Returns null during a timeline transition so the caller can refresh the complete state. */
+@androidx.annotation.OptIn(UnstableApi::class)
+internal fun MediaController.positionSnapshot(previous: PlaybackState): PlaybackState? {
+    if (currentMediaItem?.mediaId != previous.queue.currentId || mediaItemCount != previous.queue.entries.size) return null
+    return previous.copy(engine = previous.engine.copy(positionMs = currentPosition.coerceAtLeast(0),
+        durationMs = duration.coerceAtLeast(0)))
+}
+
 @androidx.annotation.OptIn(UnstableApi::class)
 internal fun MediaController.playbackSnapshot(): PlaybackState? {
     val player = this
@@ -15,8 +23,19 @@ internal fun MediaController.playbackSnapshot(): PlaybackState? {
     if (entries.isNotEmpty() && currentId == null) return null
     val extras = player.sessionExtras
     val repeat = when (player.repeatMode) { Player.REPEAT_MODE_ONE -> RepeatMode.ONE; Player.REPEAT_MODE_ALL -> RepeatMode.ALL; else -> RepeatMode.OFF }
-    val queue = QueueState(entries, currentId, repeat, player.shuffleModeEnabled)
+    val original = extras?.getStringArrayList(PlaybackCommands.ORIGINAL_ORDER)?.toList()
+        ?.takeIf { it.size == entries.size && it.toSet() == entries.map { row -> row.id }.toSet() }
+        ?: entries.map { it.id }
+    val queue = QueueState(entries, currentId, repeat, player.shuffleModeEnabled, original)
     return PlaybackState(track = queue.current?.track, queue = queue,
+        speed = PlaybackSpeed(extras?.getInt(PlaybackCommands.SPEED_TENTHS, 10)?.coerceIn(5, 20) ?: 10,
+            extras?.getBoolean(PlaybackCommands.PRESERVE_PITCH, true) ?: true),
+        sleepTimer = extras?.getString(PlaybackCommands.TIMER_MODE)?.let { name ->
+            SleepMode.entries.firstOrNull { it.name == name }?.let { mode ->
+                SleepTimerStatus(mode, extras.getLong(PlaybackCommands.TIMER_REMAINING),
+                    extras.getBoolean(PlaybackCommands.TIMER_FADE))
+            }
+        },
         resolving = extras?.getBoolean(PlaybackCommands.RESOLVING) == true,
         sourceError = extras?.getString(PlaybackCommands.SOURCE_ERROR)?.let { name -> SourceFailure.entries.find { it.name == name } },
         canUndo = extras?.getBoolean(PlaybackCommands.CAN_UNDO) == true,

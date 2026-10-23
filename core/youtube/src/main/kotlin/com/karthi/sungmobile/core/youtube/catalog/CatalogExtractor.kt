@@ -24,6 +24,15 @@ internal class CatalogExtractor {
     }
     fun nextPage(token: PageToken) = pages.next(token)
     fun clear() = pages.clear()
+    fun related(seed: CatalogItem, limit: Int): List<CatalogItem> {
+        val link = YouTubeLink.parse(seed.url) as? YouTubeLink.Song ?: return emptyList()
+        val info = StreamInfo.getInfo(service, link.url)
+        return info.relatedItems.orEmpty().mapNotNull { it.toCatalogItem(CatalogKind.SONG) }
+            .filter { it.kind == CatalogKind.SONG && it.id != seed.id &&
+                (it.durationMs ?: 0) in 60_000..900_000 &&
+                runCatching { YouTubeLink.parse(it.url) is YouTubeLink.Song }.getOrDefault(false) }
+            .distinctBy { it.id }.take(limit.coerceIn(0, 5))
+    }
     fun open(url: String): CatalogPage = when (val link = YouTubeLink.parse(url)) {
         is YouTubeLink.Song -> {
             val info = StreamInfo.getInfo(service, link.url)

@@ -1,0 +1,24 @@
+{
+  "version": "0.11.0-home-ui",
+  "versionCode": 17,
+  "applicationId": "com.karthi.sungmobile.stage0",
+  "appTests": {
+    "tests": 64,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 64
+  },
+  "lintErrors": 0,
+  "lintWarnings": 13,
+  "lintWarningTypes": [
+    "AndroidGradlePluginVersion",
+    "GradleDependency",
+    "NewerVersionAvailable"
+  ],
+  "apkSha256": "f13067c9642ce6d62d7cca28a60a1566fb781ac8860ec907d44ab2fdbc939c2d",
+  "certificateSha256": "137475c127f1805b413c4362ddd69573e41f70c3cde76fd38a1bf5ebabfbe850",
+  "phoneAcceptance": "Pending manual owner test",
+  "performance": "Reduced identified repeated work; no measured device frame-time claim",
+  "scope": "Full app test suite and lint; unchanged core module suites and live provider probes not rerun in this UI pass"
+}

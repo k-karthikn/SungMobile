@@ -6,12 +6,15 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.HttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.karthi.sungmobile.core.model.ResolvedStream
+import com.karthi.sungmobile.core.model.PlaybackSpeed
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +26,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @androidx.annotation.OptIn(UnstableApi::class)
-class ExoPlayerEngine(context: Context, scope: CoroutineScope) : PlayerEngine {
+class ExoPlayerEngine(private val context: Context, scope: CoroutineScope) : PlayerEngine {
     private val player = ExoPlayer.Builder(context.applicationContext).build().apply {
         setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA)
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true)
@@ -65,7 +68,8 @@ class ExoPlayerEngine(context: Context, scope: CoroutineScope) : PlayerEngine {
             .setDefaultRequestProperties(stream.headers)
         val item = MediaItem.Builder().setMediaId(stream.track.id).setUri(stream.url)
             .setMimeType(stream.mimeType).build()
-        player.setMediaSource(ProgressiveMediaSource.Factory(http).createMediaSource(item), positionMs)
+        val factory = DefaultDataSource.Factory(context, http)
+        player.setMediaSource(ProgressiveMediaSource.Factory(factory).createMediaSource(item), positionMs)
         player.prepare()
         publish()
     }
@@ -73,6 +77,11 @@ class ExoPlayerEngine(context: Context, scope: CoroutineScope) : PlayerEngine {
     override fun play() { player.play(); publish() }
     override fun pause() { player.pause(); publish() }
     override fun seekTo(positionMs: Long) { player.seekTo(positionMs); publish() }
+    override fun setSpeed(speed: PlaybackSpeed) {
+        player.playbackParameters = PlaybackParameters(speed.multiplier,
+            if (speed.preservePitch) 1f else speed.multiplier)
+    }
+    override fun setVolume(volume: Float) { player.volume = volume.coerceIn(0f, 1f) }
     override fun stop() {
         player.pause()
         player.stop()

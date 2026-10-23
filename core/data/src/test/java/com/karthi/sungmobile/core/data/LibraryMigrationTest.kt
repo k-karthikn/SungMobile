@@ -36,7 +36,7 @@ class LibraryMigrationTest {
                 arrayOf<Any>(id, index, 1-index)) }
             old.version = 1
         }
-        val db = Room.databaseBuilder(context, SungDatabase::class.java, name).addMigrations(LibraryMigration).build()
+        val db = DatabaseProvider.open(context, name)
         try {
             val queue = RoomQueueStore(db).read()
             assertEquals(listOf("b", "a"), queue.queue.entries.map { it.id })

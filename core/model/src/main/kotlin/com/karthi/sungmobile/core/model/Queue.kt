@@ -58,6 +58,23 @@ data class QueueState(
         return copy(entries = updated, shuffled = enabled)
     }
 
+    /** Reorder only upcoming occurrences; prefer a different recording and artist when possible. */
+    fun smartShuffle(random: Random = Random.Default): QueueState {
+        val fixed = entries.take(currentIndex + 1)
+        val remaining = entries.drop(currentIndex + 1).shuffled(random).toMutableList()
+        val result = fixed.toMutableList()
+        while (remaining.isNotEmpty()) {
+            val previous = result.lastOrNull()?.track
+            val best = remaining.indices.maxBy { index ->
+                val candidate = remaining[index].track
+                (if (candidate.id != previous?.id) 2 else 0) +
+                    (if (!candidate.subtitle.equals(previous?.subtitle, ignoreCase = true)) 1 else 0)
+            }
+            result += remaining.removeAt(best)
+        }
+        return copy(entries = result, shuffled = true)
+    }
+
     fun nextId(automatic: Boolean): String? = when {
         entries.isEmpty() -> null
         automatic && repeat == RepeatMode.ONE -> currentId

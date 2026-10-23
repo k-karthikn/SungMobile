@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.feature.library.AdvancedLibraryViewModelTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-21T14:41:28.557Z" hostname="cachyos" time="0.032">
+  <properties/>
+  <testcase name="hiddenVersionPreviewCannotReappearAfterALateRead" classname="com.karthi.sungmobile.feature.library.AdvancedLibraryViewModelTest" time="0.017"/>
+  <testcase name="confirmedRemovalStaysOnItsOriginalPlaylistAfterNavigation" classname="com.karthi.sungmobile.feature.library.AdvancedLibraryViewModelTest" time="0.007"/>
+  <testcase name="sameSizedHistoryRefreshRejectsAnOlderPaginationResult" classname="com.karthi.sungmobile.feature.library.AdvancedLibraryViewModelTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

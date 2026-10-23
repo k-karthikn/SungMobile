@@ -23,29 +23,36 @@ import com.karthi.sungmobile.feature.library.LibraryScreen
 import com.karthi.sungmobile.feature.player.*
 import com.karthi.sungmobile.feature.search.SearchScreen
 import com.karthi.sungmobile.feature.queue.QueueScreen
+import com.karthi.sungmobile.feature.lyrics.*
+import com.karthi.sungmobile.core.data.settings.LyricsSettings
 
-private enum class Destination(val label: Int, val icon: SungSymbol, val selectedIcon: SungSymbol) {
-    HOME(R.string.home, SungSymbol.HomeOutline, SungSymbol.Home),
-    SEARCH(R.string.search, SungSymbol.Search, SungSymbol.Search),
-    LIBRARY(R.string.library, SungSymbol.LibraryOutline, SungSymbol.Library),
-}
-private enum class Overlay { NONE, PLAYER, APPEARANCE, QUEUE, HISTORY, COLLECTION }
+private enum class Overlay { NONE, PLAYER, APPEARANCE, QUEUE, HISTORY, COLLECTION, LYRICS, SESSIONS }
 
 /** Navigation belongs to the UI. Playback is observed from the service across destination changes. */
 @Composable
 fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: CatalogActions,
     playerActions: PlayerActions, appearance: Appearance, onAppearance: (Appearance) -> Unit, settingsError: Boolean = false,
-    libraryContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
+    libraryContent: (@Composable (Modifier, () -> Unit, () -> Unit) -> Unit)? = null,
     historyContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
     privateMode: Boolean = false, historyError: Boolean = false,
     recentSearches: @Composable () -> Unit = {},
+    hasRecentSearches: Boolean = false,
     detailId: String? = null, closeDetail: () -> Unit = {},
     collectionContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
     homeContent: (@Composable (Modifier, () -> Unit, () -> Unit, () -> Unit, () -> Unit) -> Unit)? = null,
-    searchRequest: Int = 0) {
+    searchRequest: Int = 0,
+    lyricsState: LyricsUiState = LyricsUiState(), lyricsSettings: LyricsSettings = LyricsSettings(),
+    onLoadLyrics: () -> Unit = {}, onRetryLyrics: () -> Unit = {}, onLyricsSettings: (LyricsSettings) -> Unit = {},
+    onCancelLyrics: () -> Unit = {},
+    onLyricsOffset: (Int) -> Unit = {}, onClearLyricsCache: () -> Unit = {},
+    convenienceContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
+    playerMoreContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
+    sessionsContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
+    livePlayback: kotlinx.coroutines.flow.StateFlow<PlaybackState>? = null) {
     val screenState = rememberSaveableStateHolder()
     var destination by rememberSaveable { mutableStateOf(Destination.HOME) }
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
+    var sessionsFromPlayer by rememberSaveable { mutableStateOf(false) }
     DisposableEffect(detailId) {
         val key = detailId?.let { "collection:$it" }
         onDispose { key?.let(screenState::removeState) }
@@ -58,10 +65,17 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
         else if (overlay == Overlay.COLLECTION) overlay = Overlay.NONE
     }
     LaunchedEffect(searchRequest) { if (searchRequest > 0) { destination = Destination.SEARCH; overlay = Overlay.NONE } }
-    LaunchedEffect(playback.track, overlay) { if (playback.track == null && overlay == Overlay.PLAYER) overlay = Overlay.NONE }
+    LaunchedEffect(playback.track, overlay) {
+        if (playback.track == null && (overlay == Overlay.PLAYER || overlay == Overlay.LYRICS)) overlay = Overlay.NONE
+    }
+    LaunchedEffect(overlay, playback.track?.id, lyricsSettings.lrclibEnabled, privateMode) {
+        if (overlay == Overlay.LYRICS) onLoadLyrics() else onCancelLyrics()
+    }
     val back = {
         when {
             overlay == Overlay.QUEUE -> overlay = Overlay.PLAYER
+            overlay == Overlay.LYRICS -> overlay = Overlay.PLAYER
+            overlay == Overlay.SESSIONS -> overlay = if (sessionsFromPlayer && playback.track != null) Overlay.PLAYER else Overlay.NONE
             overlay == Overlay.COLLECTION -> { closeDetail(); overlay = Overlay.NONE }
             overlay == Overlay.PLAYER && detailId != null -> overlay = Overlay.COLLECTION
             overlay != Overlay.NONE -> overlay = Overlay.NONE
@@ -85,22 +99,14 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
             }
             Scaffold(Modifier.weight(1f).imePadding(), contentWindowInsets = WindowInsets.safeDrawing,
                 bottomBar = {
-                    if (overlay == Overlay.NONE && !keyboardVisible) {
+                    if ((overlay == Overlay.NONE || (overlay == Overlay.COLLECTION && playback.track != null)) && !keyboardVisible) {
                         Column(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars)
                             .padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            MiniPlayer(playback, { overlay = Overlay.PLAYER }, playerActions.toggle, Modifier.widthIn(max = SungSpacing.contentMaxWidth))
-                            if (!wide) {
-                                Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
-                                    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer, windowInsets = WindowInsets(0)) {
-                                        Destination.entries.forEach { target ->
-                                            NavigationBarItem(destination == target, { destination = target },
-                                                icon = { SungIcon(if (destination == target) target.selectedIcon else target.icon) },
-                                                label = { Text(stringResource(target.label)) },
-                                                modifier = Modifier.testTag("nav_${target.name.lowercase()}"))
-                                        }
-                                    }
-                                }
+                            MiniPlayer(playback, { overlay = Overlay.PLAYER }, playerActions.toggle,
+                                Modifier.widthIn(max = SungSpacing.contentMaxWidth), livePlayback)
+                            if (!wide && overlay == Overlay.NONE) {
+                                SungNavigationBar(destination) { destination = it }
                             }
                         }
                     }
@@ -108,6 +114,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                 Box(Modifier.fillMaxSize().padding(insets), contentAlignment = Alignment.TopCenter) {
                     val content = Modifier.widthIn(max = SungSpacing.contentMaxWidth).fillMaxSize()
                     Column(content) {
+                        com.karthi.sungmobile.feature.updates.UpdateReadyBanner { overlay = Overlay.APPEARANCE }
                         if (!playback.connected) {
                             Row(Modifier.padding(horizontal = 16.dp)) {
                                 Text(stringResource(R.string.player_connecting), Modifier.weight(1f))
@@ -120,21 +127,40 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                             Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
                         when (overlay) {
                             Overlay.COLLECTION -> screenState.SaveableStateProvider("collection:$detailId") { collectionContent?.invoke(Modifier.weight(1f)) { overlay = Overlay.PLAYER } }
-                            Overlay.PLAYER -> PlayerScreen(playback, playerActions, back, Modifier.weight(1f), { overlay = Overlay.QUEUE })
+                            Overlay.PLAYER -> LivePlaybackContent(playback, livePlayback) { live ->
+                                PlayerScreen(live, playerActions, back, Modifier.weight(1f),
+                                    { overlay = Overlay.QUEUE }, { overlay = Overlay.LYRICS },
+                                    moreContent = { playerMoreContent(live) { sessionsFromPlayer = true; overlay = Overlay.SESSIONS } }) {
+                                    convenienceContent(live) { sessionsFromPlayer = true; overlay = Overlay.SESSIONS }
+                                }
+                            }
+                            Overlay.LYRICS -> LivePlaybackContent(playback, livePlayback) { live ->
+                                LyricsScreen(live, lyricsState, lyricsSettings, back, onRetryLyrics,
+                                    playerActions.seek, onLyricsOffset, Modifier.weight(1f))
+                            }
                             Overlay.QUEUE -> QueueScreen(playback, playerActions, back, Modifier.weight(1f))
+                            Overlay.SESSIONS -> LivePlaybackContent(playback, livePlayback) { live -> sessionsContent(live, back) }
                             Overlay.HISTORY -> historyContent?.invoke(content, back)
-                            Overlay.APPEARANCE -> AppearanceScreen(appearance, onAppearance, back, content)
+                            Overlay.APPEARANCE -> AppearanceScreen(appearance, onAppearance, back, content,
+                                lyricsSettings, onLyricsSettings, lyricsState.cacheBytes, onClearLyricsCache)
                             Overlay.NONE -> when (destination) {
-                                Destination.HOME -> if (homeContent != null) homeContent(Modifier.weight(1f),
+                                Destination.HOME -> screenState.SaveableStateProvider("home") { if (homeContent != null) homeContent(Modifier.weight(1f),
                                     { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { overlay = Overlay.APPEARANCE }, { destination = Destination.LIBRARY })
                                     else HomeScreen(playback.track, catalog.page?.items.orEmpty(), catalog.inCollection,
                                     { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { item ->
                                         catalogActions.open(item)
                                         if (item.kind != CatalogKind.SONG) destination = Destination.SEARCH
-                                    }, { overlay = Overlay.APPEARANCE }, content)
-                                Destination.SEARCH -> screenState.SaveableStateProvider("search") { SearchScreen(catalog, playback.track?.id, catalogActions, Modifier.weight(1f), playback.connected, recentSearches) }
-                                Destination.LIBRARY -> if (libraryContent != null) libraryContent(Modifier.weight(1f)) { overlay = Overlay.HISTORY }
+                                    }, { overlay = Overlay.APPEARANCE }, content) }
+                                Destination.SEARCH -> screenState.SaveableStateProvider("search") {
+                                    SearchScreen(catalog, playback.track?.id, catalogActions, Modifier.weight(1f),
+                                        playback.connected, recentSearches, hasRecentSearches)
+                                }
+                                Destination.LIBRARY -> Column(Modifier.weight(1f)) {
+                                    if (libraryContent == null) TextButton({ sessionsFromPlayer = false; overlay = Overlay.SESSIONS },
+                                        Modifier.padding(horizontal = 16.dp)) { Text("Saved sessions") }
+                                    if (libraryContent != null) libraryContent(Modifier.weight(1f), { overlay = Overlay.HISTORY }, { sessionsFromPlayer = false; overlay = Overlay.SESSIONS })
                                     else Text("Your local library is ready for liked songs and playlists.", Modifier.padding(24.dp))
+                                }
                             }
                         }
                     }

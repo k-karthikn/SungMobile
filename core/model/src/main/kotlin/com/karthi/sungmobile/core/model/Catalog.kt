@@ -40,6 +40,11 @@ interface StreamResolver {
     suspend fun resolve(track: CatalogItem): ResolvedStream
 }
 
+/** Provider-supplied recommendations for one seed; never synthesized from search or history. */
+interface RelatedSource {
+    suspend fun related(seed: CatalogItem, limit: Int): List<CatalogItem>
+}
+
 /** Signed URLs are transient: never persist or log this object. */
 class ResolvedStream(
     val track: CatalogItem,

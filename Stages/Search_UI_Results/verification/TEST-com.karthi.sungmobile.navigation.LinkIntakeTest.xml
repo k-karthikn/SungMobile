@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.navigation.LinkIntakeTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-22T15:16:12.763Z" hostname="cachyos" time="0.104">
+  <properties/>
+  <testcase name="unsupportedIntentIsIgnoredAndInvalidTextHasRecoverableError" classname="com.karthi.sungmobile.navigation.LinkIntakeTest" time="0.056"/>
+  <testcase name="shareViewAndRestorationHaveOnePendingPreviewAndDismissConsumesIt" classname="com.karthi.sungmobile.navigation.LinkIntakeTest" time="0.044"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

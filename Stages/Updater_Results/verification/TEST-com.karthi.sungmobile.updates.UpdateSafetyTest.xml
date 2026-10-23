@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.updates.UpdateSafetyTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-22T15:08:03.961Z" hostname="cachyos" time="3.787">
+  <properties/>
+  <testcase name="metadataRequiresChecksumAndValidVersion" classname="com.karthi.sungmobile.updates.UpdateSafetyTest" time="3.293"/>
+  <testcase name="identityRejectsWrongKeyPackageCodeAndAndroidVersion" classname="com.karthi.sungmobile.updates.UpdateSafetyTest" time="0.065"/>
+  <testcase name="corruptDownloadRejectedBeforeArchiveParsing" classname="com.karthi.sungmobile.updates.UpdateSafetyTest" time="0.075"/>
+  <testcase name="assetsCannotEscapeRepository" classname="com.karthi.sungmobile.updates.UpdateSafetyTest" time="0.027"/>
+  <testcase name="enabledByDefaultTogglePersistsAndCancelsScheduledJobs" classname="com.karthi.sungmobile.updates.UpdateSafetyTest" time="0.119"/>
+  <testcase name="codesNotNamesDecideUpdates" classname="com.karthi.sungmobile.updates.UpdateSafetyTest" time="0.042"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

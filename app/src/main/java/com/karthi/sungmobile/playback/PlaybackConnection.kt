@@ -27,7 +27,7 @@ class PlaybackConnection(private val context: Context, private val scope: Corout
     }
     private val ticker = scope.launch {
         state.map { it.engine.playing }.distinctUntilChanged().collectLatest { playing ->
-            while (playing && isActive) { delay(250); publish() }
+            while (playing && isActive) { delay(250); publishPosition() }
         }
     }
     init { connect() }
@@ -55,6 +55,14 @@ class PlaybackConnection(private val context: Context, private val scope: Corout
     private fun publish() {
         val player = controller ?: return
         player.playbackSnapshot()?.let { mutableState.value = it }
+    }
+
+    private fun publishPosition() {
+        val player = controller ?: return
+        // Timeline/metadata and session extras arrive through listeners. The clock tick must
+        // not reconstruct every queue entry (up to 500 songs) on the main thread.
+        val position = player.positionSnapshot(mutableState.value)
+        if (position != null) mutableState.value = position else publish()
     }
 
     override fun select(tracks: List<CatalogItem>, index: Int) {
@@ -115,6 +123,28 @@ class PlaybackConnection(private val context: Context, private val scope: Corout
     override fun clearUpcoming() { custom(PlaybackCommands.CLEAR_UPCOMING) }
     override fun undo() { custom(PlaybackCommands.UNDO) }
     private fun custom(action: String) { controller?.sendCustomCommand(SessionCommand(action, Bundle.EMPTY), Bundle.EMPTY) }
+    fun setSpeed(speed: PlaybackSpeed) { custom(PlaybackCommands.SPEED, Bundle().apply {
+        putInt(PlaybackCommands.SPEED_TENTHS, speed.tenths)
+        putBoolean(PlaybackCommands.PRESERVE_PITCH, speed.preservePitch)
+    }) }
+    fun armTimer(mode: SleepMode, minutes: Int = 0, fade: Boolean = false) { custom(PlaybackCommands.TIMER, Bundle().apply {
+        putString(PlaybackCommands.TIMER_MODE, mode.name)
+        putInt(PlaybackCommands.TIMER_MINUTES, minutes)
+        putBoolean(PlaybackCommands.TIMER_FADE, fade)
+    }) }
+    fun cancelTimer() { custom(PlaybackCommands.CANCEL_TIMER) }
+    fun restoreSession(id: String, completed: (Boolean) -> Unit) {
+        val player = controller
+        if (player == null) { completed(false); return }
+        val result = player.sendCustomCommand(SessionCommand(PlaybackCommands.RESTORE_SESSION, Bundle.EMPTY),
+            Bundle().apply { putString(PlaybackCommands.SESSION_ID, id) })
+        result.addListener({ completed(runCatching {
+            result.get().resultCode == SessionResult.RESULT_SUCCESS
+        }.getOrDefault(false)) }, ContextCompat.getMainExecutor(context))
+    }
+    private fun custom(action: String, args: Bundle) {
+        controller?.sendCustomCommand(SessionCommand(action, Bundle.EMPTY), args)
+    }
     override fun setRepeat(mode: RepeatMode) { controller?.repeatMode = when (mode) { RepeatMode.ONE -> Player.REPEAT_MODE_ONE; RepeatMode.ALL -> Player.REPEAT_MODE_ALL; else -> Player.REPEAT_MODE_OFF } }
     override fun setShuffle(enabled: Boolean) { controller?.shuffleModeEnabled = enabled }
     fun close() {

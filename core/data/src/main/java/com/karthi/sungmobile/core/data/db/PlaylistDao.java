@@ -15,6 +15,7 @@ public interface PlaylistDao {
     @Query("DELETE FROM local_playlists WHERE id = :id") void delete(String id);
     @Query("SELECT * FROM playlist_entries WHERE playlistId = :id ORDER BY position, id") List<PlaylistEntryEntity> entries(String id);
     @Insert void insertEntries(List<PlaylistEntryEntity> entries);
+    @Query("DELETE FROM playlist_entries WHERE playlistId = :id") void clearEntries(String id);
     @Query("DELETE FROM playlist_entries WHERE playlistId = :id AND id IN (:entryIds)") void remove(String id, List<String> entryIds);
     @Query("UPDATE playlist_entries SET position = :position WHERE id = :entryId AND playlistId = :id") void position(String id, String entryId, int position);
 }

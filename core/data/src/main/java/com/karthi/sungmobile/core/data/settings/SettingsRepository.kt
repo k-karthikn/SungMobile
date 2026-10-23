@@ -5,11 +5,19 @@ import androidx.datastore.preferences.SharedPreferencesMigration
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
+import com.karthi.sungmobile.core.model.PlaybackSpeed
 
 private val Context.sungSettings by preferencesDataStore("sung_settings",
     produceMigrations = { context -> listOf(SharedPreferencesMigration(context, "appearance")) })
 
 data class AppearanceSettings(val theme: String = "SYSTEM", val colors: String = "BLUE", val reduceMotion: Boolean = false)
+data class LyricsSettings(val lrclibEnabled: Boolean = false, val textSizeSp: Int = 24,
+    val cacheEnabled: Boolean = true)
+data class AdvancedPlaybackSettings(val smartShuffle: Boolean = false, val relatedAutoplay: Boolean = false,
+    val trimsDb: Map<String, Int> = emptyMap()) {
+    fun trimFor(videoId: String?) = videoId?.let { trimsDb[it] } ?: 0
+}
 
 /** One DataStore per application; imports the Stage 1 preferences on first read. */
 class SettingsRepository(context: Context) {
@@ -17,9 +25,71 @@ class SettingsRepository(context: Context) {
     private val theme = stringPreferencesKey("theme")
     private val colors = stringPreferencesKey("colors")
     private val motion = booleanPreferencesKey("reduce_motion")
+    private val fallback = booleanPreferencesKey("lyrics_lrclib")
+    private val lyricsSize = intPreferencesKey("lyrics_text_size")
+    private val lyricsCache = booleanPreferencesKey("lyrics_cache_enabled")
+    private val offsets = stringPreferencesKey("lyrics_offsets")
+    private val speedTenths = intPreferencesKey("playback_speed_tenths")
+    private val preservePitch = booleanPreferencesKey("playback_preserve_pitch")
+    private val smartShuffle = booleanPreferencesKey("playback_smart_shuffle")
+    private val relatedAutoplay = booleanPreferencesKey("playback_related_autoplay")
+    private val trackTrims = stringPreferencesKey("playback_track_trims")
     val appearance = store.data.map { AppearanceSettings(it[theme] ?: "SYSTEM", it[colors] ?: "BLUE", it[motion] ?: false) }
-
+    val lyrics = store.data.map { LyricsSettings(it[fallback] ?: false, (it[lyricsSize] ?: 24).coerceIn(18, 34),
+        it[lyricsCache] ?: true) }
+    val playbackSpeed = store.data.map { PlaybackSpeed((it[speedTenths] ?: 10).coerceIn(5, 20),
+        it[preservePitch] ?: true) }
+    val advancedPlayback = store.data.map { preferences ->
+        AdvancedPlaybackSettings(preferences[smartShuffle] ?: false, preferences[relatedAutoplay] ?: false,
+            parseTrims(preferences[trackTrims].orEmpty()))
+    }
     suspend fun setAppearance(value: AppearanceSettings) {
         store.edit { it[theme] = value.theme; it[colors] = value.colors; it[motion] = value.reduceMotion }
     }
+
+    suspend fun setLyrics(value: LyricsSettings) {
+        store.edit { it[fallback] = value.lrclibEnabled; it[lyricsSize] = value.textSizeSp.coerceIn(18, 34)
+            it[lyricsCache] = value.cacheEnabled }
+    }
+
+    suspend fun setPlaybackSpeed(value: PlaybackSpeed) {
+        store.edit { it[speedTenths] = value.tenths; it[preservePitch] = value.preservePitch }
+    }
+
+    suspend fun setSmartShuffle(enabled: Boolean) { store.edit { it[smartShuffle] = enabled } }
+    suspend fun setRelatedAutoplay(enabled: Boolean) { store.edit { it[relatedAutoplay] = enabled } }
+
+    suspend fun setTrackTrim(videoId: String, db: Int) {
+        if (!VIDEO_ID.matches(videoId)) return
+        store.edit { preferences ->
+            val trims = parseTrims(preferences[trackTrims].orEmpty()).toMutableMap()
+            trims.remove(videoId)
+            if (db != 0) trims[videoId] = db.coerceIn(-12, 0)
+            preferences[trackTrims] = trims.entries.toList().takeLast(500).joinToString("\n") { "${it.key}:${it.value}" }
+        }
+    }
+
+    suspend fun offset(videoId: String): Int {
+        if (!VIDEO_ID.matches(videoId)) return 0
+        val raw = store.data.map { it[offsets].orEmpty() }.first()
+        return raw.lineSequence().firstOrNull { it.startsWith("$videoId:") }
+            ?.substringAfter(':')?.toIntOrNull()?.coerceIn(-10_000, 10_000) ?: 0
+    }
+
+    suspend fun setOffset(videoId: String, milliseconds: Int) {
+        if (!VIDEO_ID.matches(videoId)) return
+        store.edit { prefs ->
+            val entries = prefs[offsets].orEmpty().lineSequence().filter { it.isNotBlank() && !it.startsWith("$videoId:") }
+                .take(499).toList()
+            prefs[offsets] = (listOf("$videoId:${milliseconds.coerceIn(-10_000, 10_000)}") + entries).joinToString("\n")
+        }
+    }
+
+    private fun parseTrims(raw: String): Map<String, Int> = raw.lineSequence().mapNotNull { line ->
+        val id = line.substringBefore(':')
+        val db = line.substringAfter(':', "").toIntOrNull()
+        if (VIDEO_ID.matches(id) && db != null && db in -12..0) id to db else null
+    }.take(500).toMap()
+
+    private companion object { val VIDEO_ID = Regex("[A-Za-z0-9_-]{11}") }
 }

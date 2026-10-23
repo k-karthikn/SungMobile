@@ -34,6 +34,17 @@ class QueueTest {
         assertEquals(entries.toSet(), shuffled.entries.toSet())
         assertEquals(queue, shuffled.shuffle(false))
     }
+    @Test fun smartShuffleSeparatesDuplicatesWithoutLosingOccurrences() {
+        val candidates = listOf(entry("first", "song1"), entry("copy", "song1"),
+            entry("other", "song2"), entry("third", "song3"))
+        val source = QueueState(candidates, "first")
+        val result = source.smartShuffle(Random(2))
+        assertEquals("first", result.currentId)
+        assertEquals(candidates.map { it.id }.toSet(), result.entries.map { it.id }.toSet())
+        assertNotEquals("copy", result.entries[1].id)
+        assertEquals(source, result.shuffle(false))
+        assertEquals(result.entries, source.smartShuffle(Random(2)).entries)
+    }
     @Test fun additionsAndRemovalsWhileShuffledRemainRestorable() {
         val edited = queue.shuffle(true, Random(3)).insert(2, listOf(entry("x"))).remove(setOf("d"))
         val restored = edited.shuffle(false)

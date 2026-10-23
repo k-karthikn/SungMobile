@@ -8,7 +8,7 @@ import com.karthi.sungmobile.core.model.library.libraryKeyOrNull
 /** Shared entry points, supplied once by the application host. No repository lives in a row. */
 data class LibraryUi(val liked: Set<String> = emptySet(), val toggle: (CatalogItem) -> Unit = {},
     val add: (List<CatalogItem>) -> Unit = {}, val saveQueue: () -> Unit = {})
-val LocalLibraryUi = staticCompositionLocalOf { LibraryUi() }
+val LocalLibraryUi = compositionLocalOf { LibraryUi() }
 
 @Composable
 fun LibraryMenuItems(track: CatalogItem, dismiss: () -> Unit) {

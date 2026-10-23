@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.feature.home.HomeUiTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-10-21T15:10:43.067Z" hostname="cachyos" time="2.283">
+  <properties/>
+  <testcase name="reducedMotion" classname="com.karthi.sungmobile.feature.home.HomeUiTest" time="0.329"/>
+  <testcase name="clockUpdatesStayOutOfChromeButPlayerReceivesLiveSeekAndTimer" classname="com.karthi.sungmobile.feature.home.HomeUiTest" time="0.132"/>
+  <testcase name="narrowHome" classname="com.karthi.sungmobile.feature.home.HomeUiTest" time="0.157"/>
+  <testcase name="privateModeRemovesRecentAndHomeScrollSurvivesNavigation" classname="com.karthi.sungmobile.feature.home.HomeUiTest" time="0.238"/>
+  <testcase name="expandedHome" classname="com.karthi.sungmobile.feature.home.HomeUiTest" time="0.276"/>
+  <testcase name="lightHome" classname="com.karthi.sungmobile.feature.home.HomeUiTest" time="0.187"/>
+  <testcase name="largeText" classname="com.karthi.sungmobile.feature.home.HomeUiTest" time="0.433"/>
+  <testcase name="heartAndPlusDoNotStartPlaybackAndMixActionsKeepTheirTargets" classname="com.karthi.sungmobile.feature.home.HomeUiTest" time="0.187"/>
+  <testcase name="emptyHomeKeepsSearchAndAppearanceReachable" classname="com.karthi.sungmobile.feature.home.HomeUiTest" time="0.144"/>
+  <testcase name="darkHome" classname="com.karthi.sungmobile.feature.home.HomeUiTest" time="0.193"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

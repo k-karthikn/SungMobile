@@ -24,6 +24,7 @@ fun CollectionOperationDialog(state: CollectionOperation?, actions: CollectionAc
                 TextButton(actions::retry) { Text("Retry remaining pages") }
         }
     }, confirmButton = {
-        if (!state.loading && state.message == null && state.count > 0) TextButton(actions::commit) { Text("Use ${state.count} loaded entries") }
+        if (!state.loading && state.message == null && state.count > 0) TextButton(actions::commit) {
+            Text("Use ${state.count} loaded entries") }
     }, dismissButton = { TextButton(actions::cancel) { Text("Cancel") } })
 }

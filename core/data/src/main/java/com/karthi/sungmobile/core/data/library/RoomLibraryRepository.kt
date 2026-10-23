@@ -9,14 +9,21 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 
 class RoomLibraryRepository(private val db: SungDatabase, private val now: () -> Long = System::currentTimeMillis) : LibraryRepository {
-    private val writer = PlaylistWriter(db, now)
-    override val changes = db.changes("library_tracks", "library_likes", "local_playlists", "playlist_entries", "listening_events")
+    private val revisions = PlaylistRevisionStore(db, now)
+    private val writer = PlaylistWriter(db, now, revisions)
+    override val changes = db.changes("library_tracks", "library_likes", "local_playlists", "playlist_entries", "listening_events", "history_policy")
     override fun likedKeys(): Flow<Set<String>> = db.changes("library_likes")
         .map { withContext(Dispatchers.IO) { db.libraryDao().likedKeys().toSet() } }.distinctUntilChanged()
     override suspend fun songs(collection: LibraryCollection, filter: String, sort: LibrarySort, limit: Int, offset: Int) =
-        withContext(Dispatchers.IO) { db.libraryDao().songs(songQuery(collection, filter, sort, limit, offset)).map { it.toSong() } }
+        db.transaction {
+            if (collection == LibraryCollection.Recent && db.historyDao().policy()?.privateMode == true) emptyList()
+            else db.libraryDao().songs(songQuery(collection, filter, sort, limit, offset)).map { it.toSong() }
+        }
     override suspend fun snapshot(collection: LibraryCollection): List<CatalogItem> =
-        db.transaction { db.libraryDao().songs(songQuery(collection, "", LibrarySort.DEFAULT, Int.MAX_VALUE, 0)).map { it.toTrack() } }
+        db.transaction {
+            if (collection == LibraryCollection.Recent && db.historyDao().policy()?.privateMode == true) emptyList()
+            else db.libraryDao().songs(songQuery(collection, "", LibrarySort.DEFAULT, Int.MAX_VALUE, 0)).map { it.toTrack() }
+        }
     override suspend fun setLiked(tracks: List<CatalogItem>, liked: Boolean) = db.transaction {
         tracks.forEach { track ->
             val key = db.libraryDao().saveMetadata(track)
@@ -33,14 +40,26 @@ class RoomLibraryRepository(private val db: SungDatabase, private val now: () ->
         db.playlistDao().create(PlaylistEntity().apply {
             this.id = id; this.name = validatedPlaylistName(name); createdAt = now(); updatedAt = createdAt
         })
-        writer.add(id, tracks, allowDuplicates)
+        writer.add(id, tracks, allowDuplicates, captureBefore = false)
         id
     }
-    override suspend fun rename(id: String, name: String) { db.transaction { check(db.playlistDao().rename(id, validatedPlaylistName(name), now()) == 1) } }
-    override suspend fun deletePlaylist(id: String) = db.transaction { db.playlistDao().delete(id) }
+    override suspend fun rename(id: String, name: String) { db.transaction {
+        val valid = validatedPlaylistName(name)
+        val previous = checkNotNull(db.playlistDao().playlist(id))
+        if (previous.name != valid) {
+            revisions.capture(id)
+            check(db.playlistDao().rename(id, valid, now()) == 1)
+        }
+    } }
+    override suspend fun deletePlaylist(id: String) = db.transaction {
+        db.advancedLibraryDao().deleteRevisions(id)
+        db.playlistDao().delete(id)
+    }
     override suspend fun pin(id: String, pinned: Boolean) = db.transaction { db.playlistDao().pin(id, pinned) }
     override suspend fun add(id: String, tracks: List<CatalogItem>, allowDuplicates: Boolean) = db.transaction { writer.add(id, tracks, allowDuplicates) }
     override suspend fun removeEntries(id: String, entryIds: Set<String>) = db.transaction {
+        if (db.playlistDao().entries(id).none { it.id in entryIds }) return@transaction
+        revisions.capture(id)
         // Chunk to respect SQLite's bind-variable limit, retaining one transaction for the whole edit.
         entryIds.toList().chunked(500).forEach { db.playlistDao().remove(id, it) }
         writer.normalize(id, db.playlistDao().entries(id))
@@ -48,7 +67,8 @@ class RoomLibraryRepository(private val db: SungDatabase, private val now: () ->
     override suspend fun moveEntry(id: String, entryId: String, offset: Int) = db.transaction {
         val entries = db.playlistDao().entries(id).toMutableList()
         val from = entries.indexOfFirst { it.id == entryId }
-        if (from >= 0) {
+        if (from >= 0 && (from + offset).coerceIn(0, entries.lastIndex) != from) {
+            revisions.capture(id)
             val to = (from + offset).coerceIn(0, entries.lastIndex)
             entries.add(to, entries.removeAt(from))
             writer.normalize(id, entries)

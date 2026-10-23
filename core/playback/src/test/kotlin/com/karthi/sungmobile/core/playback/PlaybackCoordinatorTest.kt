@@ -115,6 +115,107 @@ class PlaybackCoordinatorTest {
         assertEquals(1, resolver.requests.size)
     }
 
+    @Test fun naturalEndUsesPreparedSuccessorWithoutSecondResolution() = runTest {
+        val resolver = DeferredResolver()
+        val engine = FakeEngine()
+        val player = PlaybackCoordinator(resolver, engine, backgroundScope)
+        player.select(listOf(track("one"), track("two")), 0); runCurrent()
+        resolver.requests[0].complete(stream("one")); runCurrent()
+        engine.state.value = engine.state.value.copy(positionMs = 60_000); runCurrent()
+        assertEquals(2, resolver.requests.size)
+        resolver.requests[1].complete(stream("two")); runCurrent()
+        engine.state.value = engine.state.value.copy(ended = true, playing = false, positionMs = 100_000); runCurrent()
+        assertEquals(listOf("one", "two"), engine.loaded)
+        assertEquals(2, resolver.requests.size)
+    }
+
+    @Test fun queueEditDiscardsPreparedSuccessor() = runTest {
+        val resolver = DeferredResolver()
+        val engine = FakeEngine()
+        val player = PlaybackCoordinator(resolver, engine, backgroundScope)
+        player.select(listOf(track("one"), track("two"), track("three")), 0); runCurrent()
+        resolver.requests[0].complete(stream("one")); runCurrent()
+        engine.state.value = engine.state.value.copy(positionMs = 60_000); runCurrent()
+        resolver.requests[1].complete(stream("two")); runCurrent()
+        player.remove(player.state.value.queue.entries[1].id); runCurrent()
+        engine.state.value = engine.state.value.copy(ended = true, playing = false, positionMs = 100_000); runCurrent()
+        assertEquals("three", player.state.value.track?.id)
+        assertEquals(3, resolver.requests.size)
+        resolver.requests[2].complete(stream("three")); runCurrent()
+        assertEquals(listOf("one", "three"), engine.loaded)
+    }
+
+    @Test fun trimAndSleepFadeShareOneGain() = runTest {
+        val engine = FakeEngine()
+        val player = PlaybackCoordinator(DeferredResolver(), engine, backgroundScope)
+        player.setTrimDb(-6)
+        player.setFadeVolume(.5f)
+        assertEquals(.25f, engine.gain, .01f)
+        player.setFadeVolume(1f)
+        assertEquals(.5f, engine.gain, .01f)
+    }
+
+    @Test fun savedTrimIsAppliedBeforeEachTrackLoads() = runTest {
+        val resolver = DeferredResolver()
+        val engine = FakeEngine()
+        val player = PlaybackCoordinator(resolver, engine, backgroundScope)
+        val first = CatalogItem("first", CatalogKind.SONG, "First", "Artist",
+            "https://www.youtube.com/watch?v=AAAAAAAAAAA")
+        val second = CatalogItem("second", CatalogKind.SONG, "Second", "Artist",
+            "https://www.youtube.com/watch?v=BBBBBBBBBBB")
+        player.setTrackTrims(mapOf("AAAAAAAAAAA" to -6, "BBBBBBBBBBB" to -12))
+        player.select(listOf(first, second), 0); runCurrent()
+        resolver.requests[0].complete(ResolvedStream(first, "https://example.test/a", null, emptyMap(), 128, null))
+        runCurrent()
+        player.next(); runCurrent()
+        resolver.requests[1].complete(ResolvedStream(second, "https://example.test/b", null, emptyMap(), 128, null))
+        runCurrent()
+        assertEquals(.5f, engine.gainAtLoad[0], .01f)
+        assertEquals(.25f, engine.gainAtLoad[1], .01f)
+    }
+
+    @Test fun relatedAutoplayAddsOnlyNewSongsAtNaturalQueueEnd() = runTest {
+        val resolver = DeferredResolver()
+        val engine = FakeEngine()
+        val related = object : RelatedSource {
+            var requests = 0
+            override suspend fun related(seed: CatalogItem, limit: Int): List<CatalogItem> {
+                requests++
+                return listOf(track("one"), track("two"), track("two"), track("three"))
+            }
+        }
+        val player = PlaybackCoordinator(resolver, engine, backgroundScope, relatedSource = related)
+        player.setRelatedAutoplayEnabled(true)
+        player.select(track("one")); runCurrent()
+        resolver.requests[0].complete(stream("one")); runCurrent()
+        engine.state.value = engine.state.value.copy(ended = true, playing = false); runCurrent()
+        assertEquals(1, related.requests)
+        assertEquals(listOf("one", "two", "three"), player.state.value.queue.entries.map { it.track.id })
+        assertEquals("two", player.state.value.track?.id)
+        resolver.requests[1].complete(stream("two")); runCurrent()
+        assertEquals(listOf("one", "two"), engine.loaded)
+    }
+
+    @Test fun endOfQueueTimerWinsOverRelatedAutoplay() = runTest {
+        var requests = 0
+        val related = object : RelatedSource {
+            override suspend fun related(seed: CatalogItem, limit: Int): List<CatalogItem> {
+                requests++
+                return listOf(track("two"))
+            }
+        }
+        val resolver = DeferredResolver()
+        val engine = FakeEngine()
+        val player = PlaybackCoordinator(resolver, engine, backgroundScope, relatedSource = related)
+        player.setRelatedAutoplayEnabled(true)
+        player.onNaturalEnd = { true }
+        player.select(track("one")); runCurrent()
+        resolver.requests[0].complete(stream("one")); runCurrent()
+        engine.state.value = engine.state.value.copy(ended = true, playing = false); runCurrent()
+        assertEquals(0, requests)
+        assertFalse(player.state.value.engine.playRequested)
+    }
+
     private class DeferredResolver : StreamResolver {
         val requests = mutableListOf<CompletableDeferred<ResolvedStream>>()
         override suspend fun resolve(track: CatalogItem) = CompletableDeferred<ResolvedStream>()
@@ -124,14 +225,18 @@ class PlaybackCoordinatorTest {
     private class FakeEngine : PlayerEngine {
         override val state = MutableStateFlow(EngineSnapshot())
         val loaded = mutableListOf<String>()
+        val gainAtLoad = mutableListOf<Float>()
+        var gain = 1f
         override fun load(stream: ResolvedStream, positionMs: Long) {
             loaded += stream.track.id
+            gainAtLoad += gain
             state.value = EngineSnapshot(positionMs = positionMs, durationMs = 100_000, seekable = true)
         }
         override fun play() { state.value = state.value.copy(playing = true, playRequested = true) }
         override fun pause() { state.value = state.value.copy(playing = false, playRequested = false) }
         override fun seekTo(positionMs: Long) { state.value = state.value.copy(positionMs = positionMs, ended = false) }
         override fun stop() { state.value = EngineSnapshot() }
+        override fun setVolume(volume: Float) { gain = volume }
         override fun release() { stop() }
     }
 

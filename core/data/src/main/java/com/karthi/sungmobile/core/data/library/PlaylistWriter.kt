@@ -6,8 +6,9 @@ import com.karthi.sungmobile.core.model.library.*
 import java.util.UUID
 
 /** Transaction-only playlist operations, shared by creation and additions. */
-internal class PlaylistWriter(private val db: SungDatabase, private val now: () -> Long) {
-    fun add(id: String, tracks: List<CatalogItem>, allowDuplicates: Boolean): AddResult {
+internal class PlaylistWriter(private val db: SungDatabase, private val now: () -> Long,
+    private val revisions: PlaylistRevisionStore) {
+    fun add(id: String, tracks: List<CatalogItem>, allowDuplicates: Boolean, captureBefore: Boolean = true): AddResult {
         checkNotNull(db.playlistDao().playlist(id)) { "Playlist no longer exists" }
         val existing = db.playlistDao().entries(id)
         val seen = existing.mapTo(mutableSetOf()) { it.trackKey }
@@ -21,8 +22,11 @@ internal class PlaylistWriter(private val db: SungDatabase, private val now: () 
             }
             seen += key
         }
-        db.playlistDao().insertEntries(added)
-        db.playlistDao().touch(id, now())
+        if (added.isNotEmpty()) {
+            if (captureBefore) revisions.capture(id)
+            db.playlistDao().insertEntries(added)
+            db.playlistDao().touch(id, now())
+        }
         return AddResult(added.size, tracks.size - added.size)
     }
     fun normalize(id: String, entries: List<PlaylistEntryEntity>) {

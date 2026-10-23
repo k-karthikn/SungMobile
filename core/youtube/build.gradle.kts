@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(libs.newpipe)
     implementation(libs.okhttp)
+    implementation("com.google.code.gson:gson:2.11.0")
     implementation(libs.coroutines.core)
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)

@@ -29,13 +29,14 @@ internal fun songQuery(collection: LibraryCollection, filter: String, sort: Libr
     val ordering = if (sort == LibrarySort.TITLE) "t.title COLLATE NOCASE, $id" else order
     return SimpleSQLiteQuery("""SELECT t.*, $id AS rowId, $position AS position,
         EXISTS(SELECT 1 FROM library_likes l WHERE l.trackKey = t.trackKey) AS liked
-        FROM $source WHERE (instr(lower(t.title), lower(?)) > 0 OR instr(lower(t.artist), lower(?)) > 0)
+        FROM $source WHERE t.trackKey LIKE 'youtube:%'
+        AND (instr(lower(t.title), lower(?)) > 0 OR instr(lower(t.artist), lower(?)) > 0)
         ORDER BY $ordering LIMIT ? OFFSET ?""", args.toTypedArray())
 }
 internal fun playlistQuery(filter: String, sort: LibrarySort, limit: Int, offset: Int): SimpleSQLiteQuery {
     val order = if (sort == LibrarySort.TITLE) "p.name COLLATE NOCASE, p.id" else "p.updatedAt DESC, p.id"
     return SimpleSQLiteQuery("""SELECT p.*, COUNT(e.id) AS songCount FROM local_playlists p
-        LEFT JOIN playlist_entries e ON e.playlistId = p.id
+        LEFT JOIN playlist_entries e ON e.playlistId = p.id AND e.trackKey LIKE 'youtube:%'
         WHERE instr(lower(p.name), lower(?)) > 0 GROUP BY p.id
         ORDER BY p.pinned DESC, $order LIMIT ? OFFSET ?""", arrayOf<Any>(filter, limit, offset))
 }

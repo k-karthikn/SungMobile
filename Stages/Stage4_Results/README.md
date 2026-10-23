@@ -1,5 +1,7 @@
 # Sung Stage 4 results
 
+**18 October 2026 follow-up:** The owner found that the mini-player was hidden on album and playlist detail pages. [Sung-0.5.1-stage4-debug.apk](Sung-0.5.1-stage4-debug.apk) (code 7) shows it there. Its SHA-256 is `a7758f47d9680ab6f25e4e1dcc13571e98861673189962cb98865cdaf4caef84`. `:app:assembleDebug` passed on the restored OS; the owner subsequently reported **Stage 4 working fine**. This APK uses a **new debug signing key** (certificate SHA-256 `137475c127f1805b413c4362ddd69573e41f70c3cde76fd38a1bf5ebabfbe850`). It cannot update the old-key code 6 installation. The owner agreed to uninstall/reinstall and lose the old local app data. Keep the new `~/.android/debug.keystore` for future updates. The verification counts below describe the original code 6 build, not the code 7 follow-up.
+
 Delivered: **14 October 2026**. Status: **host verified; phone acceptance pending**.
 
 - Update APK: [Sung-0.5.0-stage4-debug.apk](Sung-0.5.0-stage4-debug.apk)

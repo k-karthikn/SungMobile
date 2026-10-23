@@ -43,7 +43,7 @@ Changes to the database require an explicit Room migration and an updated export
 - Removing the current song chooses its next surviving successor, or the last remaining entry when none follows. It keeps the current play/pause intent. Removing all entries stops audio.
 - Undo restores the last removal/clear. It preserves the current successor rather than jumping back to the removed song. A new insertion, reorder, shuffle change or queue replacement invalidates that Undo.
 - Shuffle randomizes upcoming entries and retains the current entry. Disabling it restores the stored baseline order; a manual reorder defines a new baseline.
-- Repeat one applies to natural completion. Manual Next still advances. Repeat all wraps at the end. Without repeat, queue completion stops.
+- Repeat one applies to natural completion. Manual Next still advances. Repeat all wraps at the end. Without repeat, queue completion stops unless Stage 8 related autoplay is enabled and returns usable provider items.
 - Stop stops audio and resets the current position, retaining the queue for explicit Play.
 - Leaving the activity or releasing its controller does not stop the service. Reopening the app connects to the existing player.
 - Process restoration keeps the queue/position paused. Checkpoints are taken on queue/intent changes and roughly every five seconds during playback, so an abrupt process kill can lose a few seconds. Force-stop is not treated as permission to restart audio.
@@ -79,3 +79,15 @@ For a complete online collection action, call `CollectionActionsViewModel.begin(
 Home reads `AppContainer.home` (a `RoomHomeRepository`) through `HomeViewModel`. This query shares the existing database and privacy policy. Build future recommendation/statistics features on those privacy barriers; do not maintain a separate unbounded listening cache in the UI. The local mix function is pure and deterministic for a candidate set and seed.
 
 Provider mappings, details and continuation callbacks are isolated under `core:youtube/catalog`; `StreamExtractor` retains audio resolution. A provider-specific improvement belongs there, behind the catalog contracts, rather than in a screen or playback service. Check [STAGE4_REPORT.md](STAGE4_REPORT.md) for current capability limits.
+
+## Stage 6 playback convenience
+
+`PlaybackCoordinator` still owns the single live queue/player state. `ExoPlayerEngine` applies service-owned speed and per-player fade volume. `SleepTimerController` uses a monotonic deadline and intercepts natural completion before automatic advance; it is canceled on process death while the existing queue restores paused. App-only speed/timer commands and state cross the Media3 session through `PlaybackSessionCallback`, `SessionStatus`, `SessionStateMapper` and `PlaybackConnection`. Screens never construct a timer or an audio engine.
+
+`LongResumeRecorder` counts actual playing time for recordings of at least 20 minutes, checks Private mode before writing, and stores points through `ConvenienceRepository`. That repository uses bounded atomic private files for per-video resume points and named saved sessions, separate from the Room active queue/library and DataStore speed preference. A saved session retains duplicate queue-entry IDs and the canonical unshuffled order. Its Restore action runs in the service, replaces the active queue paused and reports completion to the UI. Library also opens Saved sessions when no track is playing. See [STAGE6_REPORT.md](STAGE6_REPORT.md) for behavior, limits and POCO checks.
+
+## Stage 8 online playback
+
+`PlaybackCoordinator` prepares at most one next occurrence's signed URL near natural completion. Preparation is transient, tied to the occurrence ID and queue state, and canceled by pause, seek, manual selection or a relevant queue/mode change. `ExoPlayerEngine` remains a single player and does not prebuffer audio; a prepared URL only avoids a late extractor request. Do not describe this as guaranteed gapless playback.
+
+`QueueState.smartShuffle` is a pure best-effort reorder of upcoming entries; it retains duplicate occurrence IDs and the saved original order. DataStore stores the off-by-default smart-shuffle and related-autoplay switches plus bounded per-video volume reductions. The service applies a song's saved gain before loading its stream, multiplies it with the sleep-timer fade, and never changes system volume. The YouTube adapter obtains related items from the provider's `StreamInfo.relatedItems`; the coordinator requests once at natural queue end, filters existing songs, and suppresses it in Private mode or when the timer wins. The UI stays in focused `PlayerAdvancedControls` within Now Playing. See [STAGE8_REPORT.md](STAGE8_REPORT.md) for limits and manual checks.

@@ -1,10 +1,24 @@
 # SungMobile
 
+Production release candidate: **0.12.3 (code 23)**, signed and optimized for `com.karthi.sungmobile`. [Versioned APK and manual checklist](Stages/Production_Release_Results/README.md). This installs alongside the earlier `.stage0` debug app; its local library starts fresh. Phone acceptance and public release are pending.
+
+Latest build: **0.12.3-icon (code 23)** — corrected adaptive launcher icon placement. [APK and phone checklist](Stages/Icon_Results/README.md). Phone acceptance pending.
+
+Latest UI build: **0.12.2-lyrics-ui (code 22)** — Lyrics screen, grouped settings and confirmation dialogs. [APK and manual checks](Stages/Lyrics_UI_Results/README.md). [Implementation report](docs/ui/lyrics/REPORT.md). Phone acceptance pending.
+
+Latest UI build: **0.12.1-search-ui (code 21)** — Search layout, category icons, clear action, recent searches and shared heart/plus result rows. [APK and manual checks](Stages/Search_UI_Results/README.md). [Search report](docs/ui/search/REPORT.md). Phone acceptance pending.
+
+Latest build: **0.12.0-updates (code 20)** — default-on background update checks/downloads with an off switch and Android installation confirmation. [APK and manual checks](Stages/Updater_Results/README.md). [Version numbering and publishing guide](docs/updates/VERSIONING_AND_RELEASES.md). Phone acceptance pending; no GitHub release published by this task.
+
+Latest UI build: **0.11.2-library-ui (code 19)** — Library, playlist/song rows, collection styling and Sessions access. [APK and manual checks](Stages/Library_UI_Results/README.md). Player UI code 18 accepted; Library phone acceptance pending. [Library implementation report](docs/ui/library/REPORT.md).
+
+Latest UI build: **0.11.1-player-ui (code 18)** — Now Playing, queue previews, More sheet and Queue rows. [APK and manual checks](Stages/Player_UI_Results/README.md). Same app ID/signing identity; phone acceptance pending. [Implementation report](docs/ui/player/REPORT.md).
+
 **Restoring after an OS change or continuing in a new session? Start with [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md)** for progress, backup requirements, environment setup and the exact next steps.
 
-A native Kotlin / Jetpack Compose Android music app, developed in functional milestones from the Sung Linux reference. **Stage 4 adds responsive search, shared YouTube links, collection actions and real local Home sections.** The user reported every Stage 3 POCO checklist item working on 13 October 2026.
+A native Kotlin / Jetpack Compose Android music app, developed in functional milestones from the Sung Linux reference. Stages 4–6 were accepted on the user's POCO on 18 October 2026. Stage 6 adds playback convenience.
 
-The current build is **0.5.0-stage4**. It uses the M3 Expressive foundation with simple functional controls. Stage 4 host verification is complete; manual phone acceptance is pending. See the [Stage 4 report](docs/STAGE4_REPORT.md) and [phone checklist](Stages/Stage4_Results/PHONE_TEST_CHECKLIST.md).
+The owner confirmed the online-only **0.8.1-online**, code 13, and **0.9.0-stage8**, code 14, builds work on the POCO. Stage 9 is implemented as **0.10.0-stage9**, code 15, with smart playlists, review-based cleanup, local playlist versions and listening statistics; the owner reported it working on the POCO. Stage 10 is skipped. The baseline stabilization build is **0.10.1-stabilization**, code 16. The owner then authorized page-by-page UI work; the current Home UI build is **0.11.0-home-ui**, code 17, with manual visual/scroll acceptance pending. See the [Home UI report](docs/ui/home/REPORT.md). See [the stabilization report](docs/STABILIZATION_REPORT.md). See the [Stage 9 report](docs/STAGE9_REPORT.md). App-data backup/import/export and new playlist-link exchange were excluded at the owner's request. Stage 7 source remains in [deferred/stage7](deferred/stage7/README.md) outside build source sets.
 
 See the [completion roadmap](docs/FUNCTIONAL_COMPLETION_PLAN.md), [code guide](docs/PLAYBACK_GUIDE.md), [Stage 3 report](docs/STAGE3_REPORT.md), and [accepted phone checklist](Stages/Stage3_Results/PHONE_TEST_CHECKLIST.md).
 
@@ -30,7 +44,7 @@ JAVA_HOME=/opt/android-studio/jbr ./gradlew :app:assembleDebug
 JAVA_HOME=/opt/android-studio/jbr ./gradlew :core:model:test :core:youtube:test :core:playback:testDebugUnitTest :core:data:testDebugUnitTest :app:testDebugUnitTest :app:lintDebug
 ```
 
-Debug APK: `app/build/outputs/apk/debug/app-debug.apk`. Its application ID is `com.karthi.sungmobile.stage0`, retained so later stages upgrade your existing installation; it is separate from the future production app. Minimum API is 26; the tested physical device is Android 15 / API 35. Older supported APIs still need device coverage.
+Debug APK: `app/build/outputs/apk/debug/app-debug.apk`; the current Home UI delivery is under `Stages/Home_UI_Results/`. Its application ID is `com.karthi.sungmobile.stage0`, retained so later debug stages upgrade the existing debug installation; it is separate from the production app. Use the **new debug key** created after OS migration for code 7 and later. Production signing uses a dedicated local key described in the [release guide](docs/updates/VERSIONING_AND_RELEASES.md). Minimum API is 26; the tested physical device is Android 15 / API 35. Older supported APIs still need device coverage.
 
 Live network probes are opt-in:
 
@@ -50,7 +64,7 @@ Without `live=true`, device tests cover deterministic UI states and skip live pl
 
 This build supports search, collection browsing, service-owned play/pause/seek, automatic queue progression, shuffle/repeat, queue editing/Undo and paused queue restoration. The user reported successful completion of this milestone's physical-device checklist, covering background playback, media controls and interruptions. The UI does not pause playback when it leaves the foreground.
 
-It also provides persistent likes, local playlists, pins, bulk library actions, listening/search history and privacy controls. Stage 4 adds debounced search, validated shared/pasted links, paged collection actions with explicit partial-load choices, and privacy-aware local mixes. Downloads, lyrics and complete artist/discovery support follow in the functional plan. Account sign-in is outside the current local-library scope.
+It also provides persistent likes, local playlists, pins, bulk library actions, listening/search history and privacy controls. Stage 4 adds debounced search, validated shared/pasted links, paged collection actions with explicit partial-load choices, and privacy-aware local mixes. Stage 5 adds YouTube lyrics where available, optional matched LRCLIB fallback and essential lyric settings. Stage 6 adds speed/pitch control, sleep timer, long-recording resume points and saved sessions. Device music and downloads were prototyped for Stage 7, then deferred by the owner; the active app is online-only. Account sign-in is outside the current local-library scope.
 
 SungMobile is licensed under **GPL-3.0-or-later**, matching the selected NewPipeExtractor dependency. See [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md). This development APK is not a public release. The release stage must package the corresponding source and complete dependency/asset notices before public distribution.
 

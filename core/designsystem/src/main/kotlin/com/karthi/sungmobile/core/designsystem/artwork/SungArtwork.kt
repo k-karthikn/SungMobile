@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Outline
@@ -23,7 +24,7 @@ import coil3.compose.AsyncImage
 import com.karthi.sungmobile.core.designsystem.icon.SungIcon
 import com.karthi.sungmobile.core.designsystem.icon.SungSymbol
 
-enum class ArtworkMask { TILE, CIRCLE, PILL, FLOWER }
+enum class ArtworkMask { TILE, CIRCLE, PILL, FLOWER, SQUARE }
 
 /** The mask rotates; the actual image remains upright. No generated art or subject extraction. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -35,7 +36,8 @@ fun SungArtwork(
     mask: ArtworkMask = ArtworkMask.TILE,
 ) {
     val shape: Shape = when (mask) {
-        ArtworkMask.TILE -> RoundedCornerShape(20.dp)
+        ArtworkMask.SQUARE -> RectangleShape
+        ArtworkMask.TILE -> remember { RoundedCornerShape(20.dp) }
         ArtworkMask.CIRCLE -> MaterialShapes.Circle.toShape()
         ArtworkMask.PILL -> {
             val path = MaterialShapes.Pill.toPath(startAngle = -35)

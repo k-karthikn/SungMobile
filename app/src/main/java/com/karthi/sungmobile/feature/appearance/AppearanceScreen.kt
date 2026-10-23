@@ -17,11 +17,16 @@ import androidx.compose.ui.unit.dp
 import com.karthi.sungmobile.R
 import com.karthi.sungmobile.app.Appearance
 import com.karthi.sungmobile.core.designsystem.component.SectionHeading
+import com.karthi.sungmobile.core.designsystem.component.SungSettingsGroup
 import com.karthi.sungmobile.core.designsystem.icon.*
 import com.karthi.sungmobile.core.designsystem.theme.*
+import com.karthi.sungmobile.core.data.settings.LyricsSettings
+import com.karthi.sungmobile.feature.lyrics.LyricsSettingsSection
 
 @Composable
-fun AppearanceScreen(value: Appearance, onChange: (Appearance) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun AppearanceScreen(value: Appearance, onChange: (Appearance) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier,
+    lyrics: LyricsSettings = LyricsSettings(), onLyrics: (LyricsSettings) -> Unit = {},
+    cacheBytes: Long = 0, onClearCache: () -> Unit = {}) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -43,9 +48,9 @@ fun AppearanceScreen(value: Appearance, onChange: (Appearance) -> Unit, onBack: 
                 Choice(stringResource(R.string.colors_wallpaper), value.colors == ColorMode.WALLPAPER) { onChange(value.copy(colors = ColorMode.WALLPAPER)) }
             }
         }
-        Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainer) {
+        SungSettingsGroup("Motion") {
             Row(Modifier.fillMaxWidth().toggleable(value.reduceMotion, role = Role.Switch,
-                onValueChange = { onChange(value.copy(reduceMotion = it)) }).padding(20.dp), verticalAlignment = Alignment.CenterVertically,
+                onValueChange = { onChange(value.copy(reduceMotion = it)) }), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.reduce_motion), style = MaterialTheme.typography.titleMedium)
@@ -54,6 +59,8 @@ fun AppearanceScreen(value: Appearance, onChange: (Appearance) -> Unit, onBack: 
                 Switch(value.reduceMotion, onCheckedChange = null)
             }
         }
+        com.karthi.sungmobile.feature.updates.UpdateSettingsSection()
+        LyricsSettingsSection(lyrics, onLyrics, cacheBytes, onClearCache)
     }
 }
 

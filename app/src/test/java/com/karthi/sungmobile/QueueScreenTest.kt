@@ -30,6 +30,43 @@ class QueueScreenTest {
     private val entries = listOf(QueueEntry("first", song), QueueEntry("second", song))
     private val state = PlaybackState(track = song, queue = QueueState(entries, "first"), canUndo = true)
 
+    @Test fun artworkPreviewsUseQueueOccurrencesAndHideMissingNeighbors() {
+        var jumped: String? = null
+        val third = QueueEntry("third", song.copy(id = "other", title = "Other song"))
+        val queue = QueueState(listOf(third, entries[1], entries[0]), "second", shuffled = true)
+        compose.setContent { SungTheme { PlayerScreen(state.copy(queue = queue),
+            PlayerActions({}, {}, {}, jump = { jumped = it }), {}) } }
+        compose.onNodeWithContentDescription("Previous: Other song").performClick()
+        assertEquals("third", jumped)
+        compose.onNodeWithTag("artwork_next").performClick()
+        assertEquals("first", jumped)
+    }
+    @Test fun firstOccurrenceHasOnlyNextPreviewAndMoreRetainsStop() {
+        var stopped = false
+        compose.setContent { SungTheme { PlayerScreen(state, PlayerActions({}, {}, { stopped = true }), {}) } }
+        compose.onNodeWithTag("artwork_previous").assertDoesNotExist()
+        compose.onNodeWithTag("artwork_next").assertExists()
+        compose.onNodeWithTag("player_more").performClick()
+        compose.onNodeWithTag("stop").performScrollTo().performClick()
+        assertTrue(stopped)
+    }
+    @Test fun advancedOptionsRemainActionableInsideTheMoreSheet() {
+        var smart = false
+        var related = false
+        compose.setContent { SungTheme { PlayerScreen(state, PlayerActions({}, {}, {}), {}, moreContent = {
+            com.karthi.sungmobile.feature.convenience.PlayerAdvancedControls(song,
+                com.karthi.sungmobile.core.data.settings.AdvancedPlaybackSettings(), false,
+                { smart = it }, { related = it }, { _, _ -> })
+        }) } }
+        compose.onNodeWithTag("player_more").performClick()
+        compose.onNodeWithContentDescription("Smart shuffle").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Related autoplay").performScrollTo().performClick()
+        assertTrue(smart)
+        assertTrue(related)
+        compose.onNodeWithTag("stop").performScrollTo().assertIsDisplayed()
+        val file = File("build/outputs/player-ui/more-options.png").apply { parentFile?.mkdirs() }
+        compose.onRoot().captureRoboImage(file.absolutePath)
+    }
     @Test fun duplicateSongMenuActsOnTheChosenOccurrence() {
         var removed: String? = null
         compose.setContent { SungTheme { QueueScreen(state, PlayerActions({}, {}, {}, remove = { removed = it }), {}) } }
@@ -48,7 +85,7 @@ class QueueScreenTest {
         assertTrue(undone)
         compose.onNodeWithTag("queue_list").performScrollToNode(hasTestTag("queue_options_1"))
         compose.onNodeWithTag("queue_options_1").assertIsDisplayed()
-        val file = File("../Stages/Stage2_Results/queue-large-text.png").apply { parentFile.mkdirs() }
+        val file = File("build/outputs/player-ui/queue-large-text.png").apply { parentFile.mkdirs() }
         compose.onRoot().captureRoboImage(file.absolutePath)
     }
     @Test fun playerQueueAndNextControlsAreReachable() {
@@ -59,7 +96,7 @@ class QueueScreenTest {
         assertTrue(next)
         compose.onNodeWithTag("open_queue").performScrollTo().performClick()
         assertTrue(opened)
-        val file = File("../Stages/Stage2_Results/player-controls.png").apply { parentFile.mkdirs() }
+        val file = File("build/outputs/player-ui/player-controls.png").apply { parentFile.mkdirs() }
         compose.onRoot().captureRoboImage(file.absolutePath)
     }
 }

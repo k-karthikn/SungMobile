@@ -17,8 +17,12 @@ class AppContainer(context: Context) {
     val database by lazy { com.karthi.sungmobile.core.data.db.DatabaseProvider.open(context) }
     val queueStore by lazy { RoomQueueStore(database) }
     val library by lazy { com.karthi.sungmobile.core.data.library.RoomLibraryRepository(database) }
+    val advancedLibrary by lazy { com.karthi.sungmobile.core.data.library.RoomAdvancedLibraryRepository(database) }
     val history by lazy { com.karthi.sungmobile.core.data.history.RoomHistoryRepository(database) }
     val home by lazy { com.karthi.sungmobile.core.data.discovery.RoomHomeRepository(database) }
     val settings by lazy { SettingsRepository(context) }
     val appearance by lazy { AppearanceStore(settings, applicationScope) }
+    val lyricsGateway by lazy { com.karthi.sungmobile.core.youtube.lyrics.YouTubeLyricsGateway() }
+    val lyricsCache by lazy { com.karthi.sungmobile.core.data.lyrics.LyricsCache(context) }
+    val convenience by lazy { com.karthi.sungmobile.core.data.convenience.ConvenienceRepository(context) }
 }

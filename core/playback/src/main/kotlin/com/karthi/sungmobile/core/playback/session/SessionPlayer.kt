@@ -35,6 +35,8 @@ class SessionPlayer(private val playback: PlaybackCoordinator, scope: CoroutineS
                 Player.COMMAND_SEEK_BACK, Player.COMMAND_SEEK_FORWARD, Player.COMMAND_SEEK_TO_DEFAULT_POSITION)
         }
         return State.Builder().setAvailableCommands(commands.build())
+            .setPlaybackParameters(PlaybackParameters(state.speed.multiplier,
+                if (state.speed.preservePitch) 1f else state.speed.multiplier))
             .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build())
             .setPlaylist(queue.entries.map { entry ->
                 val current = entry.id == queue.currentId

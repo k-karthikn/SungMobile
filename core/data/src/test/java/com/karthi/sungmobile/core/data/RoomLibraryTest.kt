@@ -96,6 +96,17 @@ class RoomLibraryTest {
         assertEquals(listOf(song.title), library.songs(LibraryCollection.Recent).map { it.track.title })
         assertNotNull(history.checkpoint("next:0"))
     }
+    @Test fun privateModeHidesRecentListsAndPlaybackSnapshotsButKeepsLikes() = runBlocking {
+        history.recordListening(ListeningRecord("pass:0", "pass", song, 0, 30_000, 1, 31_000, true))
+        library.setLiked(listOf(song), true)
+        assertEquals(1, library.snapshot(LibraryCollection.Recent).size)
+        history.setPolicy(HistorySetting.PRIVATE_MODE, true)
+        assertTrue(library.songs(LibraryCollection.Recent).isEmpty())
+        assertTrue(library.snapshot(LibraryCollection.Recent).isEmpty())
+        assertEquals(1, library.songs(LibraryCollection.Likes).size)
+        history.setPolicy(HistorySetting.PRIVATE_MODE, false)
+        assertEquals(1, library.songs(LibraryCollection.Recent).size)
+    }
     @Test fun searchSubmissionDeduplicatesByCategoryTrimsAndKeepsLatestFifty() = runBlocking {
         val policy = history.policy().first()
         history.recordSearch(" HELLO ", CatalogKind.SONG, policy); history.recordSearch("hello", CatalogKind.SONG, policy)

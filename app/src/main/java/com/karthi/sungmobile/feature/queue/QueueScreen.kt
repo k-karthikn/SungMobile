@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.karthi.sungmobile.R
 import com.karthi.sungmobile.app.PlayerActions
 import com.karthi.sungmobile.core.designsystem.icon.*
+import com.karthi.sungmobile.core.designsystem.component.SungConfirmDialog
 import com.karthi.sungmobile.core.designsystem.theme.LocalSungMotionEnabled
 import com.karthi.sungmobile.core.playback.PlaybackState
 
@@ -22,10 +23,9 @@ fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit
     val queue = state.queue
     val motion = LocalSungMotionEnabled.current
     var confirmClear by remember { mutableStateOf(false) }
-    if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false },
-        title = { Text(stringResource(R.string.clear_upcoming)) }, text = { Text(stringResource(R.string.clear_upcoming_body)) },
-        confirmButton = { TextButton({ actions.clearUpcoming(); confirmClear = false }) { Text(stringResource(R.string.clear)) } },
-        dismissButton = { TextButton({ confirmClear = false }) { Text(stringResource(R.string.cancel)) } })
+    if (confirmClear) SungConfirmDialog(stringResource(R.string.clear_upcoming),
+        stringResource(R.string.clear_upcoming_body), stringResource(R.string.clear),
+        { actions.clearUpcoming(); confirmClear = false }, { confirmClear = false })
     LazyColumn(modifier.fillMaxSize().testTag("queue_list"), contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item {
@@ -43,17 +43,13 @@ fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit
         itemsIndexed(queue.entries, key = { _, entry -> entry.id }) { index, entry ->
             var menu by remember { mutableStateOf(false) }
             val animation = if (motion) Modifier.animateItem() else Modifier
-            Surface(onClick = { actions.jump(entry.id) }, modifier = animation.fillMaxWidth().testTag("queue_entry_$index"),
-                color = if (entry.id == queue.currentId) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
-                shape = MaterialTheme.shapes.medium) {
-                Row(Modifier.padding(12.dp)) {
-                    Column(Modifier.weight(1f)) {
-                        Text(entry.track.title, style = MaterialTheme.typography.titleMedium)
-                        Text(entry.track.subtitle, style = MaterialTheme.typography.bodyMedium)
-                        if (entry.id == queue.currentId) Text(stringResource(R.string.current_track), style = MaterialTheme.typography.labelMedium)
-                    }
+            com.karthi.sungmobile.core.designsystem.component.SungSongListItem(
+                entry.track.title,
+                if (entry.id == queue.currentId) "${stringResource(R.string.current_track)} · ${entry.track.subtitle}" else entry.track.subtitle,
+                entry.track.artworkUrl, { actions.jump(entry.id) },
+                modifier = animation.testTag("queue_entry_$index"), selected = entry.id == queue.currentId) {
                     Box {
-                        TextButton({ menu = true }, Modifier.testTag("queue_options_$index")) { Text(stringResource(R.string.options)) }
+                        IconButton({ menu = true }, Modifier.testTag("queue_options_$index")) { SungIcon(SungSymbol.More, stringResource(R.string.options)) }
                         DropdownMenu(menu, { menu = false }) {
                             com.karthi.sungmobile.feature.library.LibraryMenuItems(entry.track) { menu = false }
                             DropdownMenuItem(text = { Text(stringResource(R.string.move_up)) }, enabled = index > 0,
@@ -64,7 +60,6 @@ fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit
                                 onClick = { actions.remove(entry.id); menu = false })
                         }
                     }
-                }
             }
         }
     }

@@ -1,8 +1,10 @@
 # Stage 4 — POCO manual verification
 
-Status: **pending**. Install `Sung-0.5.0-stage4-debug.apk` as an update over Stage 3. Do not uninstall or clear app data. No USB connection is required.
+**18 October 2026 follow-up:** Use `Sung-0.5.1-stage4-debug.apk` (code 7) to verify the mini-player remains visible after opening an album or playlist and playing a song there. It should open Now Playing and return to the same collection with the mini-player still present. This APK has a new debug signing key; an existing installation signed by the old key must be uninstalled first. That removes its local data, which the owner agreed to. Future updates should use the new key without uninstalling. The original upgrade/data-retention step below applies only to the original code 6 APK signed by the old key.
 
-1. **Upgrade:** confirm Likes, playlists, pins, appearance, privacy settings and the saved queue remain. Restored playback should wait for your Play action.
+Status: **accepted on 18 October 2026** after the owner reported Stage 4 working fine. This checklist remains the historical test scope. No USB connection was required.
+
+1. **Fresh install and restart:** because the old signing key was lost, remove the old-key installation before installing code 7. Create a Like or playlist, change an appearance setting and form a queue. Restart the app and confirm they remain. Restored playback should wait for your Play action.
 2. **Search:** type quickly, replace the query and switch Songs/Albums/Artists/Playlists. Results should correspond to the latest input. Typing previews alone should not add search history; submit or open a result, then check history. Clear the field and use a recent query.
 3. **Back and rotation:** scroll down album/playlist results, open one, then return. Query, category, loaded rows and scroll should remain. Rotate in Search and in collection details; no second playback or unsolicited start should occur.
 4. **Shared links:** in YouTube/YouTube Music choose Share → Sung, first while Sung is closed, then while it is already open/playing. Expect one choice/preview dialog and unchanged playback. Open a link with both `v=` and `list=` and check song/playlist choices. Cancel once and rotate: it should not reopen. Paste a supported link into Search as well.

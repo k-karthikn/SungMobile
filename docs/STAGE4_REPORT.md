@@ -1,5 +1,7 @@
 # Stage 4 — Catalog and discovery
 
+**18 October 2026 phone follow-up:** The owner reported that playback works from album/playlist details, but the bottom mini-player disappears there and returns on Home. `SungApp` now shows the mini-player on collection detail pages. Build `0.5.1-stage4` (code 7) was delivered and the owner subsequently reported **Stage 4 working fine**, accepting it before Stage 5 began. The original Stage 4 host/live/lint figures below belong to the code 6 build; code 7 passed `:app:assembleDebug`. The old signing key was lost during OS migration, so code 7 uses a new debug key and required a fresh installation over any old-key build. The owner agreed to that data reset. Later builds retain the new key.
+
 Implemented on 13–14 October 2026. Phone acceptance is pending the user's manual POCO checklist. Stage 3 remains the accepted device baseline.
 
 ## Working behavior

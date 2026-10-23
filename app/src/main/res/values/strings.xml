@@ -45,7 +45,7 @@
     <string name="home_subtitle">Find music that feels like you.</string>
     <string name="explore">Explore</string>
     <string name="open_player">Listen</string>
-    <string name="home_search_hint">Search songs, artists, albums…</string>
+    <string name="home_search_hint">Search music or paste a YouTube link</string>
     <string name="from_collection">From this collection</string>
     <string name="from_search">From your search</string>
     <string name="home_empty_title">Start with a song</string>
@@ -90,4 +90,28 @@
     <string name="colors_wallpaper">Wallpaper colors</string>
     <string name="reduce_motion">Reduce motion</string>
     <string name="reduce_motion_body">Use instant transitions. Sung also follows your system animation setting.</string>
+    <string name="lyrics">Lyrics</string>
+    <string name="lyrics_missing">No lyrics available for this song.</string>
+    <string name="lyrics_follow">Return to current line</string>
+    <string name="home_tagline">Music for your moments</string>
+    <string name="refresh_mixes">Refresh mixes</string>
+    <string name="view_all">View all</string>
+    <plurals name="home_song_count">
+        <item quantity="one">%1$d song</item>
+        <item quantity="other">%1$d songs</item>
+    </plurals>
+    <string name="view_mix">View %1$s</string>
+    <string name="play_mix">Play %1$s</string>
+    <string name="save_mix">Save %1$s to a playlist</string>
+    <string name="like_song">Like %1$s</string>
+    <string name="unlike_song">Unlike %1$s</string>
+    <string name="song_actions">Actions for %1$s</string>
+    <string name="liked_shuffle">Liked shuffle</string>
+    <string name="recent_mix">Recent mix</string>
+    <string name="recently_played">Recently played</string>
+    <string name="pinned_playlists">Pinned playlists</string>
+    <string name="liked_songs">Liked songs</string>
+    <string name="home_read_error">Could not read Home data.</string>
+    <string name="discovery_empty">Find a song to get started. Like songs and pin playlists to make them available here.</string>
+    <string name="close">Close</string>
 </resources>

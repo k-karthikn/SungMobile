@@ -14,17 +14,25 @@ import com.karthi.sungmobile.feature.home.*
 import com.karthi.sungmobile.feature.library.*
 import com.karthi.sungmobile.navigation.*
 import com.karthi.sungmobile.playback.PlaybackConnection
+import com.karthi.sungmobile.feature.lyrics.LyricsViewModel
+import com.karthi.sungmobile.feature.convenience.*
+import kotlinx.coroutines.launch
 
 /** Application composition only: feature state and work remain in their own ViewModels. */
 @Composable
 fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, browser: LibraryBrowserViewModel,
-    libraryActions: LibraryActionsViewModel, history: HistoryViewModel, home: HomeViewModel,
-    collection: CollectionViewModel, collectionActions: CollectionActionsViewModel, links: LinkIntakeViewModel) {
+    libraryActions: LibraryActionsViewModel, advancedLibrary: AdvancedLibraryViewModel,
+    history: HistoryViewModel, home: HomeViewModel,
+    collection: CollectionViewModel, collectionActions: CollectionActionsViewModel, links: LinkIntakeViewModel,
+    lyrics: LyricsViewModel, convenience: ConvenienceViewModel) {
     val catalog by model.catalogState.collectAsStateWithLifecycle()
-    val player by model.player.state.collectAsStateWithLifecycle()
+    val chrome = remember(model.player) { model.player.state.chromeUpdates() }
+    val initialPlayback = remember(model.player) { model.player.state.value.withoutClock() }
+    val player by chrome.collectAsStateWithLifecycle(initialPlayback)
     val preferences by container.appearance.state.collectAsStateWithLifecycle()
     val settingsError by container.appearance.error.collectAsStateWithLifecycle()
     val library by browser.page.collectAsStateWithLifecycle()
+    val advancedLibraryState by advancedLibrary.state.collectAsStateWithLifecycle()
     val policy by history.policy.collectAsStateWithLifecycle()
     val historyError by history.error.collectAsStateWithLifecycle()
     val searches by history.searches.collectAsStateWithLifecycle()
@@ -33,8 +41,17 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
     val operation by collectionActions.state.collectAsStateWithLifecycle()
     val saveBatch by collectionActions.save.collectAsStateWithLifecycle()
     val intake by links.state.collectAsStateWithLifecycle()
+    val lyricsState by lyrics.state.collectAsStateWithLifecycle()
+    val lyricsSettings by lyrics.preferences.collectAsStateWithLifecycle()
+    val convenienceState by convenience.state.collectAsStateWithLifecycle()
+    val advanced by container.settings.advancedPlayback.collectAsStateWithLifecycle(
+        initialValue = com.karthi.sungmobile.core.data.settings.AdvancedPlaybackSettings())
+    val settingsScope = rememberCoroutineScope()
     var searchRequest by remember { mutableIntStateOf(0) }
     LaunchedEffect(details.route?.id) { collectionActions.cancel() }
+    LaunchedEffect(player.track?.id, player.engine.durationMs) {
+        convenience.loadResume(player.track, player.engine.durationMs)
+    }
     SungTheme(preferences.theme, preferences.colors, preferences.reduceMotion) {
         val view = LocalView.current
         val light = MaterialTheme.colorScheme.surface.luminance() > .5f
@@ -53,17 +70,46 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                     model.player::jump, model.player::remove, model.player::move, model.player::clearUpcoming,
                     model.player::undo, { (model.player as PlaybackConnection).connect() }),
                 preferences, container.appearance::update, settingsError,
-                libraryContent = { modifier, openHistory -> LibraryScreen(browser, library, libraryActions, openHistory, modifier) },
+                libraryContent = { modifier, openHistory, openSessions -> LibraryScreen(browser, library, libraryActions, advancedLibrary, advancedLibraryState, openHistory, modifier, openSessions) },
                 historyContent = { modifier, back -> HistoryScreen(policy, history, back, modifier) },
                 privateMode = policy?.privateMode == true, historyError = historyError,
                 recentSearches = { RecentSearches(searches, { model.recall(it.query, it.kind) }, history::removeSearch) },
+                hasRecentSearches = searches.isNotEmpty(),
                 detailId = details.route?.id, closeDetail = collection::close,
                 collectionContent = { modifier, showPlayer -> CollectionScreen(details, collection, collectionActions, model.player,
                     { model.searchArtistSongs(it); searchRequest++ }, showPlayer, modifier) },
                 homeContent = { modifier, search, nowPlaying, appearance, showLibrary ->
                     DiscoveryHomeScreen(homeState, home::refresh, model.player, search, nowPlaying, appearance,
                         { browser.open(it); showLibrary() }, modifier)
-                }, searchRequest = searchRequest)
+                }, searchRequest = searchRequest,
+                lyricsState = lyricsState, lyricsSettings = lyricsSettings,
+                onLoadLyrics = { lyrics.load(player.track, policy?.privateMode == true) },
+                onCancelLyrics = lyrics::cancel,
+                onRetryLyrics = { lyrics.load(player.track, policy?.privateMode == true, refresh = true) },
+                onLyricsSettings = lyrics::setPreferences,
+                onLyricsOffset = { player.track?.let { track -> lyrics.setOffset(track, it) } },
+                onClearLyricsCache = lyrics::clearCache,
+                convenienceContent = { state, openSessions ->
+                    val connection = model.player as PlaybackConnection
+                    androidx.compose.foundation.layout.Column {
+                        PlayerConvenienceControls(state, convenienceState.resume, connection::setSpeed,
+                            connection::armTimer, connection::cancelTimer, convenience::resume,
+                            convenience::startOver, openSessions, showSessions = false)
+                    }
+                },
+                playerMoreContent = { state, openSessions ->
+                    androidx.compose.foundation.layout.Column {
+                        androidx.compose.material3.TextButton(openSessions) { androidx.compose.material3.Text("Saved sessions") }
+                        PlayerAdvancedControls(state.track, advanced, policy?.privateMode == true,
+                            { enabled -> settingsScope.launch { container.settings.setSmartShuffle(enabled) } },
+                            { enabled -> settingsScope.launch { container.settings.setRelatedAutoplay(enabled) } },
+                            { id, db -> settingsScope.launch { container.settings.setTrackTrim(id, db) } })
+                    }
+                },
+                sessionsContent = { state, back ->
+                    SessionsScreen(convenienceState, state, back, convenience::save, convenience::rename,
+                        convenience::delete, convenience::restore, convenience::clearMessage)
+                }, livePlayback = model.player.state)
             CollectionOperationDialog(operation, collectionActions)
             LinkIntakeDialog(intake, links::dismiss) { link -> collection.open(CollectionRoute(link.url, link.label, startMs = link.startMs)) }
         }

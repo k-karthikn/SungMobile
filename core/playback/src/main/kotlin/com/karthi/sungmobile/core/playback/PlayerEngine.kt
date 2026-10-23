@@ -4,6 +4,8 @@ import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.QueueState
 import com.karthi.sungmobile.core.model.ResolvedStream
 import com.karthi.sungmobile.core.model.SourceFailure
+import com.karthi.sungmobile.core.model.PlaybackSpeed
+import com.karthi.sungmobile.core.model.SleepTimerStatus
 import kotlinx.coroutines.flow.StateFlow
 
 enum class EngineFailure { EXPIRED_STREAM, NETWORK, DECODING, OTHER }
@@ -32,6 +34,8 @@ data class PlaybackState(
     val storageError: Boolean = false,
     val historyError: Boolean = false,
     val passId: String? = null,
+    val speed: PlaybackSpeed = PlaybackSpeed(),
+    val sleepTimer: SleepTimerStatus? = null,
 )
 
 /** All player operations and state emissions are confined to the application's main dispatcher. */
@@ -41,6 +45,8 @@ interface PlayerEngine {
     fun play()
     fun pause()
     fun seekTo(positionMs: Long)
+    fun setSpeed(speed: PlaybackSpeed) {}
+    fun setVolume(volume: Float) {}
     fun stop()
     fun release()
 }

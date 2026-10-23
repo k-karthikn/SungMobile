@@ -14,8 +14,11 @@ fun LibraryHost(repository: LibraryRepository, actions: LibraryActionsViewModel,
     val message by actions.message.collectAsStateWithLifecycle()
     var adding by remember { mutableStateOf<List<CatalogItem>?>(null) }
     var savingQueue by remember { mutableStateOf<List<CatalogItem>?>(null) }
-    CompositionLocalProvider(LocalLibraryUi provides LibraryUi(liked, actions::toggle, { adding = it },
-        { savingQueue = playback.queue.entries.map { it.track }.toList() })) { content() }
+    val libraryUi = remember(liked, actions, playback.queue.entries) {
+        LibraryUi(liked, actions::toggle, { adding = it },
+            { savingQueue = playback.queue.entries.map { it.track }.toList() })
+    }
+    CompositionLocalProvider(LocalLibraryUi provides libraryUi) { content() }
     adding?.let { AddToPlaylistDialog(it, repository, actions) { adding = null } }
     savingQueue?.let { tracks -> PlaylistNameDialog("Save queue as playlist", help = "Copies all ${tracks.size} queue entries, including already played songs and duplicates, in their current order.",
         dismiss = { savingQueue = null }, save = { actions.create(it, tracks, duplicates = true) }) }

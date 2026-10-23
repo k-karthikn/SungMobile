@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.karthi.sungmobile.DesignFoundationTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-10-21T14:41:06.198Z" hostname="cachyos" time="15.981">
+  <properties/>
+  <testcase name="appearanceIsReachableFromHome" classname="com.karthi.sungmobile.DesignFoundationTest" time="8.737"/>
+  <testcase name="freshInstallHasUsefulSearchAndHonestLibrary" classname="com.karthi.sungmobile.DesignFoundationTest" time="1.273"/>
+  <testcase name="homeLargeText" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.422"/>
+  <testcase name="narrowHome" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.22"/>
+  <testcase name="homeDarkReducedMotion" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.347"/>
+  <testcase name="playerLargeText" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.871"/>
+  <testcase name="expandedHome" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.56"/>
+  <testcase name="homeDark" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.44"/>
+  <testcase name="miniPlayerAndFullPlayerUseTheSameCallbacks" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.433"/>
+  <testcase name="playerLight" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.554"/>
+  <testcase name="playerDarkReducedMotion" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.499"/>
+  <testcase name="homeDarkLargeText" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.255"/>
+  <testcase name="playerDarkLargeText" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.5"/>
+  <testcase name="playerDark" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.474"/>
+  <testcase name="homeLight" classname="com.karthi.sungmobile.DesignFoundationTest" time="0.282"/>
+  <system-out><![CDATA[Roborazzi: It seems that there are multiple windows.We capture all windows using captureScreenRoboImage(). We can add a flag to disable this behavior so please let us know if you need it.
+Roborazzi: It seems that there are multiple windows.We capture all windows using captureScreenRoboImage(). We can add a flag to disable this behavior so please let us know if you need it.
+Roborazzi: It seems that there are multiple windows.We capture all windows using captureScreenRoboImage(). We can add a flag to disable this behavior so please let us know if you need it.
+Roborazzi: It seems that there are multiple windows.We capture all windows using captureScreenRoboImage(). We can add a flag to disable this behavior so please let us know if you need it.
+Roborazzi: It seems that there are multiple windows.We capture all windows using captureScreenRoboImage(). We can add a flag to disable this behavior so please let us know if you need it.
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
