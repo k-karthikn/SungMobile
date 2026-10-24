@@ -15,6 +15,7 @@ import com.karthi.sungmobile.feature.library.*
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun PlayerLibraryActions(track: CatalogItem) {
+    if (track.libraryKeyOrNull() == null) return
     val library = LocalLibraryUi.current
     val liked = track.libraryKeyOrNull() in library.liked
     var menu by remember(track.id) { mutableStateOf(false) }

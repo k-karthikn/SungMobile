@@ -12,6 +12,9 @@ import com.karthi.sungmobile.feature.collection.*
 import com.karthi.sungmobile.feature.history.*
 import com.karthi.sungmobile.feature.home.*
 import com.karthi.sungmobile.feature.library.*
+import com.karthi.sungmobile.feature.local.LocalSongsContent
+import com.karthi.sungmobile.feature.local.LocalFoldersSettingsSection
+import com.karthi.sungmobile.feature.download.DownloadHost
 import com.karthi.sungmobile.navigation.*
 import com.karthi.sungmobile.playback.PlaybackConnection
 import com.karthi.sungmobile.feature.lyrics.LyricsViewModel
@@ -58,7 +61,7 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
         SideEffect { WindowCompat.getInsetsController(window, view).apply {
             isAppearanceLightStatusBars = light; isAppearanceLightNavigationBars = light
         } }
-        LibraryHost(container.library, libraryActions, player) {
+        DownloadHost { LibraryHost(container.library, libraryActions, player) {
             val libraryUi = LocalLibraryUi.current
             LaunchedEffect(saveBatch) { saveBatch?.let { libraryUi.add(it); collectionActions.savedHandled() } }
             SungApp(catalog, player,
@@ -70,7 +73,14 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                     model.player::jump, model.player::remove, model.player::move, model.player::clearUpcoming,
                     model.player::undo, { (model.player as PlaybackConnection).connect() }),
                 preferences, container.appearance::update, settingsError,
-                libraryContent = { modifier, openHistory, openSessions -> LibraryScreen(browser, library, libraryActions, advancedLibrary, advancedLibraryState, openHistory, modifier, openSessions) },
+                libraryContent = { modifier, openSessions, openSettings, openSearch ->
+                    LibraryScreen(browser, library, libraryActions, advancedLibrary, advancedLibraryState,
+                        openSettings, modifier, openSessions, openSearch, homeState, player.connected,
+                        localContent = { localModifier ->
+                            LocalSongsContent(container.localAudio, player.connected, model.player::select,
+                                model.player::enqueue, localModifier)
+                        })
+                },
                 historyContent = { modifier, back -> HistoryScreen(policy, history, back, modifier) },
                 privateMode = policy?.privateMode == true, historyError = historyError,
                 recentSearches = { RecentSearches(searches, { model.recall(it.query, it.kind) }, history::removeSearch) },
@@ -89,6 +99,7 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 onLyricsSettings = lyrics::setPreferences,
                 onLyricsOffset = { player.track?.let { track -> lyrics.setOffset(track, it) } },
                 onClearLyricsCache = lyrics::clearCache,
+                localFoldersContent = { LocalFoldersSettingsSection(container.localAudio) },
                 convenienceContent = { state, openSessions ->
                     val connection = model.player as PlaybackConnection
                     androidx.compose.foundation.layout.Column {
@@ -117,6 +128,6 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 }, livePlayback = model.player.state)
             CollectionOperationDialog(operation, collectionActions)
             LinkIntakeDialog(intake, links::dismiss) { link -> collection.open(CollectionRoute(link.url, link.label, startMs = link.startMs)) }
-        }
+        } }
     }
 }

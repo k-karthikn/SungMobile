@@ -58,7 +58,7 @@ fun CollectionScreen(state: CollectionState, model: CollectionViewModel, operati
                 }, color = MaterialTheme.colorScheme.error)
                 TextButton(model::retry) { Text(if (state.error == SourceFailure.EXPIRED_PAGE) "Refresh" else "Retry") }
             }
-            if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (state.loading) com.karthi.sungmobile.core.designsystem.component.SungLoading(label = "Loading collection…")
             else if (state.page != null && state.entries.isEmpty() && notice == null) Text("No playable songs were returned.")
         }
         itemsIndexed(state.entries, key = { _, entry -> entry.id }) { index, entry ->

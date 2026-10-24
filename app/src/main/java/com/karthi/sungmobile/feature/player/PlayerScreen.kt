@@ -17,6 +17,7 @@ import com.karthi.sungmobile.R
 import com.karthi.sungmobile.app.PlayerActions
 import com.karthi.sungmobile.core.designsystem.icon.*
 import com.karthi.sungmobile.core.playback.PlaybackState
+import com.karthi.sungmobile.core.model.lyrics.lyricsVideoId
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,7 +78,8 @@ fun PlayerScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Uni
                 PlayerSeek(state, actions.seek)
                 PlayerTransport(state, actions)
                 convenienceContent()
-                FilledTonalButton(openLyrics, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.lyrics)) }
+                FilledTonalButton(openLyrics, Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    enabled = state.track?.lyricsVideoId() != null) { Text(stringResource(R.string.lyrics)) }
                 Text(stringResource(R.string.background_notice), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 24.dp))
             }

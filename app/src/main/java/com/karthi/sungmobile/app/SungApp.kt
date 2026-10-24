@@ -31,7 +31,7 @@ private enum class Overlay { NONE, PLAYER, APPEARANCE, HISTORY, COLLECTION, LYRI
 @Composable
 fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: CatalogActions,
     playerActions: PlayerActions, appearance: Appearance, onAppearance: (Appearance) -> Unit, settingsError: Boolean = false,
-    libraryContent: (@Composable (Modifier, () -> Unit, () -> Unit) -> Unit)? = null,
+    libraryContent: (@Composable (Modifier, () -> Unit, () -> Unit, () -> Unit) -> Unit)? = null,
     historyContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
     privateMode: Boolean = false, historyError: Boolean = false,
     recentSearches: @Composable () -> Unit = {},
@@ -44,6 +44,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     onLoadLyrics: () -> Unit = {}, onRetryLyrics: () -> Unit = {}, onLyricsSettings: (LyricsSettings) -> Unit = {},
     onCancelLyrics: () -> Unit = {},
     onLyricsOffset: (Int) -> Unit = {}, onClearLyricsCache: () -> Unit = {},
+    localFoldersContent: @Composable () -> Unit = {},
     convenienceContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
     playerMoreContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
     volumeContent: @Composable (PlaybackState) -> Unit = {},
@@ -81,6 +82,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
         when {
             overlay == Overlay.LYRICS -> overlay = Overlay.PLAYER
             overlay == Overlay.SESSIONS -> overlay = if (sessionsFromPlayer && playback.track != null) Overlay.PLAYER else Overlay.NONE
+            overlay == Overlay.HISTORY -> overlay = Overlay.APPEARANCE
             overlay == Overlay.COLLECTION -> { closeDetail(); overlay = Overlay.NONE }
             overlay == Overlay.PLAYER && detailId != null -> overlay = Overlay.COLLECTION
             overlay != Overlay.NONE -> overlay = Overlay.NONE
@@ -151,7 +153,8 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                             Overlay.SESSIONS -> LivePlaybackContent(playback, livePlayback) { live -> sessionsContent(live, back) }
                             Overlay.HISTORY -> historyContent?.invoke(content, back)
                             Overlay.APPEARANCE -> AppearanceScreen(appearance, onAppearance, back, content,
-                                lyricsSettings, onLyricsSettings, lyricsState.cacheBytes, onClearLyricsCache)
+                                lyricsSettings, onLyricsSettings, lyricsState.cacheBytes, onClearLyricsCache,
+                                onHistory = { overlay = Overlay.HISTORY }, localFolders = localFoldersContent)
                             Overlay.NONE -> when (destination) {
                                 Destination.HOME -> screenState.SaveableStateProvider("home") { if (homeContent != null) homeContent(Modifier.weight(1f),
                                     { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { overlay = Overlay.APPEARANCE }, { destination = Destination.LIBRARY })
@@ -162,12 +165,14 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                                     }, { overlay = Overlay.APPEARANCE }, content) }
                                 Destination.SEARCH -> screenState.SaveableStateProvider("search") {
                                     SearchScreen(catalog, playback.track?.id, catalogActions, Modifier.weight(1f),
-                                        playback.connected, recentSearches, hasRecentSearches)
+                                        playback.connected, recentSearches, hasRecentSearches, playback.engine.playing)
                                 }
                                 Destination.LIBRARY -> Column(Modifier.weight(1f)) {
                                     if (libraryContent == null) TextButton({ sessionsFromPlayer = false; overlay = Overlay.SESSIONS },
                                         Modifier.padding(horizontal = 16.dp)) { Text("Saved sessions") }
-                                    if (libraryContent != null) libraryContent(Modifier.weight(1f), { overlay = Overlay.HISTORY }, { sessionsFromPlayer = false; overlay = Overlay.SESSIONS })
+                                    if (libraryContent != null) libraryContent(Modifier.weight(1f),
+                                        { sessionsFromPlayer = false; overlay = Overlay.SESSIONS },
+                                        { overlay = Overlay.APPEARANCE }, { destination = Destination.SEARCH })
                                     else Text("Your local library is ready for liked songs and playlists.", Modifier.padding(24.dp))
                                 }
                             }

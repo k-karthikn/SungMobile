@@ -28,7 +28,7 @@ class SungPlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
         val container = (application as SungApplication).container
-        playback = PlaybackCoordinator(container.catalog, ExoPlayerEngine(this, serviceScope), serviceScope,
+        playback = PlaybackCoordinator(LocalAwareStreamResolver(container.catalog), ExoPlayerEngine(this, serviceScope), serviceScope,
             relatedSource = container.catalog)
         playback.setConnected(false)
         timer = SleepTimerController(playback, serviceScope, android.os.SystemClock::elapsedRealtime)

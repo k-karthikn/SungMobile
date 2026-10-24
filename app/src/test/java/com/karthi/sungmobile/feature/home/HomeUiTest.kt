@@ -53,6 +53,7 @@ class HomeUiTest {
     private var likes by mutableStateOf(setOf(tracks[0].libraryKey()))
     private var toggles = 0
     private var saved: List<CatalogItem>? = null
+    private var openedCollection: LibraryCollection? = null
     private var sought = -1L
     private var chromeCompositions = 0
     private var displayedPosition = -1L
@@ -114,6 +115,14 @@ class HomeUiTest {
         compose.onNodeWithText("Liked shuffle").assertExists()
     }
 
+    @Test fun pinnedShelfOpensItsExistingPlaylist() {
+        show()
+        compose.onNodeWithTag("discovery_home").performScrollToKey("pinned_shelf")
+        capture("home-pinned-shelf")
+        compose.onNodeWithTag("home_pinned_pin").performClick()
+        compose.runOnIdle { assertEquals(LibraryCollection.Playlist("pin"), openedCollection) }
+    }
+
     @Test fun clockUpdatesStayOutOfChromeButPlayerReceivesLiveSeekAndTimer() {
         show()
         compose.waitForIdle()
@@ -159,7 +168,8 @@ class HomeUiTest {
                         SungApp(CatalogState(), chrome, CatalogActions({}, {}, {}, {}, {}, {}, {}, {}),
                             PlayerActions({}, { sought = it }, {}), Appearance(), {}, livePlayback = player.state,
                             homeContent = { modifier, search, nowPlaying, appearance, _ ->
-                                DiscoveryHomeScreen(home, {}, player, search, nowPlaying, appearance, {}, modifier)
+                                DiscoveryHomeScreen(home, {}, player, search, nowPlaying, appearance,
+                                    { openedCollection = it }, modifier)
                             }, convenienceContent = { state, _ ->
                                 SideEffect { displayedPosition = state.engine.positionMs; displayedTimer = state.sleepTimer?.remainingMs ?: -1L }
                             })

@@ -5,6 +5,9 @@ import com.karthi.sungmobile.core.model.library.*
 
 enum class AdvancedPage { CLOSED, SMART_LIST, SMART_DETAIL, CLEANUP, STATISTICS }
 
+data class SmartOverview(val playlists: List<SmartPlaylist> = emptyList(),
+    val loading: Boolean = true, val error: Boolean = false)
+
 data class AdvancedLibraryState(
     val page: AdvancedPage = AdvancedPage.CLOSED,
     val smartPlaylists: List<SmartPlaylist> = emptyList(),

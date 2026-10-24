@@ -1,8 +1,11 @@
 package com.karthi.sungmobile.feature.library
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -12,6 +15,9 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.karthi.sungmobile.core.designsystem.theme.*
 import com.karthi.sungmobile.core.model.library.*
 import com.karthi.sungmobile.feature.library.components.LibraryHeader
+import com.karthi.sungmobile.feature.library.components.LibraryDestination
+import com.karthi.sungmobile.feature.library.components.LibraryListControls
+import com.karthi.sungmobile.feature.home.HomeState
 import com.karthi.sungmobile.testing.*
 import org.junit.*
 import org.junit.Assert.*
@@ -52,17 +58,63 @@ class LibraryUiTest {
         assertTrue(selected); assertEquals(0, played)
     }
 
-    @Test fun sessionsAndAdvancedLibraryDestinationsRemainReachable() {
+    @Test fun libraryTabsAndTopActionsRemainReachable() {
+        var selected = LibraryDestination.LIKED
         var sessions = false
-        var smart = false
+        var settings = false
+        var search = false
         compose.setContent { SungTheme { Column {
-            LibraryHeader(LibraryCollection.Likes, {}, { sessions = true }, {}, { smart = true }, {})
+            LibraryHeader(selected, { if (it == LibraryDestination.SESSIONS) sessions = true else selected = it },
+                { settings = true }, { search = true })
         } } }
+        compose.onNodeWithText("Mixes").performScrollTo().performClick()
+        assertEquals(LibraryDestination.MIXES, selected)
+        compose.onNodeWithText("Recents").performScrollTo().performClick()
+        assertEquals(LibraryDestination.RECENTS, selected)
         compose.onNodeWithText("Sessions").performScrollTo().performClick()
         assertTrue(sessions)
-        compose.onNodeWithContentDescription("Library options").performClick()
-        compose.onNodeWithText("Smart playlists").performClick()
-        assertTrue(smart)
+        compose.onNodeWithContentDescription("Settings").performClick()
+        compose.onNodeWithContentDescription("Search").performClick()
+        assertTrue(settings)
+        assertTrue(search)
+    }
+
+    @Test fun splitPlayMenuKeepsShuffleAndQueueActions() {
+        var shuffled = false
+        var next = false
+        var queued = false
+        compose.setContent { SungTheme {
+            LibraryListControls("", "Filter liked songs", {}, LibrarySort.DEFAULT, {}, false, true,
+                {}, { shuffled = true }, { next = true }, { queued = true }, {})
+        } }
+        compose.onNodeWithContentDescription("Play all songs").assertExists()
+        compose.onNodeWithContentDescription("More play options").performClick()
+        compose.onNodeWithContentDescription("Close play options").assertExists()
+        compose.onNodeWithText("Shuffle").performClick()
+        assertTrue(shuffled)
+        compose.onNodeWithContentDescription("More play options").performClick()
+        compose.onNodeWithText("Add to queue").performClick()
+        assertTrue(queued)
+        compose.onNodeWithContentDescription("More play options").performClick()
+        compose.onNodeWithText("Play next").performClick()
+        assertTrue(next)
+    }
+
+    @Test fun mixesShowRealCardsAndSavedSmartList() {
+        val repo = TestLocalLibrary()
+        val player = RecordingPlayer()
+        val actions = LibraryActionsViewModel(repo, player).also { store.put("mix-actions", it) }
+        val songs = listOf(testSong, testSong.copy(id = "second", title = "Second song"))
+        val smart = SmartPlaylist("smart-1", "Evening mix", SmartRule())
+        var opened: String? = null
+        compose.setContent { SungTheme { Column(Modifier.verticalScroll(rememberScrollState())) {
+            LibraryMixesContent(HomeState(likedMix = songs, loading = false),
+                SmartOverview(listOf(smart), loading = false), true, actions, { opened = it }, {}, {})
+        } } }
+        compose.onNodeWithTag("play_mix_Liked shuffle").performClick()
+        assertEquals(songs, player.batches.single())
+        compose.onNodeWithText("Evening mix").performScrollTo().performClick()
+        assertEquals("smart-1", opened)
     }
 
     @Test fun libraryLightAndSelection() = render(false, 1f)

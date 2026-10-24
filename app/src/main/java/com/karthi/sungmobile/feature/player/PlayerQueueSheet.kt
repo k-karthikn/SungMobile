@@ -46,11 +46,8 @@ internal fun PlayerQueueSheet(state: PlaybackState, actions: PlayerActions,
                     Text(track.subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                FilledIconButton(onClick = actions.toggle, shapes = IconButtonDefaults.shapes(),
-                    modifier = Modifier.size(48.dp).testTag("queue_play_pause")) {
-                    SungIcon(if (state.actionLabel() == R.string.pause) SungSymbol.Pause else SungSymbol.Play,
-                        stringResource(state.actionLabel()))
-                }
+                ExpressivePlayButton(state, actions.toggle, Modifier.testTag("queue_play_pause"),
+                    size = 48.dp, iconSize = 24.dp)
                 IconButton(actions.next, Modifier.size(48.dp), enabled = state.queue.nextId(false) != null) {
                     SungIcon(SungSymbol.SkipNext, stringResource(R.string.next_track))
                 }

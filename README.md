@@ -1,12 +1,20 @@
 # SungMobile
 
-Latest production candidate: **0.12.4 (code 24)** — compact player transport and seek controls with a swipe-up Queue sheet. [APK and manual checklist](Stages/Player_Queue_UI_Results/README.md). Phone acceptance pending; no GitHub release published.
+Latest production candidate: **0.12.8 (code 28)** — local songs, minimal downloads, and the square-to-flower play/pause transition. [Versioned APK and phone checklist](Stages/Local_Audio_Results/README.md). Phone acceptance and publication are pending.
+
+Latest production candidate: **0.12.7 (code 27)** — lighter theme-colored active lyrics and the same expressive play/pause control across the mini-player and Now Playing. [APK and manual checklist](Stages/Lyrics_Emphasis_Results/README.md). Phone acceptance pending; publishing was not performed in this task.
+
+Previous production candidate: **0.12.6 (code 26)** — all five expressive UI slices, including Home, Search, Lyrics, loading and settings. [APK and manual checklist](Stages/Expressive_UI_Results/README.md).
+
+Previous production candidate: **0.12.5 (code 25)** — shared expressive mini-player/navigation and Library tabs, Mixes and settings access. [APK and manual checklist](Stages/Expressive_Library_Results/README.md).
+
+Previous production candidate: **0.12.4 (code 24)** — compact player transport and seek controls with a swipe-up Queue sheet. [APK and manual checklist](Stages/Player_Queue_UI_Results/README.md).
 
 Production release candidate: **0.12.3 (code 23)**, signed and optimized for `com.karthi.sungmobile`. [Versioned APK and manual checklist](Stages/Production_Release_Results/README.md). This installs alongside the earlier `.stage0` debug app; its local library starts fresh. Phone acceptance and public release are pending.
 
-Latest build: **0.12.3-icon (code 23)** — corrected adaptive launcher icon placement. [APK and phone checklist](Stages/Icon_Results/README.md). Phone acceptance pending.
+Earlier icon build: **0.12.3-icon (code 23)** — corrected adaptive launcher icon placement. [APK and phone checklist](Stages/Icon_Results/README.md). Phone acceptance pending.
 
-Latest UI build: **0.12.2-lyrics-ui (code 22)** — Lyrics screen, grouped settings and confirmation dialogs. [APK and manual checks](Stages/Lyrics_UI_Results/README.md). [Implementation report](docs/ui/lyrics/REPORT.md). Phone acceptance pending.
+Earlier Lyrics UI build: **0.12.2-lyrics-ui (code 22)** — Lyrics screen, grouped settings and confirmation dialogs. [APK and manual checks](Stages/Lyrics_UI_Results/README.md). [Implementation report](docs/ui/lyrics/REPORT.md). Phone acceptance pending.
 
 Latest UI build: **0.12.1-search-ui (code 21)** — Search layout, category icons, clear action, recent searches and shared heart/plus result rows. [APK and manual checks](Stages/Search_UI_Results/README.md). [Search report](docs/ui/search/REPORT.md). Phone acceptance pending.
 
@@ -66,7 +74,7 @@ Without `live=true`, device tests cover deterministic UI states and skip live pl
 
 This build supports search, collection browsing, service-owned play/pause/seek, automatic queue progression, shuffle/repeat, queue editing/Undo and paused queue restoration. The user reported successful completion of this milestone's physical-device checklist, covering background playback, media controls and interruptions. The UI does not pause playback when it leaves the foreground.
 
-It also provides persistent likes, local playlists, pins, bulk library actions, listening/search history and privacy controls. Stage 4 adds debounced search, validated shared/pasted links, paged collection actions with explicit partial-load choices, and privacy-aware local mixes. Stage 5 adds YouTube lyrics where available, optional matched LRCLIB fallback and essential lyric settings. Stage 6 adds speed/pitch control, sleep timer, long-recording resume points and saved sessions. Device music and downloads were prototyped for Stage 7, then deferred by the owner; the active app is online-only. Account sign-in is outside the current local-library scope.
+It also provides persistent likes, local playlists, pins, bulk library actions, listening/search history and privacy controls. Stage 4 adds debounced search, validated shared/pasted links, paged collection actions with explicit partial-load choices, and privacy-aware local mixes. Stage 5 adds YouTube lyrics where available, optional matched LRCLIB fallback and essential lyric settings. Stage 6 adds speed/pitch control, sleep timer, long-recording resume points and saved sessions. The current source adds on-device songs and minimal downloads without restoring the deferred Stage 7 database or settings. Account sign-in is outside the current local-library scope.
 
 SungMobile is licensed under **GPL-3.0-or-later**, matching the selected NewPipeExtractor dependency. See [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md). This development APK is not a public release. The release stage must package the corresponding source and complete dependency/asset notices before public distribution.
 

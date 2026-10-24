@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.karthi.sungmobile.core.designsystem.icon.*
+import com.karthi.sungmobile.core.designsystem.component.SungLoading
 
 @Composable
 fun AdvancedLibraryScreen(model: AdvancedLibraryViewModel, state: AdvancedLibraryState,
@@ -22,7 +23,7 @@ fun AdvancedLibraryScreen(model: AdvancedLibraryViewModel, state: AdvancedLibrar
                 TextButton(model::retry) { Text("Retry") }
                 TextButton(model::dismissMessage) { Text("Dismiss") }
             }
-            if (state.busy || state.loadingMore) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (state.busy || state.loadingMore) SungLoading(label = "Loading library details…")
         }
         when (state.page) {
             AdvancedPage.SMART_LIST -> smartList(model, state)

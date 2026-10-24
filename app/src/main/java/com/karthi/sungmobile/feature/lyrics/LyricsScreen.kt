@@ -10,12 +10,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.testTag
 import com.karthi.sungmobile.R
 import com.karthi.sungmobile.core.data.settings.LyricsSettings
+import com.karthi.sungmobile.core.designsystem.component.SungLoading
 import com.karthi.sungmobile.core.model.lyrics.*
 import com.karthi.sungmobile.core.playback.PlaybackState
 import com.karthi.sungmobile.core.designsystem.theme.LocalSungMotionEnabled
-import com.karthi.sungmobile.core.designsystem.icon.*
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: LyricsSettings,
@@ -31,14 +33,13 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
     val dragged by list.interactionSource.collectIsDraggedAsState()
     LaunchedEffect(dragged) { if (dragged) follow = false }
     LaunchedEffect(current, follow) { if (follow && current >= 0) {
-        if (motionEnabled) list.animateScrollToItem(current) else list.scrollToItem(current)
+        val viewport = snapshotFlow { list.layoutInfo.viewportSize.height }.first { it > 0 }
+        val offset = -(viewport / 3)
+        if (motionEnabled) list.animateScrollToItem(current, offset) else list.scrollToItem(current, offset)
     } }
     Column(modifier.fillMaxSize().padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            IconButton(onBack) { SungIcon(SungSymbol.Back, stringResource(R.string.back)) }
-            Text(stringResource(R.string.lyrics), style = MaterialTheme.typography.headlineMedium)
-        }
+        LyricsTopBar(document?.synchronized, onBack)
         LyricsTrackCard(track, document?.attribution)
         if (timed.isNotEmpty()) {
             LyricsTimingCard(state.offsetMs, follow, onOffset, { follow = true })
@@ -46,7 +47,7 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
         when {
             state.loading || (state.videoId != track?.id && track != null) ->
                 Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                    CircularProgressIndicator()
+                    SungLoading(Modifier.testTag("lyrics_loading"), "Loading lyrics…")
                 }
             document == null -> {
                 Surface(shape = MaterialTheme.shapes.extraLarge,
@@ -58,11 +59,15 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
                     }
                 }
             }
-            timed.isNotEmpty() -> LazyColumn(state = list, modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(vertical = 28.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                itemsIndexed(timed, key = { index, _ -> index }) { index, line ->
-                    TimedLyricRow(line, index, current, settings, playback.engine.seekable,
-                        state.offsetMs, playback.engine.durationMs, onSeek)
+            timed.isNotEmpty() -> BoxWithConstraints(Modifier.weight(1f)) {
+                val breathingRoom = maxHeight / 3
+                LazyColumn(state = list, modifier = Modifier.fillMaxSize().testTag("timed_lyrics_list"),
+                    contentPadding = PaddingValues(vertical = breathingRoom),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    itemsIndexed(timed, key = { index, _ -> index }) { index, line ->
+                        TimedLyricRow(line, index, current, settings, playback.engine.seekable,
+                            state.offsetMs, playback.engine.durationMs, onSeek)
+                    }
                 }
             }
             else -> LazyColumn(modifier = Modifier.weight(1f), contentPadding = PaddingValues(vertical = 24.dp)) {

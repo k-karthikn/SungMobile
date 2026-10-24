@@ -19,18 +19,16 @@ import com.karthi.sungmobile.core.designsystem.icon.*
 internal fun HomeHeader(search: () -> Unit, nowPlaying: () -> Unit, appearance: () -> Unit,
     refresh: () -> Unit, hasTrack: Boolean, loading: Boolean) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text("Sung", style = MaterialTheme.typography.displayMediumEmphasized, fontWeight = FontWeight.Bold)
-                Text(stringResource(R.string.home_tagline), style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             FilledTonalIconButton(onClick = appearance, shapes = IconButtonDefaults.shapes(),
                 modifier = Modifier.size(52.dp).testTag("appearance")) {
-                SungIcon(SungSymbol.Tune, stringResource(R.string.appearance), Modifier.size(26.dp))
+                SungIcon(SungSymbol.Tune, "Settings", Modifier.size(26.dp))
             }
+            SungSearchEntry(stringResource(R.string.home_search_short), search,
+                Modifier.weight(1f).testTag("home_search"))
         }
-        SungSearchEntry(stringResource(R.string.home_search_hint), search, Modifier.testTag("home_search"))
+        Text(stringResource(R.string.home_listen_title), style = MaterialTheme.typography.headlineLargeEmphasized,
+            fontWeight = FontWeight.SemiBold)
         BoxWithConstraints {
             val stack = maxWidth < 340.dp || LocalDensity.current.fontScale > 1.3f
             if (stack) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

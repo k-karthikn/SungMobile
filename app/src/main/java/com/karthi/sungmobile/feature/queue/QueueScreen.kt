@@ -15,6 +15,7 @@ import com.karthi.sungmobile.core.designsystem.icon.*
 import com.karthi.sungmobile.core.designsystem.component.SungConfirmDialog
 import com.karthi.sungmobile.core.designsystem.theme.LocalSungMotionEnabled
 import com.karthi.sungmobile.core.playback.PlaybackState
+import com.karthi.sungmobile.core.model.library.libraryKeyOrNull
 
 /** Deliberately simple: explicit accessible actions instead of a custom drag interaction. */
 @Composable
@@ -22,6 +23,7 @@ fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit
     embedded: Boolean = false) {
     val library = com.karthi.sungmobile.feature.library.LocalLibraryUi.current
     val queue = state.queue
+    val onlineCount = queue.entries.count { it.track.libraryKeyOrNull() != null }
     val motion = LocalSungMotionEnabled.current
     var confirmClear by remember { mutableStateOf(false) }
     if (confirmClear) SungConfirmDialog(stringResource(R.string.clear_upcoming),
@@ -38,7 +40,10 @@ fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit
                 TextButton({ confirmClear = true }, enabled = queue.currentIndex < queue.entries.lastIndex) { Text(stringResource(R.string.clear_upcoming)) }
                 TextButton(actions.undo, enabled = state.canUndo, modifier = Modifier.testTag("queue_undo")) { Text(stringResource(R.string.undo)) }
             }
-            TextButton(library.saveQueue, enabled = queue.entries.isNotEmpty()) { Text("Save queue as playlist") }
+            TextButton(library.saveQueue, enabled = onlineCount > 0) {
+                Text(if (onlineCount == queue.entries.size) "Save queue as playlist"
+                    else "Save online songs as playlist")
+            }
             if (queue.entries.isEmpty()) Text(stringResource(R.string.queue_empty))
         }
         itemsIndexed(queue.entries, key = { _, entry -> entry.id }) { index, entry ->

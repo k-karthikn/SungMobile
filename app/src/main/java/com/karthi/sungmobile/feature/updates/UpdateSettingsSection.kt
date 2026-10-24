@@ -14,8 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.karthi.sungmobile.updates.AppUpdates
 import com.karthi.sungmobile.core.designsystem.component.SungSettingsGroup
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.ui.semantics.Role
+import com.karthi.sungmobile.core.designsystem.component.SungSettingsToggle
 import kotlinx.coroutines.launch
 
 @Composable
@@ -28,12 +27,8 @@ fun UpdateSettingsSection() {
     SungSettingsGroup("App updates") {
         val installed = remember { com.karthi.sungmobile.updates.UpdateApk.installed(context) }
         Text("Installed: ${installed.versionName.orEmpty()} (code ${com.karthi.sungmobile.updates.UpdateApk.code(installed)})", style = MaterialTheme.typography.bodySmall)
-        Row(Modifier.fillMaxWidth().toggleable(state.enabled, role = Role.Switch,
-            onValueChange = updater::setEnabled), verticalAlignment = Alignment.CenterVertically) {
-            Text("Automatic updates", Modifier.weight(1f))
-            Switch(state.enabled, onCheckedChange = null)
-        }
-        Text("Automatically check and download stable GitHub releases on unmetered networks, usually Wi-Fi. Android asks you to confirm installation. Checks run about every 12 hours when the system allows.", style = MaterialTheme.typography.bodyMedium)
+        SungSettingsToggle("Automatic updates", state.enabled, updater::setEnabled,
+            "Check and download stable releases on unmetered networks, usually Wi-Fi. Android asks you to confirm installation. Checks run about every 12 hours when the system allows.")
         Text(state.message, style = MaterialTheme.typography.bodySmall)
         FilledTonalButton({ scope.launch { updater.check(automatic = false) } }, Modifier.fillMaxWidth(), enabled = !state.busy) {
             Text(if (state.busy) "Checking / downloading…" else "Check and download now")

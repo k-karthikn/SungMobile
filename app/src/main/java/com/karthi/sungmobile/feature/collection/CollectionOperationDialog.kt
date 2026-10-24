@@ -3,8 +3,8 @@ package com.karthi.sungmobile.feature.collection
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.karthi.sungmobile.core.model.catalog.BatchStop
+import com.karthi.sungmobile.core.designsystem.component.SungLoading
 
 @Composable
 fun CollectionOperationDialog(state: CollectionOperation?, actions: CollectionActionsViewModel) {
@@ -12,7 +12,7 @@ fun CollectionOperationDialog(state: CollectionOperation?, actions: CollectionAc
     AlertDialog(onDismissRequest = actions::cancel, title = { Text(state.action.label) }, text = {
         Column {
             Text("${state.count} entries loaded")
-            if (state.loading) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Loading collection… Existing playback continues.") }
+            if (state.loading) { SungLoading(label = "Loading collection…"); Text("Existing playback continues.") }
             else Text(state.message ?: when (state.batch?.stop) {
                 BatchStop.LIMIT -> "The collection exceeded this operation's limit. Only the loaded songs are available here."
                 BatchStop.TIMEOUT -> "Loading timed out. You can retry or use the loaded songs."

@@ -31,7 +31,9 @@ class HistoryRecording(
         val state = sample.state
         val track = state.track
         val pass = state.passId
-        val id = if (pass != null && track != null && sample.policy.recordsListening) "$pass:${sample.policy.listeningEpoch}" else null
+        // Local files are playable and queueable, but are outside the YouTube-only library/history schema.
+        val id = if (pass != null && track?.libraryKeyOrNull() != null && sample.policy.recordsListening)
+            "$pass:${sample.policy.listeningEpoch}" else null
         if (accumulator?.record?.id != id) {
             accumulator?.let { old ->
                 val record = old.sample(false, old.record.track.durationMs ?: 0, sample.monotonic, sample.wall, old.record.track)

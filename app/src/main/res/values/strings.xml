@@ -39,6 +39,10 @@
     <string name="search">Search</string>
     <string name="library">Library</string>
     <string name="searching">Searching…</string>
+    <plurals name="search_results_shown">
+        <item quantity="one">%1$d result shown</item>
+        <item quantity="other">%1$d results shown</item>
+    </plurals>
     <string name="appearance">Appearance</string>
     <string name="home_headline">Your next favorite.</string>
     <string name="home_resume">Back to your sound.</string>
@@ -46,6 +50,7 @@
     <string name="explore">Explore</string>
     <string name="open_player">Listen</string>
     <string name="home_search_hint">Search music or paste a YouTube link</string>
+    <string name="home_search_short">Search music</string>
     <string name="from_collection">From this collection</string>
     <string name="from_search">From your search</string>
     <string name="home_empty_title">Start with a song</string>
@@ -96,6 +101,8 @@
     <string name="lyrics_missing">No lyrics available for this song.</string>
     <string name="lyrics_follow">Return to current line</string>
     <string name="home_tagline">Music for your moments</string>
+    <string name="home_listen_title">Listen</string>
+    <string name="home_mixes_title">Your mixes</string>
     <string name="refresh_mixes">Refresh mixes</string>
     <string name="view_all">View all</string>
     <plurals name="home_song_count">

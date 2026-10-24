@@ -251,6 +251,7 @@ class PlaybackCoordinator(
     private fun requestRelated(queue: QueueState) {
         val source = relatedSource ?: return
         val seed = queue.current?.track ?: return
+        if (seed.id.startsWith("local:")) return
         if (!relatedAutoplayEnabled || queue.repeat != RepeatMode.OFF || relatedJob != null) return
         val request = ++relatedGeneration
         relatedJob = scope.launch {

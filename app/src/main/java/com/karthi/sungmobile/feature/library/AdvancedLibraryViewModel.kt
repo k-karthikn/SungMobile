@@ -15,6 +15,8 @@ class AdvancedLibraryViewModel(private val advanced: AdvancedLibraryRepository,
     private val player: PlaybackControl) : ViewModel() {
     private val mutable = MutableStateFlow(AdvancedLibraryState())
     val state = mutable.asStateFlow()
+    private val mutableSmartOverview = MutableStateFlow(SmartOverview())
+    val smartOverview = mutableSmartOverview.asStateFlow()
     private var navigation = 0L
     private var loadGeneration = 0L
     private var detailGeneration = 0L
@@ -30,7 +32,14 @@ class AdvancedLibraryViewModel(private val advanced: AdvancedLibraryRepository,
             checking = checking) }
     }
 
-    init { viewModelScope.launch { advanced.changes.collect { reload() } } }
+    init { viewModelScope.launch {
+        advanced.changes.onStart { emit(Unit) }.collectLatest {
+            reload()
+            try { mutableSmartOverview.value = SmartOverview(advanced.smartPlaylists(), loading = false) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { mutableSmartOverview.value = mutableSmartOverview.value.copy(loading = false, error = true) }
+        }
+    } }
     private fun navigate(next: AdvancedLibraryState) {
         navigation++
         loadJob?.cancel(); moreJob?.cancel(); cancelDetail()

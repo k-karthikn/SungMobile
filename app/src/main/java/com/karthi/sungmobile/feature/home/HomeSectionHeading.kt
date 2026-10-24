@@ -15,13 +15,13 @@ import com.karthi.sungmobile.R
 import com.karthi.sungmobile.core.designsystem.icon.*
 
 @Composable
-internal fun HomeSectionHeading(title: String, viewAll: () -> Unit) {
+internal fun HomeSectionHeading(title: String, viewAll: (() -> Unit)? = null) {
     val heading: @Composable () -> Unit = {
         Text(title, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleLargeEmphasized,
             fontWeight = FontWeight.SemiBold)
     }
     val action: @Composable () -> Unit = {
-        TextButton(viewAll) {
+        if (viewAll != null) TextButton(viewAll) {
             Text(stringResource(R.string.view_all))
             SungIcon(SungSymbol.Chevron)
         }

@@ -1,6 +1,5 @@
 package com.karthi.sungmobile.feature.player
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -50,15 +49,8 @@ internal fun PlayerTransport(state: PlaybackState, actions: PlayerActions) {
                 enabled = queue.current != null) {
                 SungIcon(SungSymbol.SkipPrevious, stringResource(R.string.previous_track), Modifier.size(28.dp))
             }
-            FilledIconButton(onClick = actions.toggle, shapes = IconButtonDefaults.shapes(),
-                modifier = Modifier.size(playSize).testTag("play_pause")) {
-                val label = state.actionLabel()
-                Crossfade(label, animationSpec = tween(if (LocalSungMotionEnabled.current) 180 else 0),
-                    label = "Play or pause") { action ->
-                    SungIcon(if (action == R.string.pause) SungSymbol.Pause else SungSymbol.Play,
-                        stringResource(action), Modifier.size(34.dp))
-                }
-            }
+            ExpressivePlayButton(state, actions.toggle, Modifier.testTag("play_pause"),
+                size = playSize, iconSize = 34.dp)
             FilledTonalIconButton(onClick = actions.next, shapes = IconButtonDefaults.shapes(),
                 modifier = Modifier.width(sideWidth).height(playSize).testTag("next_track"),
                 enabled = queue.nextId(false) != null) {

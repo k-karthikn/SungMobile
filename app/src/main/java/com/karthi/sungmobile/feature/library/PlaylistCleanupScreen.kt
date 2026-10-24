@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.karthi.sungmobile.core.model.library.*
+import com.karthi.sungmobile.core.designsystem.component.SungLoading
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.cleanup(model: AdvancedLibraryViewModel, state: AdvancedLibraryState) {
     val duplicates = duplicateEntryIds(state.entries)
@@ -38,7 +39,7 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.cleanup(model: Advan
             if (state.checking) TextButton(model::cancelScan) { Text("Cancel") }
             if (state.unknownChecks > 0 && !state.checking) TextButton(model::retryUnknown) { Text("Retry unknown") }
         }
-        if (state.checking) LinearProgressIndicator(Modifier.fillMaxWidth())
+        if (state.checking) SungLoading(label = "Checking availability…")
         Text("Checked ${state.checkedCount}/${state.entries.size}; ${state.unknownChecks} unknown")
         HorizontalDivider()
         Text("Review entries", style = MaterialTheme.typography.titleMedium)

@@ -1,7 +1,5 @@
 package com.karthi.sungmobile.feature.player
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,7 +14,6 @@ import com.karthi.sungmobile.R
 import com.karthi.sungmobile.app.PlayerActions
 import com.karthi.sungmobile.core.designsystem.artwork.SungArtwork
 import com.karthi.sungmobile.core.designsystem.icon.*
-import com.karthi.sungmobile.core.designsystem.theme.LocalSungMotionEnabled
 import com.karthi.sungmobile.core.playback.PlaybackState
 import kotlinx.coroutines.flow.StateFlow
 
@@ -43,7 +40,7 @@ fun MiniPlayer(state: PlaybackState, actions: PlayerActions, onOpen: () -> Unit,
                     }
                     if (!compact) MiniSkipButton(SungSymbol.SkipPrevious, R.string.previous_track,
                         actions.previous, state.connected && state.queue.current != null, "mini_previous")
-                    MiniPlayButton(state, actions.toggle)
+                    ExpressivePlayButton(state, actions.toggle, Modifier.testTag("mini_play_pause"))
                     if (!compact) MiniSkipButton(SungSymbol.SkipNext, R.string.next_track,
                         actions.next, state.connected && state.queue.nextId(false) != null, "mini_next")
                     MiniPlayerMenu(state, actions, onLyrics, onQueue, onVolume)
@@ -59,28 +56,5 @@ private fun MiniSkipButton(symbol: SungSymbol, label: Int, action: () -> Unit,
     enabled: Boolean, tag: String) {
     IconButton(action, modifier = Modifier.size(48.dp).testTag(tag), enabled = enabled) {
         SungIcon(symbol, stringResource(label), Modifier.size(22.dp))
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun MiniPlayButton(state: PlaybackState, toggle: () -> Unit) {
-    val action = state.actionLabel()
-    val busy = state.resolving || (state.engine.buffering && state.engine.playRequested)
-    val playing = action == R.string.pause
-    FilledIconToggleButton(checked = playing, onCheckedChange = { toggle() },
-        enabled = state.connected, modifier = Modifier.size(52.dp).testTag("mini_play_pause"),
-        shapes = IconButtonDefaults.toggleableShapes(
-            shape = MaterialTheme.shapes.large,
-            checkedShape = MaterialShapes.Cookie9Sided.toShape())) {
-        if (busy && LocalSungMotionEnabled.current) {
-            LoadingIndicator(Modifier.size(28.dp), color = LocalContentColor.current)
-        } else {
-            Crossfade(action, animationSpec = tween(if (LocalSungMotionEnabled.current) 180 else 0),
-                label = "Mini player action") { label ->
-                SungIcon(if (label == R.string.pause) SungSymbol.Pause else SungSymbol.Play,
-                    stringResource(label), Modifier.size(26.dp))
-            }
-        }
     }
 }

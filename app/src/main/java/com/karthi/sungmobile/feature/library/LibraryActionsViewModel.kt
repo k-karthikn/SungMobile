@@ -48,5 +48,10 @@ class LibraryActionsViewModel(private val repository: LibraryRepository, private
         val index = rows.indexOfFirst { it.rowId == rowId }
         if (index >= 0) player.select(rows.map { it.track }, index)
     }
+    fun playTracks(tracks: List<CatalogItem>) { if (tracks.isNotEmpty()) player.playCollection(tracks, false) }
+    fun enqueueCollection(collection: LibraryCollection, next: Boolean) = run {
+        val tracks = repository.snapshot(collection)
+        if (tracks.isNotEmpty()) player.enqueueAll(tracks, next)
+    }
     fun enqueue(tracks: List<CatalogItem>, next: Boolean) { player.enqueueAll(tracks, next) }
 }

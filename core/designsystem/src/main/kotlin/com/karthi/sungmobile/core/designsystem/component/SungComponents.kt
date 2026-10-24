@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.karthi.sungmobile.core.designsystem.theme.LocalSungMotionEnabled
 import com.karthi.sungmobile.core.designsystem.theme.SungSpacing
@@ -25,15 +26,17 @@ fun SectionHeading(text: String, modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun SungLoading(modifier: Modifier = Modifier) {
+fun SungLoading(modifier: Modifier = Modifier, label: String = "Loading…") {
     Box(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().heightIn(min = SungSpacing.touchTarget)
+            .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
         if (LocalSungMotionEnabled.current) {
             LoadingIndicator(
                 Modifier.size(SungSpacing.touchTarget)
             )
-        }
+        } else Text(label, style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

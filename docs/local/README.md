@@ -1,0 +1,9 @@
+# Local songs and downloads
+
+The 0.12.8 (code 28) [production APK](../../Stages/Local_Audio_Results/README.md) has been built and verified on the host. It has not been installed or checked on a phone.
+
+In **Library → Local songs**, SungMobile scans `Music/SungMobile/` and its subfolders. The Refresh button picks up files copied in by another app. You can grant music access for those files, and add other folders through **Settings → Local songs** or the Local songs page. Folder selection uses Android's system picker; **Remove access** only removes that folder from SungMobile, leaving files untouched. Local tracks play and queue in the existing player. Likes, playlists, and listening history remain online-song features.
+
+The **Download** action in online song menus starts a fresh transfer. A notification shows progress or an unknown-size status and has a Cancel action. Completed files appear in `Music/SungMobile/`; delete them through the phone's file manager. A currently running request for the same song is reported, while a later intentional request can create another file. There is no download database, inventory, or destination preference. Downloads require Android 10 (API 29) or later; Local songs and folder picking remain available from the app's API 26 minimum.
+
+For phone verification, check an externally copied file in the default folder and a picked folder, play and queue each, deny and then grant music access, download a song, cancel another mid-transfer, and confirm the cancelled file does not appear in Local songs or a file manager. Also check a completed download after leaving the app, and verify online playback still works. These device outcomes are pending; host tests and Android lint alone cannot verify MediaStore, the document provider, and notification behavior on a phone.
