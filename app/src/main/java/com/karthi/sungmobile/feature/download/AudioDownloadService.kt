@@ -56,12 +56,13 @@ class AudioDownloadService : Service() {
         val job = scope.launch(start = CoroutineStart.LAZY) {
             try {
                 transfer.run(request.track) { bytes, total -> notifier.showProgress(request, bytes, total) }
+                (application as SungApplication).container.localAudio.invalidate()
                 notifier.finished(request, true, "Saved to Music/SungMobile")
             } catch (_: CancellationException) {
                 notifier.finished(request, false, "Download cancelled")
-            } catch (_: Exception) {
+            } catch (error: Exception) {
                 notifier.finished(request, false, if (transfer.isCancelled) "Download cancelled"
-                    else "Download failed. Tap Download to try again.")
+                    else downloadFailureMessage(error))
             } finally {
                 DownloadRequests.finish(request)
                 jobs.remove(id)

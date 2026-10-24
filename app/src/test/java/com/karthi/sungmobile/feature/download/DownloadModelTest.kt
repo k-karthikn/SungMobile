@@ -4,6 +4,7 @@ import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.CatalogKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,5 +30,19 @@ class DownloadModelTest {
         assertFalse(first.contains('/'))
         assertFalse(first.contains(':'))
         assertFalse(first == second)
+    }
+
+    @Test fun notificationExplainsExpiredAndNetworkFailuresWithoutLeakingProviderDetails() {
+        assertEquals("Audio link expired. Try Download again.",
+            downloadFailureMessage(AudioHttpException(403)))
+        assertEquals("Download interrupted. Check your connection and try again.",
+            downloadFailureMessage(java.io.IOException("https://private.example/signed?token=secret")))
+    }
+
+    @Test fun aPartialResponseCannotBePublishedAsACompleteSong() {
+        assertEquals(100L, expectedAudioLength(206, "bytes 0-99/100", 100))
+        assertThrows(java.io.IOException::class.java) {
+            expectedAudioLength(206, "bytes 0-49/100", 50)
+        }
     }
 }

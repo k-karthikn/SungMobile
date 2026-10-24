@@ -1,6 +1,6 @@
 # SungMobile
 
-Latest production candidate: **0.12.8 (code 28)** — local songs, minimal downloads, and the square-to-flower play/pause transition. [Versioned APK and phone checklist](Stages/Local_Audio_Results/README.md). Phone acceptance and publication are pending.
+Latest production candidate: **0.12.9 (code 29)** — a roomier Local songs tab, cached scans, and improved Android 15 download handling. [Versioned APK and phone checklist](Stages/Local_Audio_Viewport_Results/README.md). Phone acceptance and publication are pending.
 
 Latest production candidate: **0.12.7 (code 27)** — lighter theme-colored active lyrics and the same expressive play/pause control across the mini-player and Now Playing. [APK and manual checklist](Stages/Lyrics_Emphasis_Results/README.md). Phone acceptance pending; publishing was not performed in this task.
 

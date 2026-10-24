@@ -9,6 +9,7 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.SystemClock
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.MediaStore.Audio.Media as AudioMedia
@@ -16,6 +17,8 @@ import androidx.core.content.ContextCompat
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.CatalogKind
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 internal const val SUNG_MUSIC_PATH = "Music/SungMobile/"
@@ -24,10 +27,16 @@ data class LocalSong(val track: CatalogItem, val album: String?, val identity: S
 data class LocalScan(val songs: List<LocalSong>, val needsAudioPermission: Boolean,
     val unreadableFolders: Int = 0)
 
-/** No inventory is stored. Every opening/resume reads MediaStore and the user's persisted trees. */
+/** Keeps the last scan in memory so switching Library tabs does not walk SAF trees again. */
 class LocalAudioRepository(private val context: Context) {
     private val resolver get() = context.contentResolver
     private val preferences = context.getSharedPreferences("local_audio_folders", Context.MODE_PRIVATE)
+    private val scanMutex = Mutex()
+    @Volatile private var cachedScan: LocalScan? = null
+    @Volatile private var scannedAtMs = 0L
+
+    fun snapshot(): LocalScan? = cachedScan
+    fun invalidate() { cachedScan = null }
 
     fun hasAudioPermission(): Boolean = ContextCompat.checkSelfPermission(context, audioPermission()) ==
         PackageManager.PERMISSION_GRANTED
@@ -41,14 +50,18 @@ class LocalAudioRepository(private val context: Context) {
     fun addFolder(uri: Uri) {
         resolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         preferences.edit().putStringSet("trees", addedFolders().map(Uri::toString).toSet() + uri.toString()).apply()
+        invalidate()
     }
 
     fun removeFolder(uri: Uri) {
         preferences.edit().putStringSet("trees", addedFolders().map(Uri::toString).toSet() - uri.toString()).apply()
         runCatching { resolver.releasePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+        invalidate()
     }
 
-    suspend fun scan(): LocalScan = withContext(Dispatchers.IO) {
+    suspend fun scan(force: Boolean = false): LocalScan = withContext(Dispatchers.IO) { scanMutex.withLock {
+        val now = SystemClock.elapsedRealtime()
+        cachedScan?.takeIf { !force && now - scannedAtMs < SCAN_FRESHNESS_MS }?.let { return@withLock it }
         val songs = LinkedHashMap<String, LocalSong>()
         var denied = false
         var unreadable = 0
@@ -58,7 +71,8 @@ class LocalAudioRepository(private val context: Context) {
         }
         LocalScan(songs.values.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.track.title }),
             !hasAudioPermission() || denied, unreadable)
-    }
+            .also { cachedScan = it; scannedAtMs = SystemClock.elapsedRealtime() }
+    } }
 
     private fun scanDefault(result: MutableMap<String, LocalSong>) {
         val columns = mutableListOf(AudioMedia._ID, AudioMedia.DISPLAY_NAME, AudioMedia.TITLE, AudioMedia.ARTIST,
@@ -158,6 +172,8 @@ class LocalAudioRepository(private val context: Context) {
                 field(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull())
         }
     }.getOrDefault(Metadata(null, null, null, null))
+
+    private companion object { const val SCAN_FRESHNESS_MS = 60_000L }
 }
 
 internal fun filenameTitle(name: String): String = name.substringBeforeLast('.', name).ifBlank { "Untitled" }

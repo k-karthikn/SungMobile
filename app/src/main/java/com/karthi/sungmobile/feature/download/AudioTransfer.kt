@@ -28,7 +28,20 @@ internal class AudioTransfer(private val context: Context, private val streams: 
     suspend fun run(track: CatalogItem, progress: (Long, Long?) -> Unit): Uri = withContext(Dispatchers.IO) {
         check(Build.VERSION.SDK_INT >= 29) { "Downloads require Android 10 or newer" }
         check(!cancelled)
-        val stream = streams.resolve(track)
+        // Signed provider URLs can be invalid by the time the job starts. Resolve once more
+        // after an authorization/expiry response instead of failing the notification at 0%.
+        try {
+            transfer(track, streams.resolve(track), progress)
+        } catch (error: AudioHttpException) {
+            if (error.status !in setOf(403, 410)) throw error
+            currentCoroutineContext().ensureActive()
+            if (cancelled) throw IOException("Download cancelled")
+            transfer(track, streams.resolve(track), progress)
+        }
+    }
+
+    private suspend fun transfer(track: CatalogItem, stream: com.karthi.sungmobile.core.model.ResolvedStream,
+        progress: (Long, Long?) -> Unit): Uri {
         currentCoroutineContext().ensureActive()
         check(!cancelled)
         val url = URL(stream.url)
@@ -39,6 +52,7 @@ internal class AudioTransfer(private val context: Context, private val streams: 
             readTimeout = 25_000
             instanceFollowRedirects = true
             setRequestProperty("Accept-Encoding", "identity")
+            setRequestProperty("Range", "bytes=0-")
             stream.headers.forEach { (key, value) -> setRequestProperty(key, value) }
         }
         connection = http
@@ -46,8 +60,9 @@ internal class AudioTransfer(private val context: Context, private val streams: 
         var published = false
         try {
             http.connect()
-            if (http.responseCode != HttpURLConnection.HTTP_OK)
-                throw IOException("Audio server returned ${http.responseCode}")
+            if (http.responseCode != HttpURLConnection.HTTP_OK &&
+                http.responseCode != HttpURLConnection.HTTP_PARTIAL)
+                throw AudioHttpException(http.responseCode)
             val mime = stream.mimeType?.substringBefore(';')?.trim()?.takeIf { it.startsWith("audio/") }
                 ?: http.contentType?.substringBefore(';')?.trim()?.takeIf { it.startsWith("audio/") }
                 ?: throw IOException("The source did not provide audio")
@@ -70,12 +85,14 @@ internal class AudioTransfer(private val context: Context, private val streams: 
                 put(MediaStore.Audio.Media.IS_PENDING, 1)
             }
             val resolver = context.contentResolver
-            mediaUri = resolver.insert(MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values)
+            val destinationUri = resolver.insert(MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values)
                 ?: throw IOException("Could not create the audio file")
-            val total = http.contentLengthLong.takeIf { it > 0 }
+            mediaUri = destinationUri
+            val total = expectedAudioLength(http.responseCode,
+                http.getHeaderField("Content-Range"), http.contentLengthLong)
             var copied = 0L
             var lastUpdate = 0L
-            val output = resolver.openOutputStream(mediaUri, "w") ?: throw IOException("Could not write the audio file")
+            val output = resolver.openOutputStream(destinationUri, "w") ?: throw IOException("Could not write the audio file")
             output.use { destination ->
                 http.inputStream.use { source ->
                     val buffer = ByteArray(64 * 1024)
@@ -96,16 +113,30 @@ internal class AudioTransfer(private val context: Context, private val streams: 
             if (copied <= 0 || (total != null && copied != total)) throw IOException("Incomplete audio transfer")
             currentCoroutineContext().ensureActive()
             progress(copied, total)
-            if (resolver.update(mediaUri, ContentValues().apply { put(MediaStore.Audio.Media.IS_PENDING, 0) },
+            if (resolver.update(destinationUri, ContentValues().apply { put(MediaStore.Audio.Media.IS_PENDING, 0) },
                     null, null) != 1) throw IOException("Could not publish the audio file")
             published = true
-            mediaUri
+            return destinationUri
         } finally {
             http.disconnect()
             connection = null
             if (!published) mediaUri?.let { runCatching { context.contentResolver.delete(it, null, null) } }
         }
     }
+}
+
+internal class AudioHttpException(val status: Int) : IOException("Audio server returned $status")
+
+/** A 206 is safe only when it starts at zero and includes the entire file. */
+internal fun expectedAudioLength(status: Int, contentRange: String?, contentLength: Long): Long? {
+    if (status != HttpURLConnection.HTTP_PARTIAL) return contentLength.takeIf { it > 0 }
+    val match = Regex("bytes 0-(\\d+)/(\\d+)").matchEntire(contentRange.orEmpty())
+        ?: throw IOException("Incomplete audio response")
+    val end = match.groupValues[1].toLongOrNull() ?: throw IOException("Incomplete audio response")
+    val total = match.groupValues[2].toLongOrNull() ?: throw IOException("Incomplete audio response")
+    if (total <= 0 || end != total - 1 || (contentLength > 0 && contentLength != total))
+        throw IOException("Incomplete audio response")
+    return total
 }
 
 internal fun safeAudioFilename(title: String, extension: String): String {
