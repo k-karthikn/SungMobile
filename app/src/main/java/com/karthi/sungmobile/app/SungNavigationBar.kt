@@ -28,7 +28,7 @@ internal enum class Destination(val label: Int, val icon: SungSymbol, val select
 @Composable
 internal fun SungNavigationBar(selected: Destination, select: (Destination) -> Unit) {
     Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainer) {
-        Row(Modifier.fillMaxWidth().selectableGroup().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth().selectableGroup().padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Destination.entries.forEach { destination ->
                 val active = destination == selected
                 val background by animateColorAsState(
@@ -37,10 +37,10 @@ internal fun SungNavigationBar(selected: Destination, select: (Destination) -> U
                 Surface(selected = active, onClick = { select(destination) }, shape = CircleShape, color = background,
                     contentColor = if (active) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f).testTag("nav_${destination.name.lowercase()}").semantics { role = Role.Tab }) {
-                    Column(Modifier.heightIn(min = 64.dp).padding(horizontal = 8.dp, vertical = 8.dp),
+                    Column(Modifier.heightIn(min = 56.dp).padding(horizontal = 8.dp, vertical = 4.dp),
                         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically)) {
-                        SungIcon(if (active) destination.selectedIcon else destination.icon, modifier = Modifier.size(26.dp))
-                        Text(stringResource(destination.label), style = MaterialTheme.typography.labelMedium)
+                        SungIcon(if (active) destination.selectedIcon else destination.icon, modifier = Modifier.size(22.dp))
+                        Text(stringResource(destination.label), style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }

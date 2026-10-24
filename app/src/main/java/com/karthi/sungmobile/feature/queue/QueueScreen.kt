@@ -18,7 +18,8 @@ import com.karthi.sungmobile.core.playback.PlaybackState
 
 /** Deliberately simple: explicit accessible actions instead of a custom drag interaction. */
 @Composable
-fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit, modifier: Modifier = Modifier,
+    embedded: Boolean = false) {
     val library = com.karthi.sungmobile.feature.library.LocalLibraryUi.current
     val queue = state.queue
     val motion = LocalSungMotionEnabled.current
@@ -29,7 +30,7 @@ fun QueueScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit
     LazyColumn(modifier.fillMaxSize().testTag("queue_list"), contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item {
-            Row {
+            if (!embedded) Row {
                 IconButton(onBack) { SungIcon(SungSymbol.Back, stringResource(R.string.back)) }
                 Text(stringResource(R.string.queue_count, queue.entries.size), Modifier.padding(12.dp), style = MaterialTheme.typography.titleLarge)
             }

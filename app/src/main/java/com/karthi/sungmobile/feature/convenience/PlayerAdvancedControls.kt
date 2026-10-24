@@ -10,7 +10,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.karthi.sungmobile.core.data.settings.AdvancedPlaybackSettings
 import com.karthi.sungmobile.core.model.CatalogItem
-import com.karthi.sungmobile.core.model.lyrics.lyricsVideoId
 
 @Composable
 fun PlayerAdvancedControls(
@@ -40,18 +39,6 @@ fun PlayerAdvancedControls(
             }
             Switch(settings.relatedAutoplay, onRelatedAutoplay, Modifier.semantics { contentDescription = "Related autoplay" })
         }
-        track?.lyricsVideoId()?.let { id ->
-            val trim = settings.trimFor(id)
-            Text("This song's volume", style = MaterialTheme.typography.titleMedium)
-            Text(if (trim == 0) "Original level" else "$trim dB", style = MaterialTheme.typography.bodyMedium)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton({ onTrim(id, (trim - 1).coerceAtLeast(-12)) },
-                    enabled = trim > -12, modifier = Modifier.weight(1f)) { Text("Quieter") }
-                OutlinedButton({ onTrim(id, (trim + 1).coerceAtMost(0)) },
-                    enabled = trim < 0, modifier = Modifier.weight(1f)) { Text("Louder") }
-            }
-            Text("Only reduces this song; the sleep timer fade still applies.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+        TrackVolumeControl(track, settings, onTrim)
     }
 }

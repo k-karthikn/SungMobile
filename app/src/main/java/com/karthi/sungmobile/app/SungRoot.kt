@@ -106,6 +106,11 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                             { id, db -> settingsScope.launch { container.settings.setTrackTrim(id, db) } })
                     }
                 },
+                volumeContent = { state ->
+                    TrackVolumeControl(state.track, advanced) { id, db ->
+                        settingsScope.launch { container.settings.setTrackTrim(id, db) }
+                    }
+                },
                 sessionsContent = { state, back ->
                     SessionsScreen(convenienceState, state, back, convenience::save, convenience::rename,
                         convenience::delete, convenience::restore, convenience::clearMessage)

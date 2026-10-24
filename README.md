@@ -1,5 +1,7 @@
 # SungMobile
 
+Latest production candidate: **0.12.4 (code 24)** — compact player transport and seek controls with a swipe-up Queue sheet. [APK and manual checklist](Stages/Player_Queue_UI_Results/README.md). Phone acceptance pending; no GitHub release published.
+
 Production release candidate: **0.12.3 (code 23)**, signed and optimized for `com.karthi.sungmobile`. [Versioned APK and manual checklist](Stages/Production_Release_Results/README.md). This installs alongside the earlier `.stage0` debug app; its local library starts fresh. Phone acceptance and public release are pending.
 
 Latest build: **0.12.3-icon (code 23)** — corrected adaptive launcher icon placement. [APK and phone checklist](Stages/Icon_Results/README.md). Phone acceptance pending.

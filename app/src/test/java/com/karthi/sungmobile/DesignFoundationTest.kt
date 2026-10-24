@@ -132,6 +132,53 @@ class DesignFoundationTest {
         compose.onNodeWithTag("mini_player").assertIsDisplayed()
     }
 
+    @Test fun miniPlayerTransportAndMenuUseExistingActionsWithoutOpeningPlayer() {
+        val first = QueueEntry(track = scientist)
+        val second = QueueEntry(track = viva)
+        val queued = player.copy(queue = QueueState(listOf(first, second), currentId = first.id))
+        var previous = 0
+        var next = 0
+        var shuffled: Boolean? = null
+        compose.setContent {
+            SungTheme {
+                SungApp(catalog, queued, catalogActions,
+                    PlayerActions({}, {}, {}, next = { next++ }, previous = { previous++ },
+                        shuffle = { shuffled = it }), Appearance(), {},
+                    volumeContent = { androidx.compose.material3.Text("Song volume available") })
+            }
+        }
+        compose.onNodeWithTag("mini_previous").performClick()
+        compose.onNodeWithTag("mini_next").performClick()
+        compose.onNodeWithTag("player_title").assertDoesNotExist()
+        compose.onNodeWithText("1:42").assertIsDisplayed()
+        compose.onNodeWithText("4:28").assertIsDisplayed()
+        compose.onNodeWithTag("mini_more").performClick()
+        compose.onNodeWithText("Shuffle").performClick()
+        compose.runOnIdle {
+            assertEquals(1, previous)
+            assertEquals(1, next)
+            assertEquals(true, shuffled)
+        }
+        compose.onNodeWithTag("mini_more").performClick()
+        compose.onNodeWithText("This song's volume").performClick()
+        compose.onNodeWithText("Song volume available").assertIsDisplayed()
+    }
+
+    @Test fun miniPlayerQueueActionOpensTheExistingQueueSheet() {
+        val first = QueueEntry(track = scientist)
+        val second = QueueEntry(track = viva)
+        val queued = player.copy(queue = QueueState(listOf(first, second), currentId = first.id))
+        compose.setContent {
+            SungTheme {
+                SungApp(catalog, queued, catalogActions, playerActions, Appearance(), {})
+            }
+        }
+        compose.onNodeWithTag("mini_more").performClick()
+        compose.onNodeWithText("Queue (2)").performClick()
+        compose.onNodeWithTag("queue_now_playing").assertIsDisplayed()
+        compose.onNodeWithTag("open_queue").assertContentDescriptionContains("Collapse queue, Queue (2)")
+    }
+
     private fun render(name: String, dark: Boolean = false, fontScale: Float = 1f,
         reduced: Boolean = false, fullPlayer: Boolean = false) {
         var motion = true

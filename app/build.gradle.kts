@@ -21,8 +21,8 @@ android {
         applicationId = "com.karthi.sungmobile"
         minSdk = 26
         targetSdk = 37
-        versionCode = 23
-        versionName = "0.12.3"
+        versionCode = 24
+        versionName = "0.12.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -41,7 +41,7 @@ android {
     buildTypes {
         debug {
             applicationIdSuffix = ".stage0"
-            versionNameSuffix = "-icon"
+            versionNameSuffix = "-player-ui"
         }
         release {
             signingConfig = signingConfigs.getByName("production")

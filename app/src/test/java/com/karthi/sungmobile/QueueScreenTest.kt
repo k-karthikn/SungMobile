@@ -94,9 +94,31 @@ class QueueScreenTest {
         compose.setContent { SungTheme { PlayerScreen(state, PlayerActions({}, {}, {}, next = { next = true }), {}, openQueue = { opened = true }) } }
         compose.onNodeWithTag("next_track").performScrollTo().performClick()
         assertTrue(next)
-        compose.onNodeWithTag("open_queue").performScrollTo().performClick()
+        compose.onNodeWithTag("open_queue").performClick()
         assertTrue(opened)
         val file = File("build/outputs/player-ui/player-controls.png").apply { parentFile.mkdirs() }
         compose.onRoot().captureRoboImage(file.absolutePath)
+    }
+
+    @Test fun queuePeeksOnPlayerAndExpandsWithSwipe() {
+        compose.setContent { SungTheme { PlayerScreen(state, PlayerActions({}, {}, {}), {}) } }
+        compose.onNodeWithTag("open_queue").assertIsDisplayed().performTouchInput { swipeUp() }
+        compose.onNodeWithTag("queue_now_playing").assertIsDisplayed()
+        compose.onNodeWithTag("queue_options_1").assertIsDisplayed()
+        compose.onNodeWithTag("open_queue").performTouchInput { swipeDown() }
+        compose.onNodeWithTag("queue_now_playing").assertIsNotDisplayed()
+        compose.onNodeWithTag("open_queue").performClick()
+        compose.onNodeWithTag("queue_now_playing").assertIsDisplayed()
+    }
+
+    @Test fun expressiveTransportKeepsRepeatAndShuffleActions() {
+        var repeat: RepeatMode? = null
+        var shuffle: Boolean? = null
+        compose.setContent { SungTheme { PlayerScreen(state, PlayerActions({}, {}, {},
+            repeat = { repeat = it }, shuffle = { shuffle = it }), {}) } }
+        compose.onNodeWithTag("repeat_toggle").performScrollTo().performClick()
+        compose.onNodeWithTag("shuffle_toggle").performScrollTo().performClick()
+        assertEquals(RepeatMode.ALL, repeat)
+        assertEquals(true, shuffle)
     }
 }

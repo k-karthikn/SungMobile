@@ -1,5 +1,6 @@
 package com.karthi.sungmobile.feature.player
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -16,38 +17,70 @@ import com.karthi.sungmobile.R
 import com.karthi.sungmobile.app.PlayerActions
 import com.karthi.sungmobile.core.designsystem.icon.*
 import com.karthi.sungmobile.core.playback.PlaybackState
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit, modifier: Modifier = Modifier,
     openQueue: () -> Unit = {}, openLyrics: () -> Unit = {},
+    expandQueueRequest: Boolean = false, onQueueRequestHandled: () -> Unit = {},
     moreContent: @Composable () -> Unit = {},
     convenienceContent: @Composable () -> Unit = {}) {
     var more by remember { mutableStateOf(false) }
     if (more) PlayerMoreSheet(actions, { more = false }, moreContent)
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onBack, Modifier.size(48.dp)) { SungIcon(SungSymbol.Back, stringResource(R.string.close_player)) }
-            Text(stringResource(R.string.now_playing), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            IconButton({ more = true }, Modifier.testTag("player_more")) { SungIcon(SungSymbol.More, "More playback options") }
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.PartiallyExpanded,
+        enabledValues = setOf(SheetValue.PartiallyExpanded, SheetValue.Expanded))
+    LaunchedEffect(expandQueueRequest) {
+        if (expandQueueRequest) {
+            sheetState.expand()
+            onQueueRequestHandled()
         }
-        PlayerArtwork(state, actions.jump, Modifier.widthIn(max = 420.dp).fillMaxWidth().align(Alignment.CenterHorizontally))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(state.track?.title.orEmpty(), Modifier.testTag("player_title").semantics { heading() }, style = MaterialTheme.typography.headlineLarge)
-                Text(state.track?.subtitle.orEmpty(), style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(stringResource(state.statusLabel()), Modifier.testTag("player_status"), style = MaterialTheme.typography.bodyMedium,
-                    color = if (state.sourceError != null || state.engine.error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
+    val expanded = sheetState.currentValue == SheetValue.Expanded
+    BackHandler(expanded) { scope.launch { sheetState.partialExpand() } }
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val sheetHeight = (maxHeight - 24.dp).coerceAtLeast(200.dp)
+        val horizontalPadding = if (maxWidth < 360.dp) 16.dp else 24.dp
+        BottomSheetScaffold(scaffoldState = scaffoldState, sheetPeekHeight = 88.dp,
+            sheetDragHandle = null, sheetShape = MaterialTheme.shapes.extraLarge,
+            sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            sheetContent = {
+                PlayerQueueSheet(state, actions, expanded, onToggle = {
+                    scope.launch {
+                        if (expanded) sheetState.partialExpand()
+                        else { openQueue(); sheetState.expand() }
+                    }
+                }, onCollapse = { scope.launch { sheetState.partialExpand() } },
+                    modifier = Modifier.height(sheetHeight))
+            }, modifier = Modifier.fillMaxSize()) { insets ->
+            Column(Modifier.fillMaxSize().padding(insets).verticalScroll(rememberScrollState())
+                .padding(horizontal = horizontalPadding),
+                verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onBack, Modifier.size(48.dp)) { SungIcon(SungSymbol.Back, stringResource(R.string.close_player)) }
+                    Text(stringResource(R.string.now_playing), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    IconButton({ more = true }, Modifier.testTag("player_more")) { SungIcon(SungSymbol.More, "More playback options") }
+                }
+                PlayerArtwork(state, actions.jump, Modifier.widthIn(max = 420.dp).fillMaxWidth().align(Alignment.CenterHorizontally))
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(state.track?.title.orEmpty(), Modifier.testTag("player_title").semantics { heading() }, style = MaterialTheme.typography.headlineLarge)
+                        Text(state.track?.subtitle.orEmpty(), style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(state.statusLabel()), Modifier.testTag("player_status"), style = MaterialTheme.typography.bodyMedium,
+                            color = if (state.sourceError != null || state.engine.error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    state.track?.let { PlayerLibraryActions(it) }
+                }
+                PlayerSeek(state, actions.seek)
+                PlayerTransport(state, actions)
+                convenienceContent()
+                FilledTonalButton(openLyrics, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.lyrics)) }
+                Text(stringResource(R.string.background_notice), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 24.dp))
             }
-            state.track?.let { PlayerLibraryActions(it) }
         }
-        PlayerSeek(state, actions.seek)
-        PlayerTransport(state, actions)
-        QueueControls(state, actions, openQueue)
-        convenienceContent()
-        FilledTonalButton(openLyrics, Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(stringResource(R.string.lyrics)) }
-        Text(stringResource(R.string.background_notice), style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 24.dp))
     }
 }

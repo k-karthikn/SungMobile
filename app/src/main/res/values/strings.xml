@@ -58,6 +58,8 @@
     <string name="forward_ten_short">+10</string>
     <string name="background_notice">Playback continues when you leave Sung or lock the screen.</string>
     <string name="queue_count">Queue (%1$d)</string>
+    <string name="expand_queue">Expand queue</string>
+    <string name="collapse_queue">Collapse queue</string>
     <string name="queue_empty">Your queue is empty. Add songs from Search.</string>
     <string name="clear_upcoming">Clear upcoming</string>
     <string name="clear_upcoming_body">Remove all songs after the current song? You can undo this.</string>

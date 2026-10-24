@@ -31,22 +31,23 @@ internal fun PlayerSeekTrack(fraction: () -> Float, playing: Boolean) {
     } else remember { mutableFloatStateOf(0f) }
     val active = MaterialTheme.colorScheme.primary
     val inactive = MaterialTheme.colorScheme.surfaceContainerHighest
-    Canvas(Modifier.fillMaxWidth().height(16.dp)) {
+    Canvas(Modifier.fillMaxWidth().height(12.dp)) {
         val y = size.height / 2
         val end = size.width * fraction().coerceIn(0f, 1f)
-        val stroke = 4.dp.toPx()
+        val stroke = 3.dp.toPx()
         drawLine(inactive, Offset(end, y), Offset(size.width, y), stroke, StrokeCap.Round)
         if (end > 0) {
             if (!moving) drawLine(active, Offset(0f, y), Offset(end, y), stroke, StrokeCap.Round)
             else {
                 val wave = Path()
-                val wavelength = 32.dp.toPx()
+                val wavelength = 36.dp.toPx()
                 var x = 0f
                 while (x <= end) {
-                    val py = y + sin((x / wavelength - phase.value) * 2 * PI).toFloat() * 3.dp.toPx()
+                    val py = y + sin((x / wavelength - phase.value) * 2 * PI).toFloat() * 2.dp.toPx()
                     if (x == 0f) wave.moveTo(x, py) else wave.lineTo(x, py)
-                    x += 1.dp.toPx()
+                    x += 3.dp.toPx()
                 }
+                wave.lineTo(end, y + sin((end / wavelength - phase.value) * 2 * PI).toFloat() * 2.dp.toPx())
                 drawPath(wave, active, style = Stroke(stroke, cap = StrokeCap.Round))
             }
         }

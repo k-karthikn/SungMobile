@@ -22,11 +22,10 @@ import com.karthi.sungmobile.feature.home.HomeScreen
 import com.karthi.sungmobile.feature.library.LibraryScreen
 import com.karthi.sungmobile.feature.player.*
 import com.karthi.sungmobile.feature.search.SearchScreen
-import com.karthi.sungmobile.feature.queue.QueueScreen
 import com.karthi.sungmobile.feature.lyrics.*
 import com.karthi.sungmobile.core.data.settings.LyricsSettings
 
-private enum class Overlay { NONE, PLAYER, APPEARANCE, QUEUE, HISTORY, COLLECTION, LYRICS, SESSIONS }
+private enum class Overlay { NONE, PLAYER, APPEARANCE, HISTORY, COLLECTION, LYRICS, SESSIONS }
 
 /** Navigation belongs to the UI. Playback is observed from the service across destination changes. */
 @Composable
@@ -47,12 +46,19 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     onLyricsOffset: (Int) -> Unit = {}, onClearLyricsCache: () -> Unit = {},
     convenienceContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
     playerMoreContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
+    volumeContent: @Composable (PlaybackState) -> Unit = {},
     sessionsContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
     livePlayback: kotlinx.coroutines.flow.StateFlow<PlaybackState>? = null) {
     val screenState = rememberSaveableStateHolder()
     var destination by rememberSaveable { mutableStateOf(Destination.HOME) }
     var overlay by rememberSaveable { mutableStateOf(Overlay.NONE) }
     var sessionsFromPlayer by rememberSaveable { mutableStateOf(false) }
+    var miniVolume by rememberSaveable { mutableStateOf(false) }
+    var miniQueueRequest by remember { mutableStateOf(false) }
+    LaunchedEffect(playback.track?.id) { miniVolume = false }
+    if (miniVolume && playback.track != null) AlertDialog(onDismissRequest = { miniVolume = false },
+        title = { Text("Sound control") }, text = { volumeContent(playback) },
+        confirmButton = { TextButton({ miniVolume = false }) { Text("Close") } })
     DisposableEffect(detailId) {
         val key = detailId?.let { "collection:$it" }
         onDispose { key?.let(screenState::removeState) }
@@ -73,7 +79,6 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     }
     val back = {
         when {
-            overlay == Overlay.QUEUE -> overlay = Overlay.PLAYER
             overlay == Overlay.LYRICS -> overlay = Overlay.PLAYER
             overlay == Overlay.SESSIONS -> overlay = if (sessionsFromPlayer && playback.track != null) Overlay.PLAYER else Overlay.NONE
             overlay == Overlay.COLLECTION -> { closeDetail(); overlay = Overlay.NONE }
@@ -101,9 +106,12 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                 bottomBar = {
                     if ((overlay == Overlay.NONE || (overlay == Overlay.COLLECTION && playback.track != null)) && !keyboardVisible) {
                         Column(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars)
-                            .padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            MiniPlayer(playback, { overlay = Overlay.PLAYER }, playerActions.toggle,
+                            .padding(horizontal = 12.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            MiniPlayer(playback, playerActions, { overlay = Overlay.PLAYER },
+                                { overlay = Overlay.LYRICS },
+                                { miniQueueRequest = true; overlay = Overlay.PLAYER },
+                                { miniVolume = true },
                                 Modifier.widthIn(max = SungSpacing.contentMaxWidth), livePlayback)
                             if (!wide && overlay == Overlay.NONE) {
                                 SungNavigationBar(destination) { destination = it }
@@ -129,7 +137,9 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                             Overlay.COLLECTION -> screenState.SaveableStateProvider("collection:$detailId") { collectionContent?.invoke(Modifier.weight(1f)) { overlay = Overlay.PLAYER } }
                             Overlay.PLAYER -> LivePlaybackContent(playback, livePlayback) { live ->
                                 PlayerScreen(live, playerActions, back, Modifier.weight(1f),
-                                    { overlay = Overlay.QUEUE }, { overlay = Overlay.LYRICS },
+                                    { }, { overlay = Overlay.LYRICS },
+                                    expandQueueRequest = miniQueueRequest,
+                                    onQueueRequestHandled = { miniQueueRequest = false },
                                     moreContent = { playerMoreContent(live) { sessionsFromPlayer = true; overlay = Overlay.SESSIONS } }) {
                                     convenienceContent(live) { sessionsFromPlayer = true; overlay = Overlay.SESSIONS }
                                 }
@@ -138,7 +148,6 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                                 LyricsScreen(live, lyricsState, lyricsSettings, back, onRetryLyrics,
                                     playerActions.seek, onLyricsOffset, Modifier.weight(1f))
                             }
-                            Overlay.QUEUE -> QueueScreen(playback, playerActions, back, Modifier.weight(1f))
                             Overlay.SESSIONS -> LivePlaybackContent(playback, livePlayback) { live -> sessionsContent(live, back) }
                             Overlay.HISTORY -> historyContent?.invoke(content, back)
                             Overlay.APPEARANCE -> AppearanceScreen(appearance, onAppearance, back, content,

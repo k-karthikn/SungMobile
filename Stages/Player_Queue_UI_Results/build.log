@@ -1,0 +1,298 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.6.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: :app:testDebugUnitTest --tests com.karthi.sungmobile.QueueScreenTest --tests com.karthi.sungmobile.DesignFoundationTest :app:assembleRelease
+> Task :core:model:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:youtube:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :core:youtube:processResources NO-SOURCE
+> Task :core:model:processResources NO-SOURCE
+> Task :core:data:preBuild UP-TO-DATE
+> Task :core:designsystem:preBuild UP-TO-DATE
+> Task :core:data:preDebugBuild UP-TO-DATE
+> Task :core:designsystem:preDebugBuild UP-TO-DATE
+> Task :core:designsystem:processDebugNavigationResources UP-TO-DATE
+> Task :core:data:processDebugNavigationResources UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :core:playback:preBuild UP-TO-DATE
+> Task :core:playback:preDebugBuild UP-TO-DATE
+> Task :core:data:generateDebugResources UP-TO-DATE
+> Task :core:playback:processDebugNavigationResources UP-TO-DATE
+> Task :core:model:compileKotlin UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :core:data:packageDebugResources UP-TO-DATE
+> Task :core:model:compileJava NO-SOURCE
+> Task :core:model:classes UP-TO-DATE
+> Task :core:data:parseDebugLocalResources UP-TO-DATE
+> Task :core:data:javaPreCompileDebug UP-TO-DATE
+> Task :core:data:generateDebugRFile UP-TO-DATE
+> Task :core:model:jar UP-TO-DATE
+> Task :core:designsystem:javaPreCompileDebug UP-TO-DATE
+> Task :core:designsystem:generateDebugResources UP-TO-DATE
+> Task :core:designsystem:packageDebugResources UP-TO-DATE
+> Task :core:designsystem:parseDebugLocalResources UP-TO-DATE
+> Task :core:designsystem:generateDebugRFile UP-TO-DATE
+> Task :core:youtube:compileKotlin UP-TO-DATE
+> Task :core:youtube:compileJava NO-SOURCE
+> Task :core:youtube:classes UP-TO-DATE
+> Task :core:youtube:jar UP-TO-DATE
+> Task :core:playback:generateDebugResources UP-TO-DATE
+> Task :core:playback:packageDebugResources UP-TO-DATE
+> Task :core:playback:parseDebugLocalResources UP-TO-DATE
+> Task :core:playback:generateDebugRFile UP-TO-DATE
+> Task :core:data:compileDebugKotlin UP-TO-DATE
+> Task :core:playback:compileDebugKotlin UP-TO-DATE
+> Task :core:data:compileDebugJavaWithJavac UP-TO-DATE
+> Task :core:playback:javaPreCompileDebug UP-TO-DATE
+> Task :core:data:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:playback:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :core:playback:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core:data:writeDebugAarMetadata UP-TO-DATE
+> Task :core:designsystem:writeDebugAarMetadata UP-TO-DATE
+> Task :core:playback:writeDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:designsystem:compileDebugKotlin UP-TO-DATE
+> Task :core:designsystem:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:designsystem:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :core:data:extractDeepLinksDebug UP-TO-DATE
+> Task :core:data:processDebugManifest UP-TO-DATE
+> Task :core:designsystem:extractDeepLinksDebug UP-TO-DATE
+> Task :core:designsystem:processDebugManifest UP-TO-DATE
+> Task :core:playback:extractDeepLinksDebug UP-TO-DATE
+> Task :core:playback:processDebugManifest UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :core:data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :core:designsystem:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:data:compileDebugLibraryResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :core:playback:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:designsystem:compileDebugLibraryResources UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:playback:compileDebugLibraryResources UP-TO-DATE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :core:data:generateDebugAssets UP-TO-DATE
+> Task :core:designsystem:generateDebugAssets UP-TO-DATE
+> Task :core:data:mergeDebugAssets UP-TO-DATE
+> Task :core:playback:generateDebugAssets UP-TO-DATE
+> Task :core:designsystem:mergeDebugAssets UP-TO-DATE
+> Task :core:data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:playback:mergeDebugAssets UP-TO-DATE
+> Task :core:data:processDebugJavaRes UP-TO-DATE
+> Task :core:designsystem:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:designsystem:processDebugJavaRes UP-TO-DATE
+> Task :core:playback:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:playback:processDebugJavaRes UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :core:data:preReleaseBuild UP-TO-DATE
+> Task :core:data:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :core:data:mergeReleaseNativeLibs NO-SOURCE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :core:data:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :core:designsystem:preReleaseBuild UP-TO-DATE
+> Task :core:designsystem:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugUnitTestManifest UP-TO-DATE
+> Task :core:designsystem:mergeReleaseNativeLibs NO-SOURCE
+> Task :app:processDebugUnitTestManifest UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :core:designsystem:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :core:playback:preReleaseBuild UP-TO-DATE
+> Task :core:playback:mergeReleaseJniLibFolders UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :core:playback:mergeReleaseNativeLibs NO-SOURCE
+> Task :core:playback:copyReleaseJniLibsProjectOnly UP-TO-DATE
+> Task :core:data:prepareReleaseArtProfile UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :core:designsystem:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:playback:prepareReleaseArtProfile UP-TO-DATE
+> Task :core:designsystem:generateReleaseResources UP-TO-DATE
+> Task :core:designsystem:packageReleaseResources UP-TO-DATE
+> Task :core:designsystem:processReleaseNavigationResources UP-TO-DATE
+> Task :core:designsystem:parseReleaseLocalResources UP-TO-DATE
+> Task :core:designsystem:generateReleaseRFile UP-TO-DATE
+> Task :core:designsystem:compileReleaseKotlin UP-TO-DATE
+> Task :core:designsystem:javaPreCompileRelease UP-TO-DATE
+> Task :core:designsystem:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:designsystem:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:designsystem:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :app:mergeReleaseArtProfile UP-TO-DATE
+> Task :core:data:generateReleaseResources UP-TO-DATE
+> Task :core:data:packageReleaseResources UP-TO-DATE
+> Task :app:expandReleaseL8ArtProfileWildcards UP-TO-DATE
+> Task :core:data:processReleaseNavigationResources UP-TO-DATE
+> Task :core:data:javaPreCompileRelease UP-TO-DATE
+> Task :core:data:parseReleaseLocalResources UP-TO-DATE
+> Task :core:data:generateReleaseRFile UP-TO-DATE
+> Task :core:playback:generateReleaseResources UP-TO-DATE
+> Task :core:playback:packageReleaseResources UP-TO-DATE
+> Task :core:playback:processReleaseNavigationResources UP-TO-DATE
+> Task :app:mergeReleaseNativeLibs UP-TO-DATE
+> Task :core:playback:parseReleaseLocalResources UP-TO-DATE
+> Task :app:stripReleaseDebugSymbols UP-TO-DATE
+> Task :core:playback:generateReleaseRFile UP-TO-DATE
+> Task :app:extractReleaseNativeSymbolTables UP-TO-DATE
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :core:playback:javaPreCompileRelease UP-TO-DATE
+> Task :core:data:compileReleaseKotlin UP-TO-DATE
+> Task :core:playback:compileReleaseKotlin UP-TO-DATE
+> Task :core:playback:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:playback:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :core:playback:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:data:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :core:data:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :core:data:exportReleaseConsumerProguardFiles UP-TO-DATE
+> Task :app:packageReleaseResources UP-TO-DATE
+> Task :app:processReleaseNavigationResources UP-TO-DATE
+> Task :core:data:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :core:designsystem:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :app:generateReleaseRFile UP-TO-DATE
+> Task :app:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:generateDebugUnitTestConfig UP-TO-DATE
+> Task :core:playback:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :app:compileReleaseKotlin UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :app:compileReleaseJavaWithJavac NO-SOURCE
+> Task :core:data:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:designsystem:writeReleaseAarMetadata UP-TO-DATE
+> Task :core:playback:writeReleaseAarMetadata UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:compileReleaseNavigationResources UP-TO-DATE
+> Task :app:mergeReleaseResources UP-TO-DATE
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :core:data:extractDeepLinksRelease UP-TO-DATE
+> Task :core:data:processReleaseManifest UP-TO-DATE
+> Task :core:designsystem:extractDeepLinksRelease UP-TO-DATE
+> Task :core:designsystem:processReleaseManifest UP-TO-DATE
+> Task :core:playback:extractDeepLinksRelease UP-TO-DATE
+> Task :core:playback:processReleaseManifest UP-TO-DATE
+> Task :app:checkReleaseDuplicateClasses UP-TO-DATE
+> Task :app:processReleaseMainManifest UP-TO-DATE
+> Task :core:data:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :core:data:compileReleaseLibraryResources UP-TO-DATE
+> Task :app:processReleaseManifest UP-TO-DATE
+> Task :core:designsystem:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+> Task :core:playback:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :core:designsystem:compileReleaseLibraryResources UP-TO-DATE
+> Task :core:playback:compileReleaseLibraryResources UP-TO-DATE
+> Task :core:data:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core:designsystem:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :core:playback:bundleLibRuntimeToJarRelease UP-TO-DATE
+> Task :app:processReleaseResources UP-TO-DATE
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:mergeReleaseGeneratedProguardFiles UP-TO-DATE
+> Task :app:processReleaseJavaRes UP-TO-DATE
+> Task :core:data:processReleaseJavaRes UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :core:designsystem:processReleaseJavaRes UP-TO-DATE
+> Task :app:mergeReleaseStartupProfile UP-TO-DATE
+> Task :core:playback:processReleaseJavaRes UP-TO-DATE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :core:data:generateReleaseAssets UP-TO-DATE
+> Task :core:data:mergeReleaseAssets UP-TO-DATE
+> Task :core:designsystem:generateReleaseAssets UP-TO-DATE
+> Task :core:designsystem:mergeReleaseAssets UP-TO-DATE
+> Task :core:playback:generateReleaseAssets UP-TO-DATE
+> Task :core:playback:mergeReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets UP-TO-DATE
+> Task :app:compressReleaseAssets UP-TO-DATE
+> Task :app:extractReleaseVersionControlInfo UP-TO-DATE
+> Task :core:data:createFullJarRelease UP-TO-DATE
+> Task :core:data:extractProguardFiles UP-TO-DATE
+> Task :core:data:generateReleaseLintModel UP-TO-DATE
+> Task :core:data:prepareLintJarForPublish UP-TO-DATE
+> Task :core:designsystem:createFullJarRelease UP-TO-DATE
+> Task :core:designsystem:extractProguardFiles UP-TO-DATE
+> Task :app:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:designsystem:prepareLintJarForPublish UP-TO-DATE
+> Task :core:playback:createFullJarRelease UP-TO-DATE
+> Task :core:playback:extractProguardFiles UP-TO-DATE
+> Task :core:playback:generateReleaseLintModel UP-TO-DATE
+> Task :core:playback:prepareLintJarForPublish UP-TO-DATE
+> Task :core:designsystem:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:designsystem:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:designsystem:extractReleaseAnnotations UP-TO-DATE
+> Task :core:designsystem:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:designsystem:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:designsystem:syncReleaseLibJars UP-TO-DATE
+> Task :core:designsystem:generateReleaseLintModel UP-TO-DATE
+> Task :core:designsystem:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:data:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:data:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:data:extractReleaseAnnotations UP-TO-DATE
+> Task :core:data:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:data:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:data:syncReleaseLibJars UP-TO-DATE
+> Task :core:data:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:playback:checkReleaseAarMetadata UP-TO-DATE
+> Task :core:playback:extractDeepLinksForAarRelease UP-TO-DATE
+> Task :core:playback:extractReleaseAnnotations UP-TO-DATE
+> Task :core:playback:mergeReleaseConsumerProguardFiles UP-TO-DATE
+> Task :core:playback:mergeReleaseJavaResource UP-TO-DATE
+> Task :core:playback:syncReleaseLibJars UP-TO-DATE
+> Task :core:playback:bundleReleaseLocalLintAar UP-TO-DATE
+> Task :core:data:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :core:data:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:designsystem:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :core:designsystem:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :core:playback:lintVitalAnalyzeRelease UP-TO-DATE
+> Task :core:playback:writeReleaseLintModelMetadata UP-TO-DATE
+> Task :app:generateReleaseLintVitalReportModel
+> Task :core:data:generateReleaseLintVitalModel UP-TO-DATE
+> Task :core:designsystem:generateReleaseLintVitalModel UP-TO-DATE
+> Task :core:playback:generateReleaseLintVitalModel UP-TO-DATE
+> Task :app:collectReleaseDependencies UP-TO-DATE
+> Task :app:sdkReleaseDependencyData UP-TO-DATE
+> Task :app:validateSigningRelease UP-TO-DATE
+> Task :app:writeReleaseAppMetadata UP-TO-DATE
+> Task :app:writeReleaseSigningConfigVersions UP-TO-DATE
+> Task :app:expandReleaseArtProfileWildcards
+
+> Task :app:compileDebugUnitTestKotlin
+w: file:///home/karthi/Projects/SungMobile/app/src/test/java/com/karthi/sungmobile/QueueScreenTest.kt:88:81 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'File?'.
+w: file:///home/karthi/Projects/SungMobile/app/src/test/java/com/karthi/sungmobile/QueueScreenTest.kt:99:80 Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable receiver of type 'File?'.
+
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :app:minifyReleaseWithR8
+WARNING: /home/karthi/Projects/SungMobile/app/build/intermediates/merged_java_res/release/mergeReleaseJavaResource/base.jar: R8: Unexpected reference to missing service class: META-INF/services/javax.script.ScriptEngineFactory.
+
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.robolectric.nativeruntime.DefaultNativeRuntimeLoader in an unnamed module
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:testDebugUnitTest
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:convertShrunkResourcesToBinaryRelease
+> Task :app:optimizeReleaseResources
+> Task :app:l8DexDesugarLibRelease
+> Task :app:compileReleaseArtProfile
+> Task :app:packageRelease
+> Task :app:assembleRelease
+> Task :app:createReleaseApkListingFileRedirect
+
+BUILD SUCCESSFUL in 2m 34s
+237 actionable tasks: 16 executed, 221 up-to-date
+Configuration cache entry stored.
