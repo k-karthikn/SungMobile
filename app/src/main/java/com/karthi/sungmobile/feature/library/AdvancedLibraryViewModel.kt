@@ -50,7 +50,7 @@ class AdvancedLibraryViewModel(private val advanced: AdvancedLibraryRepository,
     fun openSmartList() = navigate(AdvancedLibraryState(page = AdvancedPage.SMART_LIST))
     fun openSmart(id: String) = navigate(AdvancedLibraryState(page = AdvancedPage.SMART_DETAIL, smartId = id))
     fun openCleanup(id: String) = navigate(AdvancedLibraryState(page = AdvancedPage.CLEANUP, playlistId = id))
-    fun openStatistics() = navigate(AdvancedLibraryState(page = AdvancedPage.STATISTICS))
+    fun openStatistics() = navigate(AdvancedLibraryState(page = AdvancedPage.STATISTICS, loadingStats = true))
     fun close() = navigate(AdvancedLibraryState())
     fun back() { if (mutable.value.page == AdvancedPage.SMART_DETAIL) openSmartList() else close() }
     fun dismissMessage() { mutable.update { it.copy(message = null) } }
@@ -90,15 +90,20 @@ class AdvancedLibraryViewModel(private val advanced: AdvancedLibraryRepository,
                     }
                     AdvancedPage.STATISTICS -> {
                         val stats = advanced.statistics(30)
-                        publish { it.copy(stats = stats, statsMore = stats.recentEvents.size == 30, loadingMore = false) }
+                        publish { it.copy(stats = stats, statsMore = stats.recentEvents.size == 30,
+                            loadingStats = false, loadingMore = false) }
                     }
                     AdvancedPage.CLOSED -> Unit
                 }
             } catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) { publish { it.copy(message = "Could not load this library view. Retry.", loadingMore = false) } }
+            catch (_: Exception) { publish { it.copy(message = "Could not load this library view. Retry.",
+                loadingStats = false, loadingMore = false) } }
         }
     }
-    fun retry() = reload()
+    fun retry() {
+        if (mutable.value.page == AdvancedPage.STATISTICS) mutable.update { it.copy(loadingStats = true, message = null) }
+        reload()
+    }
 
     /** Capture action targets at the tap; navigation does not redirect a confirmed database write. */
     private fun command(block: suspend (Long) -> Unit) {

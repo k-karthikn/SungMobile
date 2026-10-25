@@ -10,6 +10,7 @@
 .DS_Store
 **/build/
 /verification/
+/release-assets/
 /captures
 .externalNativeBuild
 .cxx

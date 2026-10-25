@@ -20,20 +20,26 @@ fun LyricsSettingsSection(value: LyricsSettings, onChange: (LyricsSettings) -> U
     var legal by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     SungSettingsGroup("Lyrics") {
-            SungSettingsToggle("Use LRCLIB for local, missing or untimed lyrics", value.lrclibEnabled,
+            SungSettingsToggle("Find lyrics online", value.lrclibEnabled,
                 { onChange(value.copy(lrclibEnabled = it)) },
-                "Sends the title, artist and duration to LRCLIB. Private mode skips this request.")
+                "Shares song details with LRCLIB")
             HorizontalDivider()
-            SungSettingsToggle("Save lyric text on this device", value.cacheEnabled,
+            SungSettingsToggle("Save lyrics offline", value.cacheEnabled,
                 { onChange(value.copy(cacheEnabled = it)) },
-                "Turning this off clears saved lyric text. Timing offsets stay saved.")
+                "Turning off clears saved lyrics")
+            HorizontalDivider()
             Text("Text size · ${value.textSizeSp} sp", style = MaterialTheme.typography.titleSmall)
-            Slider(value.textSizeSp.toFloat(), { onChange(value.copy(textSizeSp = it.toInt())) }, valueRange = 18f..34f, steps = 15)
-            Text("Lyrics cache: ${cacheBytes / 1024} KiB", style = MaterialTheme.typography.bodyMedium)
-            OutlinedButton({ confirmClear = true }, Modifier.fillMaxWidth()) { Text("Clear lyrics cache") }
+            Slider(value.textSizeSp.toFloat(), { onChange(value.copy(textSizeSp = it.toInt())) },
+                valueRange = 18f..34f, steps = 15)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Text("Cache · ${cacheBytes / 1024} KiB", style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                TextButton({ confirmClear = true }) { Text("Clear cache") }
+            }
     }
     SungSettingsGroup("About") {
-        Text("SungMobile · YouTube music playback · GPL-3.0-or-later", style = MaterialTheme.typography.bodyMedium)
+        Text("SungMobile · GPL-3.0-or-later", style = MaterialTheme.typography.bodyMedium)
         TextButton({ legal = "LICENSE.txt" }) { Text("App license") }
         TextButton({ legal = "THIRD_PARTY_NOTICES.txt" }) { Text("Open-source notices") }
     }

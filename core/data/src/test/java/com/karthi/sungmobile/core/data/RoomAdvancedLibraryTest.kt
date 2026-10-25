@@ -57,6 +57,18 @@ class RoomAdvancedLibraryTest {
         assertEquals(0L, advanced.statistics().qualifiedPlays)
     }
 
+    @Test fun statisticsAggregateUniqueSongsAndEveryPlayInDailyActivity() = runBlocking {
+        history.recordListening(ListeningRecord("first:0", "first", first, 0, 60_000, 10_000, 70_000, true))
+        history.recordListening(ListeningRecord("first:1", "first", first, 0, 30_000, 80_000, 110_000, true))
+        history.recordListening(ListeningRecord("second:0", "second", second, 0, 45_000, 120_000, 165_000, true))
+        val stats = advanced.statistics(limit = 1)
+        assertEquals(3L, stats.qualifiedPlays)
+        assertEquals(2L, stats.uniqueSongs)
+        assertEquals(135_000L, stats.dailyActivity.sumOf { it.listenedMs })
+        assertEquals(3L, stats.dailyActivity.sumOf { it.plays })
+        assertEquals(1, stats.recentEvents.size)
+    }
+
     @Test fun versionsRestoreNameOccurrenceIdsAndOrder() = runBlocking {
         val id = library.create("Original", listOf(first, second, first))
         val before = library.songs(LibraryCollection.Playlist(id))

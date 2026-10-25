@@ -59,9 +59,11 @@ data class TopSong(val track: CatalogItem, val plays: Int, val listenedMs: Long)
 data class ListeningEvent(val id: String, val track: CatalogItem, val startedAt: Long,
     val lastPlayedAt: Long, val listenedMs: Long)
 data class ListeningPeriod(val startedAt: Long, val endedAt: Long, val events: List<ListeningEvent>)
+data class DailyListening(val day: String, val listenedMs: Long, val plays: Long)
 data class ListeningStats(val privateMode: Boolean = false, val qualifiedPlays: Long = 0,
     val listenedMs: Long = 0, val topSongs: List<TopSong> = emptyList(),
-    val recentEvents: List<ListeningEvent> = emptyList())
+    val recentEvents: List<ListeningEvent> = emptyList(), val uniqueSongs: Long = 0,
+    val dailyActivity: List<DailyListening> = emptyList())
 
 fun listeningPeriods(events: List<ListeningEvent>, gapMs: Long = 30 * 60_000L): List<ListeningPeriod> {
     val ordered = events.sortedWith(compareByDescending<ListeningEvent> { it.lastPlayedAt }.thenByDescending { it.id })

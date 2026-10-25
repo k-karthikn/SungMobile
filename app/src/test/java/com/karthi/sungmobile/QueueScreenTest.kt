@@ -11,6 +11,7 @@ import com.karthi.sungmobile.core.designsystem.theme.SungTheme
 import com.karthi.sungmobile.core.model.*
 import com.karthi.sungmobile.core.playback.PlaybackState
 import com.karthi.sungmobile.feature.queue.QueueScreen
+import com.karthi.sungmobile.feature.queue.queueArtist
 import com.karthi.sungmobile.feature.player.PlayerScreen
 import org.junit.Assert.*
 import org.junit.Rule
@@ -73,6 +74,21 @@ class QueueScreenTest {
         compose.onNodeWithTag("queue_options_1").performClick()
         compose.onNodeWithText("Remove").performClick()
         assertEquals("second", removed)
+    }
+    @Test fun queueRowsStayCompactAndCleanUpPreviouslySavedArtistRuns() {
+        assertEquals("ARJN, KDS, FIFTY4", queueArtist("ARJN · , · KDS · , · FIFTY4 · ,"))
+        assertEquals("KR\$NA & Dhanda Nyoliwala", queueArtist("KR\$NA · & · Dhanda Nyoliwala · 203M plays"))
+        val tracks = (0 until 8).map { index ->
+            QueueEntry("row$index", song.copy(id = "song$index", title = "KALYANI (Remix) $index",
+                subtitle = "ARJN · , · KDS · , · FIFTY4 · ,", durationMs = 235_000))
+        }
+        compose.setContent { SungTheme { QueueScreen(state.copy(queue = QueueState(tracks, "row0")),
+            PlayerActions({}, {}, {}), {}, embedded = true) } }
+        compose.onAllNodesWithText("ARJN, KDS, FIFTY4").onFirst().assertExists()
+        compose.onAllNodesWithText("3:55").onFirst().assertExists()
+        compose.onNodeWithTag("queue_entry_7").performScrollTo().assertIsDisplayed()
+        val file = File("build/outputs/player-ui/queue-compact.png").apply { parentFile.mkdirs() }
+        compose.onRoot().captureRoboImage(file.absolutePath)
     }
     @Test fun largeTextKeepsQueueActionsReachable() {
         var undone = false

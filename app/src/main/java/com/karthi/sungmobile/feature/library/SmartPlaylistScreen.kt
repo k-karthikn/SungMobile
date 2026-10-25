@@ -19,7 +19,6 @@ internal fun androidx.compose.foundation.lazy.LazyListScope.smartList(model: Adv
         var create by remember { mutableStateOf(false) }
         if (create) SmartRuleDialog(null, { create = false }, model::saveSmart, model::previewRule)
         Button({ create = true }) { Text("New smart playlist") }
-        TextButton(model::openStatistics) { Text("Listening statistics") }
     }
     items(state.smartPlaylists, key = { it.id }) { playlist ->
         Surface(onClick = { model.openSmart(playlist.id) }, color = MaterialTheme.colorScheme.surfaceContainerLow,

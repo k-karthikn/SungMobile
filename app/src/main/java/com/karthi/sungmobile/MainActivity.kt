@@ -11,6 +11,7 @@ import com.karthi.sungmobile.app.*
 import com.karthi.sungmobile.feature.collection.*
 import com.karthi.sungmobile.feature.history.HistoryViewModel
 import com.karthi.sungmobile.feature.home.HomeViewModel
+import com.karthi.sungmobile.feature.home.DiscoveryFeedViewModel
 import com.karthi.sungmobile.feature.library.*
 import com.karthi.sungmobile.feature.lyrics.LyricsViewModel
 import com.karthi.sungmobile.feature.convenience.ConvenienceViewModel
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
     } }
     private val history by lazy { obtain(HistoryViewModel::class.java) { HistoryViewModel(container.history) } }
     private val home by lazy { obtain(HomeViewModel::class.java) { HomeViewModel(container.home, it) } }
+    private val discovery by lazy { obtain(DiscoveryFeedViewModel::class.java) { DiscoveryFeedViewModel(container.catalog) } }
     private val collection by lazy { obtain(CollectionViewModel::class.java) { CollectionViewModel(container.catalog, it) } }
     private val collectionActions by lazy { obtain(CollectionActionsViewModel::class.java) { CollectionActionsViewModel(container.catalog, catalog.player) } }
     private val links by lazy { obtain(LinkIntakeViewModel::class.java) { LinkIntakeViewModel(it) } }
@@ -54,7 +56,8 @@ class MainActivity : ComponentActivity() {
         catalog.onOpenLink = links::receive
         catalog.onOpenCollection = { collection.open(CollectionRoute(it.url, it.title, it.kind)) }
         if (savedInstanceState == null) links.receive(intent)
-        setContent { SungRoot(window, container, catalog, library, libraryActions, advancedLibrary, history, home, collection, collectionActions, links, lyrics, convenience) }
+        setContent { SungRoot(window, container, catalog, library, libraryActions, advancedLibrary, history, home,
+            discovery, collection, collectionActions, links, lyrics, convenience) }
     }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)

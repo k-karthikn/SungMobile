@@ -24,7 +24,12 @@ public interface AdvancedLibraryDao {
     @Query("DELETE FROM playlist_revisions WHERE playlistId = :playlistId AND id NOT IN " +
         "(SELECT id FROM playlist_revisions WHERE playlistId = :playlistId ORDER BY createdAt DESC, id DESC LIMIT 20)") void trimRevisions(String playlistId);
     @Query("DELETE FROM playlist_revisions WHERE playlistId = :playlistId") void deleteRevisions(String playlistId);
-    @Query("SELECT COUNT(*) AS qualifiedPlays, COALESCE(SUM(listenedMs), 0) AS listenedMs FROM listening_events WHERE qualified = 1 AND trackKey LIKE 'youtube:%'") ListeningSummaryRow summary();
+    @Query("SELECT COUNT(*) AS qualifiedPlays, COALESCE(SUM(listenedMs), 0) AS listenedMs, " +
+        "COUNT(DISTINCT trackKey) AS uniqueSongs FROM listening_events WHERE qualified = 1 AND trackKey LIKE 'youtube:%'") ListeningSummaryRow summary();
+    @Query("SELECT strftime('%Y-%m-%d', lastPlayedAt / 1000, 'unixepoch', 'localtime') AS day, " +
+        "COALESCE(SUM(listenedMs), 0) AS listenedMs, COUNT(*) AS plays FROM listening_events " +
+        "WHERE qualified = 1 AND trackKey LIKE 'youtube:%' AND lastPlayedAt >= :sinceMs " +
+        "GROUP BY day ORDER BY day") List<DailyListeningRow> dailyActivity(long sinceMs);
     @Query("SELECT t.*, COUNT(e.id) AS plays, SUM(e.listenedMs) AS listenedMs FROM listening_events e " +
         "JOIN library_tracks t ON t.trackKey = e.trackKey WHERE e.qualified = 1 " +
         "AND e.trackKey LIKE 'youtube:%' GROUP BY e.trackKey ORDER BY plays DESC, listenedMs DESC, e.trackKey LIMIT :limit") List<TopSongRow> topSongs(int limit);

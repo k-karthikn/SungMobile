@@ -1,6 +1,7 @@
 package com.karthi.sungmobile.feature.updates
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,20 +24,29 @@ fun UpdateSettingsSection() {
     val updater = remember { AppUpdates.get(context) }
     val state by updater.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    var notificationsAllowed by remember {
+        mutableStateOf(Build.VERSION.SDK_INT < 33 ||
+            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
+    }
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        notificationsAllowed = it
+    }
     SungSettingsGroup("App updates") {
         val installed = remember { com.karthi.sungmobile.updates.UpdateApk.installed(context) }
-        Text("Installed: ${installed.versionName.orEmpty()} (code ${com.karthi.sungmobile.updates.UpdateApk.code(installed)})", style = MaterialTheme.typography.bodySmall)
+        Text("Version ${installed.versionName.orEmpty()}", style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
         SungSettingsToggle("Automatic updates", state.enabled, updater::setEnabled,
-            "Check and download stable releases on unmetered networks, usually Wi-Fi. Android asks you to confirm installation. Checks run about every 12 hours when the system allows.")
-        Text(state.message, style = MaterialTheme.typography.bodySmall)
-        FilledTonalButton({ scope.launch { updater.check(automatic = false) } }, Modifier.fillMaxWidth(), enabled = !state.busy) {
-            Text(if (state.busy) "Checking / downloading…" else "Check and download now")
+            "Download on Wi-Fi")
+        if (state.message.isNotBlank() && state.message != "Updates have not been checked yet.") {
+            Text(state.message, style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Text("Manual checks may use mobile data. Turning automatic updates off stops scheduled checks and downloads.", style = MaterialTheme.typography.bodySmall)
+        FilledTonalButton({ scope.launch { updater.check(automatic = false) } }, Modifier.fillMaxWidth(), enabled = !state.busy) {
+            Text(if (state.busy) "Checking…" else "Check for updates")
+        }
         if (state.ready) Button({ scope.launch { updater.install(context) } }, Modifier.fillMaxWidth(), enabled = !state.busy) { Text("Install update") }
-        if (Build.VERSION.SDK_INT >= 33) TextButton({ permission.launch(Manifest.permission.POST_NOTIFICATIONS) }) {
-            Text("Enable update notifications")
+        if (Build.VERSION.SDK_INT >= 33 && !notificationsAllowed) TextButton({ permission.launch(Manifest.permission.POST_NOTIFICATIONS) }) {
+            Text("Enable notifications")
         }
     }
 }

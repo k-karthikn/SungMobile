@@ -23,7 +23,7 @@ fun LibraryScreen(browser: LibraryBrowserViewModel, page: LibraryPage, actions: 
     advanced: AdvancedLibraryViewModel, advancedState: AdvancedLibraryState,
     openSettings: () -> Unit, modifier: Modifier = Modifier, openSessions: () -> Unit = {},
     openSearch: () -> Unit = {}, home: HomeState = HomeState(), connected: Boolean = true,
-    localContent: @Composable (Modifier) -> Unit = {}) {
+    localContent: @Composable (Modifier) -> Unit = {}, refreshMixes: () -> Unit = {}) {
     var mixesSelected by rememberSaveable { mutableStateOf(false) }
     var localSelected by rememberSaveable { mutableStateOf(false) }
     val smart by advanced.smartOverview.collectAsStateWithLifecycle()
@@ -131,8 +131,8 @@ fun LibraryScreen(browser: LibraryBrowserViewModel, page: LibraryPage, actions: 
             }
         }
         if (mixesSelected) item("mixes") {
-            LibraryMixesContent(home, smart, connected, actions, advanced::openSmart,
-                advanced::openSmartList, advanced::openStatistics)
+            LibraryMixesContent(home, smart, connected, actions, refreshMixes, advanced::openSmart,
+                advanced::openSmartList)
         }
         if (!mixesSelected) items(page.playlists, key = { "playlist:${it.id}" }, contentType = { "playlist" }) { item ->
             PlaylistRow(item, { browser.open(LibraryCollection.Playlist(item.id)) }, actions)

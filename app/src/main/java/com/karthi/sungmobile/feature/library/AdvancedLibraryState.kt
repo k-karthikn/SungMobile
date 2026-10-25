@@ -25,6 +25,7 @@ data class AdvancedLibraryState(
     val revisions: List<PlaylistRevision> = emptyList(),
     val revisionDetail: RevisionDetail? = null,
     val stats: ListeningStats = ListeningStats(),
+    val loadingStats: Boolean = false,
     val statsMore: Boolean = false,
     val loadingMore: Boolean = false,
     val busy: Boolean = false,

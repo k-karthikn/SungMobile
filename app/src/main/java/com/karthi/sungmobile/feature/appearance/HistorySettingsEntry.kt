@@ -12,16 +12,12 @@ import com.karthi.sungmobile.core.designsystem.icon.*
 
 @Composable
 internal fun HistorySettingsEntry(open: () -> Unit) {
-    SungSettingsGroup("History & privacy") {
-        Row(Modifier.fillMaxWidth().clickable(onClick = open).heightIn(min = 48.dp),
+    SungSettingsGroup("Your data") {
+        Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(onClick = open),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            SungIcon(SungSymbol.Refresh, modifier = Modifier.size(24.dp))
-            Column(Modifier.weight(1f)) {
-                Text("Manage history & privacy", style = MaterialTheme.typography.titleMedium)
-                Text("Private mode, saved listening and searches", style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            SungIcon(SungSymbol.Clock, modifier = Modifier.size(24.dp))
+            Text("History & privacy", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
             SungIcon(SungSymbol.Chevron)
         }
     }

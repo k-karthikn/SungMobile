@@ -76,7 +76,7 @@ class SearchHostTest {
         compose.runOnIdle { assertEquals("John Michael Howell", query) }
     }
 
-    @Test fun categoryClearAndSubmitKeepTheirExistingCallbacks() {
+    @Test fun categoryClearAndImeSubmitKeepTheirExistingCallbacks() {
         var state by mutableStateOf(CatalogState(query = "https://youtu.be/RB-RcX5DS5A"))
         var submits = 0
         compose.setContent {
@@ -88,11 +88,11 @@ class SearchHostTest {
         }
         compose.onNodeWithTag("filter_album").performClick()
         compose.runOnIdle { assertEquals(CatalogKind.ALBUM, state.kind) }
-        compose.onNodeWithTag("search_submit").performClick()
+        compose.onNodeWithTag("search_input").performImeAction()
         compose.runOnIdle { assertEquals(1, submits) }
         compose.onNodeWithContentDescription("Clear search").performClick()
         compose.runOnIdle { assertEquals("", state.query) }
-        compose.onNodeWithTag("search_submit").assertIsNotEnabled()
+        compose.onNodeWithText("Search / open link").assertDoesNotExist()
     }
 
     @Test fun songResultKeepsLikeQueueAndCurrentTrackCue() {
@@ -143,7 +143,7 @@ class SearchHostTest {
             }
         }
         compose.onNodeWithTag("search_input").assertIsDisplayed()
-        compose.onNodeWithTag("search_submit").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Search / open link").assertDoesNotExist()
         compose.onNodeWithTag("result_0").performScrollTo().assertIsDisplayed()
         val output = File("build/outputs/search-ui/search-dark-large-text.png").apply { parentFile!!.mkdirs() }
         compose.onRoot().captureRoboImage(output.absolutePath)

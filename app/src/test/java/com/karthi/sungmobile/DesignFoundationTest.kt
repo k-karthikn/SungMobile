@@ -2,6 +2,9 @@ package com.karthi.sungmobile
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -109,7 +112,7 @@ class DesignFoundationTest {
             }
         }
         compose.onNodeWithTag("appearance").performClick()
-        compose.onNodeWithText("Follow system").assertIsDisplayed()
+        compose.onNodeWithText("System").assertIsDisplayed()
         compose.onNodeWithText("Sung blue").assertIsDisplayed()
         capture("appearance", waitForArtwork = false)
     }
@@ -177,6 +180,28 @@ class DesignFoundationTest {
         compose.onNodeWithText("Queue (2)").performClick()
         compose.onNodeWithTag("queue_now_playing").assertIsDisplayed()
         compose.onNodeWithTag("open_queue").assertContentDescriptionContains("Collapse queue, Queue (2)")
+    }
+
+    @Test fun statisticsPageHidesMiniPlayerAndNavigation() {
+        var statisticsOpen by mutableStateOf(false)
+        compose.setContent {
+            SungTheme {
+                SungApp(catalog, player, catalogActions, playerActions, Appearance(), {},
+                    homeContent = { _, _, _, _, openLibrary ->
+                        androidx.compose.material3.Button({ statisticsOpen = true; openLibrary() }) {
+                            androidx.compose.material3.Text("Open statistics")
+                        }
+                    },
+                    libraryContent = { _, _, _, _ ->
+                        androidx.compose.material3.Text("Statistics page")
+                    }, statisticsPageOpen = statisticsOpen)
+            }
+        }
+        compose.onNodeWithTag("mini_player").assertIsDisplayed()
+        compose.onNodeWithText("Open statistics").performClick()
+        compose.onNodeWithText("Statistics page").assertIsDisplayed()
+        compose.onNodeWithTag("mini_player").assertDoesNotExist()
+        compose.onNodeWithTag("nav_library").assertDoesNotExist()
     }
 
     private fun render(name: String, dark: Boolean = false, fontScale: Float = 1f,

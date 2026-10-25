@@ -49,6 +49,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     playerMoreContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
     volumeContent: @Composable (PlaybackState) -> Unit = {},
     sessionsContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
+    statisticsPageOpen: Boolean = false,
     livePlayback: kotlinx.coroutines.flow.StateFlow<PlaybackState>? = null) {
     val screenState = rememberSaveableStateHolder()
     var destination by rememberSaveable { mutableStateOf(Destination.HOME) }
@@ -95,7 +96,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
         val wide = maxWidth >= 840.dp
         val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
         Row(Modifier.fillMaxSize()) {
-            if (wide && overlay == Overlay.NONE) {
+            if (wide && overlay == Overlay.NONE && !statisticsPageOpen) {
                 NavigationRail(Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))) {
                     Destination.entries.forEach { target ->
                         NavigationRailItem(destination == target, { destination = target },
@@ -106,7 +107,8 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
             }
             Scaffold(Modifier.weight(1f).imePadding(), contentWindowInsets = WindowInsets.safeDrawing,
                 bottomBar = {
-                    if ((overlay == Overlay.NONE || (overlay == Overlay.COLLECTION && playback.track != null)) && !keyboardVisible) {
+                    if (((overlay == Overlay.NONE && !statisticsPageOpen) ||
+                        (overlay == Overlay.COLLECTION && playback.track != null)) && !keyboardVisible) {
                         Column(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars)
                             .padding(horizontal = 12.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(4.dp)) {

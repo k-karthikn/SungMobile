@@ -15,6 +15,10 @@ fun AdvancedLibraryScreen(model: AdvancedLibraryViewModel, state: AdvancedLibrar
     modifier: Modifier = Modifier) {
     BackHandler { model.back() }
     val back = { model.back() }
+    if (state.page == AdvancedPage.STATISTICS) {
+        ListeningStatisticsScreen(state, back, model::retry, model::moreEvents, modifier)
+        return
+    }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             IconButton(back) { SungIcon(SungSymbol.Back, "Back to Library") }
@@ -29,7 +33,7 @@ fun AdvancedLibraryScreen(model: AdvancedLibraryViewModel, state: AdvancedLibrar
             AdvancedPage.SMART_LIST -> smartList(model, state)
             AdvancedPage.SMART_DETAIL -> smartDetail(model, state)
             AdvancedPage.CLEANUP -> cleanup(model, state)
-            AdvancedPage.STATISTICS -> statistics(model, state)
+            AdvancedPage.STATISTICS -> Unit // Rendered in the dedicated dashboard above.
             AdvancedPage.CLOSED -> Unit
         }
     }

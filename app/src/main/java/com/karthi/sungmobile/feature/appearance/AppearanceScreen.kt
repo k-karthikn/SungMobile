@@ -3,8 +3,6 @@ package com.karthi.sungmobile.feature.appearance
 import android.os.Build
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -27,51 +25,51 @@ fun AppearanceScreen(value: Appearance, onChange: (Appearance) -> Unit, onBack: 
     lyrics: LyricsSettings = LyricsSettings(), onLyrics: (LyricsSettings) -> Unit = {},
     cacheBytes: Long = 0, onClearCache: () -> Unit = {}, onHistory: () -> Unit = {},
     localFolders: @Composable () -> Unit = {}) {
-    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)) {
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())
+        .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 32.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onBack, Modifier.size(48.dp)) { SungIcon(SungSymbol.Back, stringResource(R.string.back)) }
             SectionHeading("Settings")
         }
-        AppearanceGroup(stringResource(R.string.theme)) {
-            ThemeMode.entries.forEach { mode ->
-                Choice(stringResource(when (mode) {
-                    ThemeMode.SYSTEM -> R.string.theme_system
-                    ThemeMode.LIGHT -> R.string.theme_light
-                    ThemeMode.DARK -> R.string.theme_dark
-                }), mode == value.theme) { onChange(value.copy(theme = mode)) }
+        SungSettingsGroup("Appearance") {
+            Text(stringResource(R.string.theme), style = MaterialTheme.typography.titleSmall)
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                ThemeMode.entries.forEachIndexed { index, mode ->
+                    SegmentedButton(selected = mode == value.theme,
+                        onClick = { onChange(value.copy(theme = mode)) },
+                        shape = SegmentedButtonDefaults.itemShape(index, ThemeMode.entries.size)) {
+                        Text(stringResource(when (mode) {
+                            ThemeMode.SYSTEM -> R.string.theme_system
+                            ThemeMode.LIGHT -> R.string.theme_light
+                            ThemeMode.DARK -> R.string.theme_dark
+                        }))
+                    }
+                }
             }
-        }
-        AppearanceGroup(stringResource(R.string.colors)) {
-            Choice(stringResource(R.string.colors_blue), value.colors == ColorMode.BLUE) { onChange(value.copy(colors = ColorMode.BLUE)) }
+            Text(stringResource(R.string.colors), style = MaterialTheme.typography.titleSmall)
             if (Build.VERSION.SDK_INT >= 31) {
-                Choice(stringResource(R.string.colors_wallpaper), value.colors == ColorMode.WALLPAPER) { onChange(value.copy(colors = ColorMode.WALLPAPER)) }
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    ColorMode.entries.forEachIndexed { index, mode ->
+                        SegmentedButton(selected = mode == value.colors,
+                            onClick = { onChange(value.copy(colors = mode)) },
+                            shape = SegmentedButtonDefaults.itemShape(index, ColorMode.entries.size)) {
+                            Text(stringResource(if (mode == ColorMode.BLUE) R.string.colors_blue
+                                else R.string.colors_wallpaper))
+                        }
+                    }
+                }
+            } else {
+                Text(stringResource(R.string.colors_blue), style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-        }
-        SungSettingsGroup("Motion") {
+            HorizontalDivider()
             SungSettingsToggle(stringResource(R.string.reduce_motion), value.reduceMotion,
-                { onChange(value.copy(reduceMotion = it)) }, stringResource(R.string.reduce_motion_body))
+                { onChange(value.copy(reduceMotion = it)) })
         }
         HistorySettingsEntry(onHistory)
         localFolders()
         com.karthi.sungmobile.feature.updates.UpdateSettingsSection()
         LyricsSettingsSection(lyrics, onLyrics, cacheBytes, onClearCache)
-    }
-}
-
-@Composable
-private fun AppearanceGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
-    SungSettingsGroup(title) {
-        Column(Modifier.selectableGroup(), content = content)
-    }
-}
-
-@Composable
-private fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).selectable(selected, onClick = onClick, role = androidx.compose.ui.semantics.Role.RadioButton)
-        .padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        RadioButton(selected, onClick = null)
-        Text(label, style = MaterialTheme.typography.bodyLarge)
     }
 }

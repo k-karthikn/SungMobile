@@ -24,17 +24,17 @@ fun LocalFoldersSettingsSection(repository: LocalAudioRepository) {
         }
     }
     SungSettingsGroup("Local songs") {
-        Text("SungMobile always scans Music/SungMobile. Add other music folders here.",
-            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (folders.isNotEmpty()) Text("Removing a folder here keeps its files on your phone.",
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Music/SungMobile is included", style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
         folders.forEach { uri -> FolderRow(uri) {
             repository.removeFolder(uri)
             folders = repository.addedFolders()
         } }
         if (error) Text("Could not keep access to that folder. Select it again.",
             color = MaterialTheme.colorScheme.error)
-        OutlinedButton({ picker.launch(null) }) { Text("Add music folder") }
+        OutlinedButton({ picker.launch(null) }, modifier = Modifier.heightIn(min = 48.dp)) {
+            Text("Add folder")
+        }
     }
 }
 

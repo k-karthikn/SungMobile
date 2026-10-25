@@ -29,7 +29,7 @@ internal fun PlayerSeek(state: PlaybackState, onSeek: (Long) -> Unit) {
             track = { PlayerSeekTrack({ slider.value / range.endInclusive }, engine.playing && scrub == null) }, onValueChange = { scrub = it },
             onValueChangeFinished = { scrub?.let { onSeek(it.toLong()) }; scrub = null },
             thumb = {
-                Box(Modifier.size(width = 5.dp, height = 22.dp)
+                Box(Modifier.size(width = 4.dp, height = 44.dp)
                     .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50)))
             },
             enabled = canSeek,

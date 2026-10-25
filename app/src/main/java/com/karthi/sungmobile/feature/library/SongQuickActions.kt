@@ -13,7 +13,7 @@ import com.karthi.sungmobile.core.designsystem.icon.*
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.library.libraryKeyOrNull
 
-/** The same immediate Like and add-menu actions on Home and Search song rows. */
+/** Immediate Like and overflow actions for search song rows. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SongQuickActions(song: CatalogItem, playbackReady: Boolean, playNext: () -> Unit,
@@ -30,7 +30,7 @@ fun SongQuickActions(song: CatalogItem, playbackReady: Boolean, playNext: () -> 
     Box {
         FilledTonalIconButton(onClick = { menu = true }, shapes = IconButtonDefaults.shapes(),
             modifier = Modifier.size(48.dp).testTag("${tagPrefix}_actions_${song.id}")) {
-            SungIcon(SungSymbol.Plus, stringResource(R.string.song_actions, song.title))
+            SungIcon(SungSymbol.More, stringResource(R.string.song_actions, song.title))
         }
         DropdownMenu(menu, { menu = false }) {
             LibraryMenuItems(song) { menu = false }

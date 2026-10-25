@@ -14,12 +14,12 @@ import androidx.compose.ui.unit.dp
 /** Shared section surface for settings; callers own their switches and persistence. */
 @Composable
 fun SungSettingsGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(title, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleLarge)
-        Surface(shape = MaterialTheme.shapes.extraLarge,
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, Modifier.semantics { heading() }, style = MaterialTheme.typography.titleMedium)
+        Surface(shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surfaceContainer) {
-            Column(Modifier.fillMaxWidth().padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp), content = content)
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
         }
     }
 }

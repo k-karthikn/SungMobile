@@ -2,11 +2,13 @@ package com.karthi.sungmobile.feature.lyrics
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -36,6 +38,32 @@ class LyricsScreenTest {
     private val track = CatalogItem("song", CatalogKind.SONG, "Sample song", "Artist",
         "https://www.youtube.com/watch?v=RB-RcX5DS5A")
     private val lines = (0..30).map { LyricLine(it * 1_000L, "Line $it") }
+
+    @Test fun activeTimedLineStaysNearViewportCenter() {
+        var position by mutableLongStateOf(15_000L)
+        compose.setContent {
+            SungTheme(reduceMotion = true) {
+                LyricsScreen(PlaybackState(track = track,
+                    engine = EngineSnapshot(positionMs = position, durationMs = 31_000, seekable = true)),
+                    LyricsUiState(track.id, document = LyricsDocument(LyricsOrigin.YOUTUBE,
+                        "Test provider", lines = lines)), LyricsSettings(), {}, {}, {}, {})
+            }
+        }
+        fun assertCentered(index: Int) {
+            compose.waitForIdle()
+            val viewport = compose.onNodeWithTag("timed_lyrics_list").getUnclippedBoundsInRoot()
+            val active = compose.onNodeWithText("Line $index").getUnclippedBoundsInRoot()
+            val viewportCenter = (viewport.top + viewport.bottom) / 2
+            val activeCenter = (active.top + active.bottom) / 2
+            assertTrue("Active lyric center $activeCenter should be near $viewportCenter",
+                kotlin.math.abs(activeCenter.value - viewportCenter.value) < (viewport.bottom - viewport.top).value * 0.12f)
+        }
+        assertCentered(15)
+        compose.runOnIdle { position = 0L }
+        assertCentered(0)
+        compose.runOnIdle { position = 30_000L }
+        assertCentered(30)
+    }
 
     @Test fun currentLineAccentPreservesWordsAndProviderCreditIsNotDuplicated() {
         val original = "Darlin', I'll love you"

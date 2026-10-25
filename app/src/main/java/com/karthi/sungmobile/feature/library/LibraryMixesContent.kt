@@ -18,11 +18,15 @@ import com.karthi.sungmobile.feature.home.HomeState
 /** The Mixes destination contains real local mixes and saved smart lists only. */
 @Composable
 internal fun LibraryMixesContent(home: HomeState, smart: SmartOverview, connected: Boolean,
-    actions: LibraryActionsViewModel, openSmart: (String) -> Unit, openSmartList: () -> Unit,
-    openStatistics: () -> Unit) {
+    actions: LibraryActionsViewModel, refreshMixes: () -> Unit, openSmart: (String) -> Unit, openSmartList: () -> Unit) {
     val save = LocalLibraryUi.current.add
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Your mixes", style = MaterialTheme.typography.headlineSmall)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Your mixes", Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
+            IconButton(refreshMixes, enabled = !home.loading) {
+                SungIcon(SungSymbol.Refresh, "Refresh mixes")
+            }
+        }
         val liked = home.likedMix.takeIf { it.size >= 2 }
         val recent = home.recentMix.takeIf { !home.data.privateMode && it.size >= 2 }
         if (liked != null || recent != null) {
@@ -59,6 +63,5 @@ internal fun LibraryMixesContent(home: HomeState, smart: SmartOverview, connecte
                 }
             }
         }
-        TextButton(openStatistics) { Text("Listening statistics") }
     }
 }

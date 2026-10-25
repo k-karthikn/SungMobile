@@ -6,6 +6,7 @@ import com.karthi.sungmobile.core.model.library.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import java.util.Calendar
 import java.util.UUID
 
 class RoomAdvancedLibraryRepository(private val db: SungDatabase,
@@ -62,9 +63,17 @@ class RoomAdvancedLibraryRepository(private val db: SungDatabase,
         if (db.historyDao().policy()?.privateMode == true) return@transaction ListeningStats(privateMode = true)
         val bound = limit.coerceIn(1, 100)
         val summary = dao.summary()
+        val since = Calendar.getInstance().apply {
+            timeInMillis = now()
+            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_YEAR, -29)
+        }.timeInMillis
         ListeningStats(qualifiedPlays = summary.qualifiedPlays, listenedMs = summary.listenedMs,
             topSongs = dao.topSongs(bound).map { TopSong(it.toTrack(), it.plays, it.listenedMs) },
-            recentEvents = dao.recentEvents(bound, offset.coerceAtLeast(0)).map { ListeningEvent(it.id, it.toTrack(), it.startedAt, it.lastPlayedAt, it.listenedMs) })
+            recentEvents = dao.recentEvents(bound, offset.coerceAtLeast(0)).map { ListeningEvent(it.id, it.toTrack(), it.startedAt, it.lastPlayedAt, it.listenedMs) },
+            uniqueSongs = summary.uniqueSongs,
+            dailyActivity = dao.dailyActivity(since).map { DailyListening(it.day, it.listenedMs, it.plays) })
     }
 }
 

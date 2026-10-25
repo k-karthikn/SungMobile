@@ -107,10 +107,13 @@ class LibraryUiTest {
         val songs = listOf(testSong, testSong.copy(id = "second", title = "Second song"))
         val smart = SmartPlaylist("smart-1", "Evening mix", SmartRule())
         var opened: String? = null
+        var refreshed = false
         compose.setContent { SungTheme { Column(Modifier.verticalScroll(rememberScrollState())) {
             LibraryMixesContent(HomeState(likedMix = songs, loading = false),
-                SmartOverview(listOf(smart), loading = false), true, actions, { opened = it }, {}, {})
+                SmartOverview(listOf(smart), loading = false), true, actions, { refreshed = true }, { opened = it }, {})
         } } }
+        compose.onNodeWithContentDescription("Refresh mixes").performClick()
+        assertTrue(refreshed)
         compose.onNodeWithTag("play_mix_Liked shuffle").performClick()
         assertEquals(songs, player.batches.single())
         compose.onNodeWithText("Evening mix").performScrollTo().performClick()

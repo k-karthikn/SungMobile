@@ -55,12 +55,5 @@ internal fun SearchHeader(state: CatalogState, actions: CatalogActions, submit: 
                     modifier = Modifier.heightIn(min = 48.dp).testTag("filter_${kind.name.lowercase()}"))
             }
         }
-        Button(onClick = submit, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("search_submit"),
-            enabled = state.query.isNotBlank(), shapes = ButtonDefaults.shapes(
-                shape = RoundedCornerShape(18.dp), pressedShape = RoundedCornerShape(10.dp))) {
-            SungIcon(SungSymbol.Search)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.search_action))
-        }
     }
 }

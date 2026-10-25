@@ -11,6 +11,7 @@ import com.karthi.sungmobile.core.designsystem.theme.SungTheme
 import com.karthi.sungmobile.feature.collection.*
 import com.karthi.sungmobile.feature.history.*
 import com.karthi.sungmobile.feature.home.*
+import com.karthi.sungmobile.core.model.CatalogKind
 import com.karthi.sungmobile.feature.library.*
 import com.karthi.sungmobile.feature.local.LocalSongsContent
 import com.karthi.sungmobile.feature.local.LocalFoldersSettingsSection
@@ -25,7 +26,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, browser: LibraryBrowserViewModel,
     libraryActions: LibraryActionsViewModel, advancedLibrary: AdvancedLibraryViewModel,
-    history: HistoryViewModel, home: HomeViewModel,
+    history: HistoryViewModel, home: HomeViewModel, discovery: DiscoveryFeedViewModel,
     collection: CollectionViewModel, collectionActions: CollectionActionsViewModel, links: LinkIntakeViewModel,
     lyrics: LyricsViewModel, convenience: ConvenienceViewModel) {
     val catalog by model.catalogState.collectAsStateWithLifecycle()
@@ -40,6 +41,7 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
     val historyError by history.error.collectAsStateWithLifecycle()
     val searches by history.searches.collectAsStateWithLifecycle()
     val homeState by home.state.collectAsStateWithLifecycle()
+    val discoveryState by discovery.state.collectAsStateWithLifecycle()
     val details by collection.state.collectAsStateWithLifecycle()
     val operation by collectionActions.state.collectAsStateWithLifecycle()
     val saveBatch by collectionActions.save.collectAsStateWithLifecycle()
@@ -76,6 +78,7 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 libraryContent = { modifier, openSessions, openSettings, openSearch ->
                     LibraryScreen(browser, library, libraryActions, advancedLibrary, advancedLibraryState,
                         openSettings, modifier, openSessions, openSearch, homeState, player.connected,
+                        refreshMixes = home::refresh,
                         localContent = { localModifier ->
                             LocalSongsContent(container.localAudio, player.connected, model.player::select,
                                 model.player::enqueue, localModifier)
@@ -89,8 +92,17 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 collectionContent = { modifier, showPlayer -> CollectionScreen(details, collection, collectionActions, model.player,
                     { model.searchArtistSongs(it); searchRequest++ }, showPlayer, modifier) },
                 homeContent = { modifier, search, nowPlaying, appearance, showLibrary ->
-                    DiscoveryHomeScreen(homeState, home::refresh, model.player, search, nowPlaying, appearance,
-                        { browser.open(it); showLibrary() }, modifier)
+                    DiscoveryHomeScreen(discoveryState, discovery::refresh, discovery::ensureFresh,
+                        search, appearance, showLibrary,
+                        { advancedLibrary.openStatistics(); showLibrary() },
+                        { query -> model.recall(query, CatalogKind.SONG); searchRequest++ },
+                        { shelf, item ->
+                            if (item.kind == CatalogKind.SONG) {
+                                val songs = shelf.items.filter { it.kind == CatalogKind.SONG }
+                                val index = songs.indexOfFirst { it.id == item.id }
+                                if (index >= 0) model.player.select(songs, index)
+                            } else collection.open(CollectionRoute(item.url, item.title, item.kind))
+                        }, player.connected, modifier)
                 }, searchRequest = searchRequest,
                 lyricsState = lyricsState, lyricsSettings = lyricsSettings,
                 onLoadLyrics = { lyrics.load(player.track, policy?.privateMode == true) },
@@ -125,7 +137,8 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 sessionsContent = { state, back ->
                     SessionsScreen(convenienceState, state, back, convenience::save, convenience::rename,
                         convenience::delete, convenience::restore, convenience::clearMessage)
-                }, livePlayback = model.player.state)
+                }, statisticsPageOpen = advancedLibraryState.page == AdvancedPage.STATISTICS,
+                livePlayback = model.player.state)
             CollectionOperationDialog(operation, collectionActions)
             LinkIntakeDialog(intake, links::dismiss) { link -> collection.open(CollectionRoute(link.url, link.label, startMs = link.startMs)) }
         } }
