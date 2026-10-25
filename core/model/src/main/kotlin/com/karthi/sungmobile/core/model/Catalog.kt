@@ -40,6 +40,11 @@ interface StreamResolver {
     suspend fun resolve(track: CatalogItem): ResolvedStream
 }
 
+/** Downloads need a format the device's audio collection can publish as a real media file. */
+interface DownloadStreamResolver {
+    suspend fun resolveDownload(track: CatalogItem): ResolvedStream
+}
+
 /** Provider-supplied recommendations for one seed; never synthesized from search or history. */
 interface RelatedSource {
     suspend fun related(seed: CatalogItem, limit: Int): List<CatalogItem>

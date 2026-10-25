@@ -21,8 +21,8 @@ android {
         applicationId = "com.karthi.sungmobile"
         minSdk = 26
         targetSdk = 37
-        versionCode = 29
-        versionName = "0.12.9"
+        versionCode = 30
+        versionName = "0.12.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

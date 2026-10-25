@@ -7,7 +7,7 @@ import org.schabi.newpipe.extractor.localization.*
 import java.io.Closeable
 
 /** Catalog work cannot occupy the stream resolver's executor. No provider DTO leaves this module. */
-class YouTubeSource : CatalogSource, StreamResolver, RelatedSource, Closeable {
+class YouTubeSource : CatalogSource, StreamResolver, DownloadStreamResolver, RelatedSource, Closeable {
     private val catalogExecution = ExtractorExecution(2)
     private val streamExecution = ExtractorExecution(1)
     private val catalog = CatalogExtractor()
@@ -17,6 +17,7 @@ class YouTubeSource : CatalogSource, StreamResolver, RelatedSource, Closeable {
     override suspend fun nextPage(token: PageToken) = catalogExecution.run { catalog.nextPage(token) }
     override suspend fun open(url: String) = catalogExecution.run { catalog.open(url) }
     override suspend fun resolve(track: CatalogItem) = streamExecution.run { streams.resolve(track) }
+    override suspend fun resolveDownload(track: CatalogItem) = streamExecution.run { streams.resolveDownload(track) }
     override suspend fun related(seed: CatalogItem, limit: Int) = catalogExecution.run { catalog.related(seed, limit) }
     override fun close() { catalogExecution.close(); streamExecution.close(); catalog.clear() }
     companion object {

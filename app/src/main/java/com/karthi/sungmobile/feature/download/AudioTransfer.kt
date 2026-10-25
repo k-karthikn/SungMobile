@@ -6,7 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import com.karthi.sungmobile.core.model.CatalogItem
-import com.karthi.sungmobile.core.model.StreamResolver
+import com.karthi.sungmobile.core.model.DownloadStreamResolver
 import com.karthi.sungmobile.feature.local.SUNG_MUSIC_PATH
 import java.io.IOException
 import java.net.HttpURLConnection
@@ -18,7 +18,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 /** One request, one pending MediaStore row. No history, inventory, or destination preference. */
-internal class AudioTransfer(private val context: Context, private val streams: StreamResolver) {
+internal class AudioTransfer(private val context: Context, private val streams: DownloadStreamResolver) {
     @Volatile private var connection: HttpURLConnection? = null
     @Volatile private var cancelled = false
     val isCancelled: Boolean get() = cancelled
@@ -31,12 +31,12 @@ internal class AudioTransfer(private val context: Context, private val streams: 
         // Signed provider URLs can be invalid by the time the job starts. Resolve once more
         // after an authorization/expiry response instead of failing the notification at 0%.
         try {
-            transfer(track, streams.resolve(track), progress)
+            transfer(track, streams.resolveDownload(track), progress)
         } catch (error: AudioHttpException) {
             if (error.status !in setOf(403, 410)) throw error
             currentCoroutineContext().ensureActive()
             if (cancelled) throw IOException("Download cancelled")
-            transfer(track, streams.resolve(track), progress)
+            transfer(track, streams.resolveDownload(track), progress)
         }
     }
 
@@ -63,13 +63,12 @@ internal class AudioTransfer(private val context: Context, private val streams: 
             if (http.responseCode != HttpURLConnection.HTTP_OK &&
                 http.responseCode != HttpURLConnection.HTTP_PARTIAL)
                 throw AudioHttpException(http.responseCode)
-            val mime = stream.mimeType?.substringBefore(';')?.trim()?.takeIf { it.startsWith("audio/") }
+            val sourceMime = stream.mimeType?.substringBefore(';')?.trim()?.takeIf { it.startsWith("audio/") }
                 ?: http.contentType?.substringBefore(';')?.trim()?.takeIf { it.startsWith("audio/") }
                 ?: throw IOException("The source did not provide audio")
+            val mime = canonicalDownloadMime(sourceMime)
             val extension = when (mime.lowercase()) {
                 "audio/mp4", "audio/x-m4a" -> "m4a"
-                "audio/webm" -> "webm"
-                "audio/ogg", "audio/opus" -> "ogg"
                 "audio/mpeg", "audio/mp3" -> "mp3"
                 "audio/aac" -> "aac"
                 "audio/flac" -> "flac"
@@ -126,6 +125,12 @@ internal class AudioTransfer(private val context: Context, private val streams: 
 }
 
 internal class AudioHttpException(val status: Int) : IOException("Audio server returned $status")
+
+internal fun canonicalDownloadMime(mime: String): String = when (mime.lowercase()) {
+    "audio/x-m4a" -> "audio/mp4"
+    "audio/mp3" -> "audio/mpeg"
+    else -> mime.lowercase()
+}
 
 /** A 206 is safe only when it starts at zero and includes the entire file. */
 internal fun expectedAudioLength(status: Int, contentRange: String?, contentLength: Long): Long? {

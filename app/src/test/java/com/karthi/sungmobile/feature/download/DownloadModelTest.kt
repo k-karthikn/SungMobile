@@ -45,4 +45,8 @@ class DownloadModelTest {
             expectedAudioLength(206, "bytes 0-49/100", 50)
         }
     }
+
+    @Test fun mediaStoreGetsCanonicalMimeForM4a() {
+        assertEquals("audio/mp4", canonicalDownloadMime("audio/x-m4a"))
+    }
 }

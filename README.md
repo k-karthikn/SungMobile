@@ -1,6 +1,8 @@
 # SungMobile
 
-Latest production candidate: **0.12.9 (code 29)** — a roomier Local songs tab, cached scans, and improved Android 15 download handling. [Versioned APK and phone checklist](Stages/Local_Audio_Viewport_Results/README.md). Phone acceptance and publication are pending.
+Latest production candidate: **0.12.10 (code 30)** — fixes music downloads on devices whose MediaStore rejects WebM audio. [Versioned APK and phone result](Stages/Download_Compatibility_Results/README.md). A download completed on the connected Android 15 phone; publication is pending.
+
+Previous production candidate: **0.12.9 (code 29)** — a roomier Local songs tab and cached scans. [APK and phone checklist](Stages/Local_Audio_Viewport_Results/README.md).
 
 Latest production candidate: **0.12.7 (code 27)** — lighter theme-colored active lyrics and the same expressive play/pause control across the mini-player and Now Playing. [APK and manual checklist](Stages/Lyrics_Emphasis_Results/README.md). Phone acceptance pending; publishing was not performed in this task.
 

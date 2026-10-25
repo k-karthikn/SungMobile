@@ -40,6 +40,7 @@ class AudioDownloadJob : JobService() {
             } catch (_: CancellationException) {
                 notifier.finished(request, false, "Download cancelled")
             } catch (error: Exception) {
+                if (!transfer.isCancelled) logDownloadFailure(error)
                 notifier.finished(request, false, if (transfer.isCancelled) "Download cancelled"
                     else downloadFailureMessage(error))
             } finally {

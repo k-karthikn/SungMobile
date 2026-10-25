@@ -5,26 +5,26 @@
 In `app/build.gradle.kts`:
 
 ```kotlin
-versionCode = 29
-versionName = "0.12.9"
+versionCode = 30
+versionName = "0.12.10"
 ```
 
-- **versionCode** is Android's ordering number within an application ID. Increase it for every update to that app: 29 → 30 → 31. Never reuse or reduce it for production hotfixes or prereleases. Choose a number higher than every production APK already distributed.
-- **versionName** is the readable label. For example, the next small fix can be `0.12.10`, then a feature release `0.13.0`. This string and the GitHub tag do not decide whether an update is newer.
+- **versionCode** is Android's ordering number within an application ID. Increase it for every update to that app: 30 → 31 → 32. Never reuse or reduce it for production hotfixes or prereleases. Choose a number higher than every production APK already distributed.
+- **versionName** is the readable label. For example, the next small fix can be `0.12.11`, then a feature release `0.13.0`. This string and the GitHub tag do not decide whether an update is newer.
 - To undo a bad release, restore the desired source changes but build with a NEW, higher versionCode. Do not distribute an older-code APK as the fix.
 
 Sung's updater rejects equal or lower codes. Android also protects against normal downgrade installations. The production application ID is **`com.karthi.sungmobile`**. Keep that ID and the dedicated production signing key for every future production APK; changing either breaks in-place updates. The earlier debug application ID, `com.karthi.sungmobile.stage0`, is a separate Android app with separate data. Installing production does not transfer Likes, playlists, history, or settings from debug. Do not uninstall the debug app until you have finished anything you need there.
 
 ## Publish a future update
 
-1. Increase versionCode (next after this build: **30**) and choose versionName.
+1. Increase versionCode (next after this build: **31**) and choose versionName.
 2. Build/test the production APK with `./gradlew :app:assembleRelease`. Local signing configuration is read from `~/.android/sungmobile-release/signing.properties`. Back up both that file and `~/.android/sungmobile-release/sungmobile-release.p12` securely; without the same private key, future APKs cannot update an installed production app. Never commit either file. Use `apksigner verify --print-certs` to confirm the signer. The debug APK and debug key remain separate.
-3. Choose a GitHub tag, e.g. `v0.12.10`. Use the exact final APK filename when generating metadata:
+3. Choose a GitHub tag, e.g. `v0.12.11`. Use the exact final APK filename when generating metadata:
 
 ```bash
 python3 scripts/make_update_manifest.py \
-  --apk /absolute/path/SungMobile-0.12.10-code30-release.apk \
-  --tag v0.12.10 \
+  --apk /absolute/path/SungMobile-0.12.11-code31-release.apk \
+  --tag v0.12.11 \
   --package-name com.karthi.sungmobile \
   --aapt /home/karthi/Android/Sdk/build-tools/36.0.0/aapt \
   --output /absolute/path/update.json
