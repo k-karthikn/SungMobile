@@ -24,6 +24,9 @@ class AppContainer(context: Context) {
     val appearance by lazy { AppearanceStore(settings, applicationScope) }
     val lyricsGateway by lazy { com.karthi.sungmobile.core.youtube.lyrics.YouTubeLyricsGateway() }
     val lyricsCache by lazy { com.karthi.sungmobile.core.data.lyrics.LyricsCache(context) }
+    val localLyrics by lazy { com.karthi.sungmobile.feature.lyrics.LocalLyricsReader(context.applicationContext) {
+        localAudio.addedFolders()
+    } }
     val convenience by lazy { com.karthi.sungmobile.core.data.convenience.ConvenienceRepository(context) }
     val localAudio by lazy { com.karthi.sungmobile.feature.local.LocalAudioRepository(context.applicationContext) }
 }

@@ -10,6 +10,16 @@ class LyricsTest {
             "Song", "Artist", "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
         assertEquals("dQw4w9WgXcQ", track.lyricsVideoId())
     }
+    @Test fun localContentUriGetsStableDistinctLyricKey() {
+        val first = CatalogItem("local:content://media/external/audio/media/42", CatalogKind.SONG,
+            "Local", "Artist", "content://media/external/audio/media/42")
+        val second = first.copy(id = "local:content://media/external/audio/media/43")
+        assertEquals(first.lyricsStorageKey(), first.lyricsStorageKey())
+        assertEquals(11, first.lyricsStorageKey()?.length)
+        org.junit.Assert.assertNotEquals(first.lyricsStorageKey(), second.lyricsStorageKey())
+        assertEquals("dQw4w9WgXcQ", CatalogItem("song", CatalogKind.SONG, "Song", "Artist",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ").lyricsStorageKey())
+    }
     @Test fun timingOffsetAffectsHighlightAndSeekInOppositeDirections() {
         val lines = listOf(LyricLine(1_000, "one"), LyricLine(2_000, "two"))
         assertEquals(1, currentLyricLine(lines, 1_750, 250))

@@ -15,6 +15,7 @@ import com.karthi.sungmobile.core.designsystem.icon.SungIcon
 import com.karthi.sungmobile.core.designsystem.icon.SungSymbol
 import com.karthi.sungmobile.core.model.RepeatMode
 import com.karthi.sungmobile.core.model.library.libraryKeyOrNull
+import com.karthi.sungmobile.core.model.lyrics.lyricsStorageKey
 import com.karthi.sungmobile.core.model.lyrics.lyricsVideoId
 import com.karthi.sungmobile.core.playback.PlaybackState
 import com.karthi.sungmobile.feature.library.LocalLibraryUi
@@ -35,7 +36,7 @@ internal fun MiniPlayerMenu(state: PlaybackState, actions: PlayerActions,
             SungIcon(SungSymbol.More, "More options for ${track.title}")
         }
         DropdownMenu(expanded, { expanded = false }) {
-            if (track.lyricsVideoId() != null) DropdownMenuItem(text = { Text(stringResource(R.string.lyrics)) }, onClick = {
+            if (track.lyricsStorageKey() != null) DropdownMenuItem(text = { Text(stringResource(R.string.lyrics)) }, onClick = {
                 expanded = false; onLyrics()
             })
             DropdownMenuItem(text = { Text(stringResource(R.string.queue_count, state.queue.entries.size)) }, onClick = {

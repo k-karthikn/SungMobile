@@ -12,6 +12,7 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.HttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.karthi.sungmobile.core.model.ResolvedStream
 import com.karthi.sungmobile.core.model.PlaybackSpeed
@@ -27,11 +28,14 @@ import kotlinx.coroutines.launch
 
 @androidx.annotation.OptIn(UnstableApi::class)
 class ExoPlayerEngine(private val context: Context, scope: CoroutineScope) : PlayerEngine {
-    private val player = ExoPlayer.Builder(context.applicationContext).build().apply {
+    private val player = ExoPlayer.Builder(context.applicationContext)
+        .setLoadControl(DefaultLoadControl.Builder()
+            .setBufferDurationsMs(50_000, 120_000, 2_500, 5_000).build())
+        .setWakeMode(C.WAKE_MODE_NETWORK)
+        .build().apply {
         setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA)
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true)
         setHandleAudioBecomingNoisy(true)
-        setWakeMode(C.WAKE_MODE_NETWORK)
     }
     private val mutableState = MutableStateFlow(EngineSnapshot())
     override val state = mutableState.asStateFlow()

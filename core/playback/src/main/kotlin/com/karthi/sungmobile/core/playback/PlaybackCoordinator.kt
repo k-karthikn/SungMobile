@@ -23,6 +23,9 @@ class PlaybackCoordinator(
     private var preparationAttemptedId: String? = null
     private var preparationGeneration = 0L
     private var relatedJob: Job? = null
+    private var networkRecovery: Job? = null
+    private var bufferWatchdog: Job? = null
+    private var networkRecoveries = 0
     private var relatedGeneration = 0L
     private var relatedAutoplayEnabled = false
     private var generation = 0L
@@ -45,10 +48,14 @@ class PlaybackCoordinator(
             resumePositionMs = snapshot.positionMs
             mutableState.update { it.copy(engine = snapshot) }
             prepareNextIfNearEnd(snapshot)
+            watchBuffering(snapshot)
             when {
                 snapshot.error == EngineFailure.EXPIRED_STREAM && wantsPlayback && refreshes == 0 -> {
                     refreshes++
                     resolve(snapshot.positionMs)
+                }
+                snapshot.error == EngineFailure.NETWORK && wantsPlayback -> {
+                    scheduleNetworkRecovery(snapshot.positionMs)
                 }
                 snapshot.ended && !endedHandled && wantsPlayback -> {
                     endedHandled = true
@@ -101,6 +108,7 @@ class PlaybackCoordinator(
     }
 
     fun restore(snapshot: QueueSnapshot) {
+        cancelNetworkRecovery()
         cancelResolution()
         cancelPreparation()
         cancelRelated()
@@ -149,6 +157,8 @@ class PlaybackCoordinator(
         if (queue.entries.none { it.id == id }) return
         cancelPreparation()
         cancelRelated()
+        cancelNetworkRecovery()
+        networkRecoveries = 0
         trimDb = trackTrimsDb[queue.entries.first { it.id == id }.track.lyricsVideoId()] ?: 0
         applyVolume()
         refreshes = 0
@@ -186,9 +196,13 @@ class PlaybackCoordinator(
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
-                if (request == generation) mutableState.update { it.copy(resolving = false,
-                    sourceError = (error as? SourceException)?.failure ?: SourceFailure.EXTRACTION,
-                    engine = it.engine.copy(playRequested = false)) }
+                if (request == generation) {
+                    val failure = (error as? SourceException)?.failure ?: SourceFailure.EXTRACTION
+                    if (failure != SourceFailure.NETWORK || !scheduleNetworkRecovery(positionMs)) {
+                        mutableState.update { it.copy(resolving = false, sourceError = failure,
+                            engine = it.engine.copy(playRequested = false)) }
+                    }
+                }
             }
         }
     }
@@ -286,11 +300,14 @@ class PlaybackCoordinator(
 
     fun play() {
         cancelRelated()
+        val wasRecovering = networkRecovery != null
+        cancelNetworkRecovery()
+        if (wasRecovering || state.value.sourceError != null || state.value.engine.error != null) networkRecoveries = 0
         val current = state.value
         wantsPlayback = true
         if (current.track != null && (current.passId == null || current.engine.ended))
             mutableState.update { it.copy(passId = UUID.randomUUID().toString()) }
-        if (current.resolving) return
+        if (current.resolving && !wasRecovering) return
         if (!loaded || current.sourceError != null || current.engine.error != null) {
             refreshes = 0
             resolve(resumePositionMs)
@@ -308,6 +325,7 @@ class PlaybackCoordinator(
 
     fun pause() {
         wantsPlayback = false
+        cancelNetworkRecovery()
         cancelPreparation()
         cancelRelated()
         if (state.value.resolving) cancelResolution()
@@ -400,12 +418,59 @@ class PlaybackCoordinator(
     }
     private fun resetUndo() { undoQueue = null; mutableState.update { it.copy(canUndo = false) } }
     private fun cancelResolution() { generation++; resolution?.cancel(); resolution = null }
+    private fun watchBuffering(snapshot: EngineSnapshot) {
+        if (!wantsPlayback || !snapshot.playRequested || !snapshot.buffering || snapshot.suppressed ||
+            snapshot.error != null || state.value.track?.id?.startsWith("local:") != false || networkRecoveries >= MAX_NETWORK_RECOVERIES) {
+            bufferWatchdog?.cancel()
+            bufferWatchdog = null
+            return
+        }
+        if (bufferWatchdog != null) return
+        val trackId = state.value.queue.currentId
+        bufferWatchdog = scope.launch {
+            delay(BUFFER_STALL_MS)
+            bufferWatchdog = null
+            if (trackId == state.value.queue.currentId && loaded && wantsPlayback &&
+                engine.state.value.buffering && engine.state.value.playRequested) {
+                scheduleNetworkRecovery(engine.state.value.positionMs)
+            }
+        }
+    }
+
+    /** A brief network loss must not leave background playback permanently stopped. */
+    private fun scheduleNetworkRecovery(positionMs: Long): Boolean {
+        if (!wantsPlayback || state.value.track?.id?.startsWith("local:") != false ||
+            networkRecovery != null || networkRecoveries >= MAX_NETWORK_RECOVERIES) return false
+        bufferWatchdog?.cancel()
+        bufferWatchdog = null
+        val trackId = state.value.queue.currentId
+        val delayMs = if (networkRecoveries++ == 0) 2_000L else 6_000L
+        loaded = false
+        engine.stop()
+        resumePositionMs = positionMs
+        mutableState.update { it.copy(resolving = true, sourceError = null,
+            engine = EngineSnapshot(positionMs = positionMs, playRequested = true)) }
+        networkRecovery = scope.launch {
+            delay(delayMs)
+            networkRecovery = null
+            if (trackId == state.value.queue.currentId && wantsPlayback) resolve(positionMs)
+        }
+        return true
+    }
+
+    private fun cancelNetworkRecovery() {
+        networkRecovery?.cancel()
+        networkRecovery = null
+        bufferWatchdog?.cancel()
+        bufferWatchdog = null
+    }
     private fun stopEmpty() {
         stop()
         mutableState.update { it.copy(track = null, queue = QueueState(repeat = it.queue.repeat)) }
     }
     override fun stop() {
         onStopped?.invoke()
+        cancelNetworkRecovery()
         cancelResolution()
         cancelPreparation()
         cancelRelated()
@@ -415,5 +480,10 @@ class PlaybackCoordinator(
         engine.stop()
         mutableState.update { it.copy(resolving = false, sourceError = null, engine = EngineSnapshot(), passId = null) }
     }
-    fun release() { cancelResolution(); cancelPreparation(); cancelRelated(); observation.cancel(); engine.release() }
+    fun release() { cancelNetworkRecovery(); cancelResolution(); cancelPreparation(); cancelRelated(); observation.cancel(); engine.release() }
+
+    private companion object {
+        const val MAX_NETWORK_RECOVERIES = 2
+        const val BUFFER_STALL_MS = 45_000L
+    }
 }

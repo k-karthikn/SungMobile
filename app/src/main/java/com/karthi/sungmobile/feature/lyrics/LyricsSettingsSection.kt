@@ -20,7 +20,7 @@ fun LyricsSettingsSection(value: LyricsSettings, onChange: (LyricsSettings) -> U
     var legal by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     SungSettingsGroup("Lyrics") {
-            SungSettingsToggle("Use LRCLIB for missing or untimed lyrics", value.lrclibEnabled,
+            SungSettingsToggle("Use LRCLIB for local, missing or untimed lyrics", value.lrclibEnabled,
                 { onChange(value.copy(lrclibEnabled = it)) },
                 "Sends the title, artist and duration to LRCLIB. Private mode skips this request.")
             HorizontalDivider()

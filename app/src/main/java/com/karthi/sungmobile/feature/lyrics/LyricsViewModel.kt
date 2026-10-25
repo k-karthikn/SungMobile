@@ -23,6 +23,7 @@ class LyricsViewModel(
     private val gateway: LyricsGateway,
     private val cache: LyricsCache,
     private val settings: SettingsRepository,
+    private val local: LocalLyricsSource = LocalLyricsSource { null },
 ) : ViewModel() {
     val preferences = settings.lyrics.stateIn(viewModelScope, SharingStarted.Eagerly, LyricsSettings())
     private val mutableState = MutableStateFlow(LyricsUiState())
@@ -43,41 +44,53 @@ class LyricsViewModel(
         request?.cancel()
         val current = ++generation
         if (track == null) { mutableState.value = LyricsUiState(); return }
-        val videoId = track.lyricsVideoId()
-        if (videoId == null) { mutableState.value = LyricsUiState(videoId = track.id, message = "This song has no supported YouTube ID."); return }
+        val key = track.lyricsStorageKey()
+        if (key == null) { mutableState.value = LyricsUiState(videoId = track.id, message = "Lyrics are unavailable for this song."); return }
         mutableState.value = LyricsUiState(videoId = track.id, loading = true)
         request = viewModelScope.launch {
-            val offset = runCatching { settings.offset(videoId) }.getOrDefault(0)
+            val offset = runCatching { settings.offset(key) }.getOrDefault(0)
             val bytes = runCatching { cache.bytes() }.getOrDefault(0)
             ensureActive()
             mutableState.update { it.copy(offsetMs = offset, cacheBytes = bytes) }
             var error: String? = null
-            var youtube: LyricsDocument? = null
-            try {
-                if (!refresh && preferences.value.cacheEnabled) youtube = cache.get(videoId, LyricsOrigin.YOUTUBE)
-                if (youtube == null) youtube = gateway.youtube(track)?.also {
-                    ensureActive()
-                    if (!privateMode && preferences.value.cacheEnabled) cache.put(videoId, it)
-                }
-            } catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) { error = "YouTube lyrics could not be loaded." }
+            var primary: LyricsDocument? = null
+            if (track.isLocalSong()) {
+                try { primary = local.read(track) }
+                catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { error = "Lyrics in this file could not be read." }
+            } else {
+                try {
+                    if (!refresh && preferences.value.cacheEnabled) primary = cache.get(key, LyricsOrigin.YOUTUBE)
+                    if (primary == null) primary = gateway.youtube(track)?.also {
+                        ensureActive()
+                        if (!privateMode && preferences.value.cacheEnabled) cache.put(key, it)
+                    }
+                } catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { error = "YouTube lyrics could not be loaded." }
+            }
             var lrclib: LyricsDocument? = null
             ensureActive()
-            if (youtube?.synchronized != true && preferences.value.lrclibEnabled && !privateMode) {
+            if (primary?.synchronized != true && preferences.value.lrclibEnabled && !privateMode) {
                 try {
-                    if (!refresh && preferences.value.cacheEnabled) lrclib = cache.get(videoId, LyricsOrigin.LRCLIB)
+                    if (!refresh && preferences.value.cacheEnabled) lrclib = cache.get(key, LyricsOrigin.LRCLIB)
                     if (lrclib == null) lrclib = gateway.lrclib(track)?.also {
                         ensureActive()
-                        if (preferences.value.cacheEnabled) cache.put(videoId, it)
+                        if (preferences.value.cacheEnabled) cache.put(key, it)
                     }
                 } catch (cancelled: CancellationException) { throw cancelled }
                 catch (_: Exception) { error = "Lyrics could not be loaded. Check your connection and retry." }
             }
-            val document = selectLyrics(youtube, lrclib)
+            val document = selectLyrics(primary, lrclib)
             val finalBytes = runCatching { cache.bytes() }.getOrDefault(bytes)
             ensureActive()
             if (current == generation) mutableState.value = LyricsUiState(track.id, false, document,
-                if (document == null) error ?: "No lyrics available for this song." else null,
+                if (document == null) error ?: when {
+                    track.isLocalSong() && !preferences.value.lrclibEnabled ->
+                        "No lyrics found in this file. You can also search LRCLIB online."
+                    track.isLocalSong() && privateMode ->
+                        "No lyrics found in this file. Private mode skips online lookup."
+                    else -> "No lyrics available for this song."
+                } else null,
                 offset, finalBytes)
         }
     }
@@ -87,10 +100,10 @@ class LyricsViewModel(
         if (!value.cacheEnabled) { cache.clear(); mutableState.update { it.copy(cacheBytes = 0) } }
     }
     fun setOffset(track: CatalogItem, offsetMs: Int) {
-        val videoId = track.lyricsVideoId() ?: return
+        val key = track.lyricsStorageKey() ?: return
         val clamped = offsetMs.coerceIn(-10_000, 10_000)
         mutableState.update { if (it.videoId == track.id) it.copy(offsetMs = clamped) else it }
-        viewModelScope.launch { settings.setOffset(videoId, clamped) }
+        viewModelScope.launch { settings.setOffset(key, clamped) }
     }
     fun clearCache() {
         cancel()

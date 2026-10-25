@@ -1,0 +1,5 @@
+# Blue palette refresh (code 31)
+
+The fixed **Blue** appearance now uses Material 3 Tonal Spot roles generated from `#789DFF` at normal contrast. This moves the dark scheme from cyan-tinted surfaces to near-neutral graphite (`surface` `#121318`, `surfaceContainer` `#1E1F25`) and uses periwinkle for the main accent (`primary` `#B2C5FF`). Light mode gets the corresponding roles from the same seed. Components continue to use `MaterialTheme.colorScheme` rather than page-specific colors, so selection, controls, lyrics, and navigation stay coordinated. **Wallpaper** appearance still uses Android's dynamic color scheme on API 31+.
+
+The tables in `core/designsystem/.../SungColors.kt` were produced by Sung's Material 3 HCT/Tonal Spot generator, with all standard roles resolved together. The reference screenshots informed the seed and surface contrast; their exact pixels were not copied. Host tests check text contrast and ordered surface levels in both modes. Phone visual review remains with the owner.

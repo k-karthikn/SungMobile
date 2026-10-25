@@ -106,7 +106,7 @@ class SessionPlayerTest {
         assertFalse(session.isPlaying)
         session.release(); coordinator.release()
     }
-    @Test fun errorCanBeRetriedThroughStandardPlayCommand() = runTest {
+    @Test fun transientResolutionFailureRecoversWithoutAnotherPlayCommand() = runTest {
         var failed = false
         val resolver = object : StreamResolver {
             override suspend fun resolve(track: CatalogItem): ResolvedStream {
@@ -117,8 +117,9 @@ class SessionPlayerTest {
         val coordinator = PlaybackCoordinator(resolver, Engine(), backgroundScope)
         val session = SessionPlayer(coordinator, backgroundScope)
         coordinator.select(songs, 0); runCurrent()
-        assertNotNull(session.playerError)
-        session.prepare(); session.play(); runCurrent()
+        assertEquals(Player.STATE_BUFFERING, session.playbackState)
+        assertTrue(session.playWhenReady)
+        advanceTimeBy(2_000); runCurrent()
         assertNull(session.playerError)
         assertTrue(session.isPlaying)
         session.release(); coordinator.release()

@@ -2,8 +2,10 @@ package com.karthi.sungmobile.core.model.lyrics
 
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.YouTubeLink
+import java.security.MessageDigest
+import java.util.Base64
 
-enum class LyricsOrigin { YOUTUBE, LRCLIB }
+enum class LyricsOrigin { YOUTUBE, LRCLIB, LOCAL }
 
 data class LyricLine(val startMs: Long, val text: String)
 
@@ -31,6 +33,29 @@ fun selectLyrics(youtube: LyricsDocument?, lrclib: LyricsDocument?): LyricsDocum
 
 fun CatalogItem.lyricsVideoId(): String? =
     (runCatching { YouTubeLink.parse(url) }.getOrNull() as? YouTubeLink.Song)?.videoId
+
+/** Local content URIs need a stable, filename-safe key for lyric text and timing offsets. */
+fun CatalogItem.lyricsStorageKey(): String? = lyricsVideoId() ?: id.takeIf { it.startsWith("local:content://") }
+    ?.let { "l" + Base64.getUrlEncoder().withoutPadding().encodeToString(
+        MessageDigest.getInstance("SHA-256").digest(it.toByteArray(Charsets.UTF_8))).take(10) }
+
+fun CatalogItem.isLocalSong(): Boolean = id.startsWith("local:content://")
+
+/** Shared by LRCLIB and local sidecar/embedded lyric files. */
+fun parseLrc(text: String): List<LyricLine> {
+    if (text.length > 256_000) return emptyList()
+    val stamp = Regex("\\[(\\d{1,3}):(\\d{2})(?:\\.(\\d{1,3}))?]")
+    return text.lineSequence().flatMap { raw ->
+        val lyric = raw.replace(stamp, "").trim()
+        if (lyric.isBlank()) emptySequence() else stamp.findAll(raw).mapNotNull { match ->
+            val minutes = match.groupValues[1].toLongOrNull() ?: return@mapNotNull null
+            val seconds = match.groupValues[2].toLongOrNull() ?: return@mapNotNull null
+            if (seconds > 59) return@mapNotNull null
+            val fraction = match.groupValues[3].padEnd(3, '0').take(3).toLongOrNull() ?: 0
+            LyricLine((minutes * 60 + seconds) * 1_000 + fraction, lyric)
+        }
+    }.take(4_000).sortedBy { it.startMs }.toList()
+}
 
 /** The display clock includes the saved offset; tapping a line reverses it. */
 fun currentLyricLine(lines: List<LyricLine>, positionMs: Long, offsetMs: Int): Int {

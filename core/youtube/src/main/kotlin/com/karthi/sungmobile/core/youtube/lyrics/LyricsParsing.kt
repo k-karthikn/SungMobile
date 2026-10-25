@@ -59,21 +59,6 @@ internal fun parseYouTubeLyrics(body: String): LyricsDocument? {
     return null
 }
 
-internal fun parseLrc(text: String): List<LyricLine> {
-    if (text.length > 256_000) return emptyList()
-    val stamp = Regex("\\[(\\d{1,3}):(\\d{2})(?:\\.(\\d{1,3}))?]")
-    return text.lineSequence().flatMap { raw ->
-        val lyric = raw.replace(stamp, "").trim()
-        if (lyric.isBlank()) emptySequence() else stamp.findAll(raw).mapNotNull { match ->
-            val minutes = match.groupValues[1].toLongOrNull() ?: return@mapNotNull null
-            val seconds = match.groupValues[2].toLongOrNull() ?: return@mapNotNull null
-            if (seconds > 59) return@mapNotNull null
-            val fraction = match.groupValues[3].padEnd(3, '0').take(3).toLongOrNull() ?: 0
-            LyricLine((minutes * 60 + seconds) * 1_000 + fraction, lyric)
-        }
-    }.take(4_000).sortedBy { it.startMs }.toList()
-}
-
 private fun normalize(value: String): String = Normalizer.normalize(value, Normalizer.Form.NFKC)
     .lowercase().replace(Regex("[^\\p{L}\\p{N}]+"), " ").trim().replace(Regex("\\s+"), " ")
 

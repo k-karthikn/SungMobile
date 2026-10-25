@@ -25,7 +25,7 @@ The Sung Linux code and documentation informed behavior and architecture. Stage 
 
 Google Sans Flex is bundled unmodified from [Google Fonts](https://github.com/google/fonts/tree/main/ofl/googlesansflex). Font Git blob: `1d8d8ae5a7c6d0e48312d2a0a478bad92caee73a`; SHA-256: `a9ac770798857d5e8ac593ced42b22e40a7c08cec98319f92b0eccc2783a77ba`. Its SIL Open Font License and upstream trademark notice are bundled in the same licenses directory. The font is not relicensed under the application's GPL.
 
-The blue role tables were generated using Google's Apache-2.0 [Material Color Utilities](https://github.com/material-foundation/material-color-utilities), JavaScript package 0.3.0, Tonal Spot scheme, seed `#79D2F5`, normal contrast. The generator is not a runtime dependency. Material shape paths are provided by AndroidX Material 3, not copied into application code.
+The blue role tables use the Material 3 Tonal Spot scheme with seed `#789DFF` and normal contrast. They were generated using Sung's HCT color implementation, which follows Google's Apache-2.0 [Material Color Utilities](https://github.com/material-foundation/material-color-utilities). The generator is not a runtime dependency. Material shape paths are provided by AndroidX Material 3, not copied into application code.
 
 Catalog metadata and artwork belong to their respective sources/rightsholders, not this application's license. Two small YouTube video thumbnail fixtures are used only for offline UI tests: Coldplay “The Scientist” (`RB-RcX5DS5A`) and “Viva La Vida” (`dvgZkm1xWPE`), fetched from `i.ytimg.com/vi/<id>/mqdefault.jpg`. They are under `app/src/test/resources/artwork`, are not APK resources, and are not offered as redistributable application artwork.
 

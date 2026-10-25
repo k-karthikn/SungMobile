@@ -148,7 +148,8 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                             }
                             Overlay.LYRICS -> LivePlaybackContent(playback, livePlayback) { live ->
                                 LyricsScreen(live, lyricsState, lyricsSettings, back, onRetryLyrics,
-                                    playerActions.seek, onLyricsOffset, Modifier.weight(1f))
+                                    playerActions.seek, onLyricsOffset, Modifier.weight(1f),
+                                    onEnableOnline = { onLyricsSettings(lyricsSettings.copy(lrclibEnabled = true)) })
                             }
                             Overlay.SESSIONS -> LivePlaybackContent(playback, livePlayback) { live -> sessionsContent(live, back) }
                             Overlay.HISTORY -> historyContent?.invoke(content, back)

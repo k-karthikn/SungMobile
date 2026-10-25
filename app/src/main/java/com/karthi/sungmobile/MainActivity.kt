@@ -40,7 +40,9 @@ class MainActivity : ComponentActivity() {
     private val collection by lazy { obtain(CollectionViewModel::class.java) { CollectionViewModel(container.catalog, it) } }
     private val collectionActions by lazy { obtain(CollectionActionsViewModel::class.java) { CollectionActionsViewModel(container.catalog, catalog.player) } }
     private val links by lazy { obtain(LinkIntakeViewModel::class.java) { LinkIntakeViewModel(it) } }
-    private val lyrics by lazy { obtain(LyricsViewModel::class.java) { LyricsViewModel(container.lyricsGateway, container.lyricsCache, container.settings) } }
+    private val lyrics by lazy { obtain(LyricsViewModel::class.java) {
+        LyricsViewModel(container.lyricsGateway, container.lyricsCache, container.settings, container.localLyrics)
+    } }
     private val convenience by lazy { obtain(ConvenienceViewModel::class.java) {
         ConvenienceViewModel(container.convenience, catalog.player as PlaybackConnection)
     } }

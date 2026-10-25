@@ -4,6 +4,7 @@ import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.lyrics.LyricsDocument
 import com.karthi.sungmobile.core.model.lyrics.LyricsGateway
 import com.karthi.sungmobile.core.model.lyrics.lyricsVideoId
+import com.karthi.sungmobile.core.model.lyrics.isLocalSong
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.*
@@ -41,7 +42,7 @@ class YouTubeLyricsGateway(
     }
 
     override suspend fun lrclib(track: CatalogItem): LyricsDocument? {
-        if (track.lyricsVideoId() == null) return null
+        if (track.lyricsVideoId() == null && !track.isLocalSong()) return null
         if (System.currentTimeMillis() < lrclibRetryAfterMillis) throw IOException("LRCLIB rate limited")
         val artist = track.subtitle.substringBefore(" • ").trim()
         val duration = track.durationMs ?: return null

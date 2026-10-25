@@ -6,6 +6,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.advanceTimeBy
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -69,7 +70,7 @@ class PlaybackCoordinatorTest {
         assertEquals(1, engine.loaded.size)
     }
 
-    @Test fun networkErrorDoesNotRetryAndSeekingIsClamped() = runTest {
+    @Test fun networkErrorRetriesTwiceFromSamePositionThenShowsError() = runTest {
         val resolver = DeferredResolver()
         val engine = FakeEngine()
         val player = PlaybackCoordinator(resolver, engine, backgroundScope)
@@ -79,8 +80,75 @@ class PlaybackCoordinatorTest {
         assertEquals(100_000, engine.state.value.positionMs)
         player.seekTo(-1); runCurrent()
         assertEquals(0, engine.state.value.positionMs)
-        engine.state.value = EngineSnapshot(error = EngineFailure.NETWORK); runCurrent()
+        engine.state.value = EngineSnapshot(positionMs = 22_000, error = EngineFailure.NETWORK); runCurrent()
+        assertTrue(player.state.value.resolving)
         assertEquals(1, resolver.requests.size)
+        advanceTimeBy(2_000); runCurrent()
+        assertEquals(2, resolver.requests.size)
+        resolver.requests[1].complete(stream("one")); runCurrent()
+        assertEquals(22_000, engine.state.value.positionMs)
+        engine.state.value = EngineSnapshot(positionMs = 23_000, error = EngineFailure.NETWORK); runCurrent()
+        advanceTimeBy(6_000); runCurrent()
+        assertEquals(3, resolver.requests.size)
+        resolver.requests[2].complete(stream("one")); runCurrent()
+        engine.state.value = EngineSnapshot(positionMs = 24_000, error = EngineFailure.NETWORK); runCurrent()
+        advanceTimeBy(10_000); runCurrent()
+        assertEquals(3, resolver.requests.size)
+        assertEquals(EngineFailure.NETWORK, player.state.value.engine.error)
+    }
+
+    @Test fun longBufferStallRetriesButPauseCancelsPendingRecovery() = runTest {
+        val resolver = DeferredResolver()
+        val engine = FakeEngine()
+        val player = PlaybackCoordinator(resolver, engine, backgroundScope)
+        player.select(track("one")); runCurrent()
+        resolver.requests[0].complete(stream("one")); runCurrent()
+        engine.state.value = EngineSnapshot(positionMs = 31_000, buffering = true, playRequested = true)
+        runCurrent()
+        advanceTimeBy(45_000); runCurrent()
+        assertTrue(player.state.value.resolving)
+        player.pause()
+        advanceTimeBy(10_000); runCurrent()
+        assertEquals(1, resolver.requests.size)
+        assertFalse(player.state.value.engine.playRequested)
+    }
+
+    @Test fun networkRecoveryResumesAfterBufferStallAndIgnoresLocalFiles() = runTest {
+        val resolver = DeferredResolver()
+        val engine = FakeEngine()
+        val player = PlaybackCoordinator(resolver, engine, backgroundScope)
+        player.select(track("one")); runCurrent()
+        resolver.requests[0].complete(stream("one")); runCurrent()
+        engine.state.value = EngineSnapshot(positionMs = 31_000, buffering = true, playRequested = true)
+        runCurrent()
+        advanceTimeBy(45_000); runCurrent()
+        advanceTimeBy(2_000); runCurrent()
+        assertEquals(2, resolver.requests.size)
+        resolver.requests[1].complete(stream("one")); runCurrent()
+        assertEquals(31_000, engine.state.value.positionMs)
+
+        player.select(track("local:one")); runCurrent()
+        resolver.requests[2].complete(stream("local:one")); runCurrent()
+        engine.state.value = EngineSnapshot(positionMs = 2_000, buffering = true, playRequested = true)
+        runCurrent()
+        advanceTimeBy(60_000); runCurrent()
+        assertEquals(3, resolver.requests.size)
+    }
+
+    @Test fun choosingAnotherTrackCancelsNetworkRecovery() = runTest {
+        val resolver = DeferredResolver()
+        val engine = FakeEngine()
+        val player = PlaybackCoordinator(resolver, engine, backgroundScope)
+        player.select(track("one")); runCurrent()
+        resolver.requests[0].complete(stream("one")); runCurrent()
+        engine.state.value = EngineSnapshot(positionMs = 15_000, error = EngineFailure.NETWORK)
+        runCurrent()
+        player.select(track("two")); runCurrent()
+        resolver.requests[1].complete(stream("two")); runCurrent()
+        advanceTimeBy(10_000); runCurrent()
+        assertEquals(2, resolver.requests.size)
+        assertEquals("two", player.state.value.track?.id)
+        assertTrue(engine.state.value.playing)
     }
 
     @Test fun expiredResolvedUrlIsNeverLoaded() = runTest {

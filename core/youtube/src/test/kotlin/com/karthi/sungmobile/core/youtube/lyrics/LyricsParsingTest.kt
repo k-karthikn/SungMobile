@@ -1,5 +1,6 @@
 package com.karthi.sungmobile.core.youtube.lyrics
 
+import com.karthi.sungmobile.core.model.lyrics.parseLrc
 import org.junit.Assert.*
 import org.junit.Test
 

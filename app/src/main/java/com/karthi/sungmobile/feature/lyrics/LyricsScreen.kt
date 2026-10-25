@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.first
 @Composable
 fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: LyricsSettings,
     onBack: () -> Unit, onRetry: () -> Unit, onSeek: (Long) -> Unit, onOffset: (Int) -> Unit,
-    modifier: Modifier = Modifier) {
+    modifier: Modifier = Modifier, onEnableOnline: () -> Unit = {}) {
     val track = playback.track
     val document = state.document?.takeIf { state.videoId == track?.id }
     val timed = document?.lines.orEmpty()
@@ -55,6 +55,8 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
                     Column(Modifier.fillMaxWidth().padding(24.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(state.message ?: stringResource(R.string.lyrics_missing), style = MaterialTheme.typography.bodyLarge)
+                        if (track?.isLocalSong() == true && !settings.lrclibEnabled)
+                            FilledTonalButton(onEnableOnline) { Text("Search LRCLIB online") }
                         FilledTonalButton(onRetry) { Text(stringResource(R.string.retry)) }
                     }
                 }

@@ -36,6 +36,8 @@ class AppearanceTest {
 
     @Test fun blueLightRolesMeetNormalTextContrast() = contrast(ThemeMode.LIGHT)
     @Test fun blueDarkRolesMeetNormalTextContrast() = contrast(ThemeMode.DARK)
+    @Test fun darkBlueSurfaceLadderKeepsContentAndControlsDistinct() = surfaceLadder(ThemeMode.DARK)
+    @Test fun lightBlueSurfaceLadderKeepsContentAndControlsDistinct() = surfaceLadder(ThemeMode.LIGHT)
 
     private fun contrast(mode: ThemeMode) {
         var pairs = emptyList<Pair<Color, Color>>()
@@ -44,19 +46,37 @@ class AppearanceTest {
                 val colors = MaterialTheme.colorScheme
                 SideEffect {
                     pairs = with(colors) { listOf(onPrimary to primary, onPrimaryContainer to primaryContainer,
-                        onSecondaryContainer to secondaryContainer, onSurface to surface,
+                        onSecondary to secondary, onSecondaryContainer to secondaryContainer,
+                        onTertiary to tertiary, onTertiaryContainer to tertiaryContainer, onSurface to surface,
                         onSurfaceVariant to surfaceContainerHigh, onErrorContainer to errorContainer) }
                 }
             }
         }
         compose.runOnIdle {
-            assertEquals(6, pairs.size)
+            assertEquals(9, pairs.size)
             pairs.forEach { (foreground, background) ->
                 val first = foreground.luminance()
                 val second = background.luminance()
                 val ratio = (maxOf(first, second) + .05f) / (minOf(first, second) + .05f)
                 assertTrue("Contrast $ratio is below 4.5:1", ratio >= 4.5f)
             }
+        }
+    }
+
+    private fun surfaceLadder(mode: ThemeMode) {
+        var levels = emptyList<Float>()
+        compose.setContent {
+            SungTheme(mode) {
+                val colors = MaterialTheme.colorScheme
+                SideEffect { levels = with(colors) { listOf(surface, surfaceContainerLow, surfaceContainer,
+                    surfaceContainerHigh, surfaceContainerHighest).map(Color::luminance) } }
+            }
+        }
+        compose.runOnIdle {
+            assertEquals(5, levels.size)
+            val ordered = if (mode == ThemeMode.DARK) levels.zipWithNext().all { (a, b) -> a < b }
+                else levels.zipWithNext().all { (a, b) -> a > b }
+            assertTrue("Surface roles should form a visible hierarchy", ordered)
         }
     }
 }
