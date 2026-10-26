@@ -17,13 +17,22 @@ import androidx.core.content.ContextCompat
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.CatalogKind
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.Locale
 
 internal const val SUNG_MUSIC_PATH = "Music/SungMobile/"
 
-data class LocalSong(val track: CatalogItem, val album: String?, val identity: String)
+data class LocalSong(val track: CatalogItem, val album: String?, val identity: String,
+    val sidecarArt: Uri? = null)
 data class LocalScan(val songs: List<LocalSong>, val needsAudioPermission: Boolean,
     val unreadableFolders: Int = 0)
 
@@ -31,12 +40,19 @@ data class LocalScan(val songs: List<LocalSong>, val needsAudioPermission: Boole
 class LocalAudioRepository(private val context: Context) {
     private val resolver get() = context.contentResolver
     private val preferences = context.getSharedPreferences("local_audio_folders", Context.MODE_PRIVATE)
+    private val artwork = LocalArtworkRepository(context)
+    private val artworkScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var artworkJob: Job? = null
     private val scanMutex = Mutex()
     @Volatile private var cachedScan: LocalScan? = null
     @Volatile private var scannedAtMs = 0L
+    @Volatile private var revision = 0L
+    @Volatile private var sidecarsDirty = false
+    private val mutableUpdates = MutableStateFlow<LocalScan?>(null)
+    val updates = mutableUpdates.asStateFlow()
 
     fun snapshot(): LocalScan? = cachedScan
-    fun invalidate() { cachedScan = null }
+    fun invalidate() { revision++; artworkJob?.cancel(); cachedScan = null }
 
     fun hasAudioPermission(): Boolean = ContextCompat.checkSelfPermission(context, audioPermission()) ==
         PackageManager.PERMISSION_GRANTED
@@ -50,12 +66,14 @@ class LocalAudioRepository(private val context: Context) {
     fun addFolder(uri: Uri) {
         resolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
         preferences.edit().putStringSet("trees", addedFolders().map(Uri::toString).toSet() + uri.toString()).apply()
+        sidecarsDirty = true
         invalidate()
     }
 
     fun removeFolder(uri: Uri) {
         preferences.edit().putStringSet("trees", addedFolders().map(Uri::toString).toSet() - uri.toString()).apply()
         runCatching { resolver.releasePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+        sidecarsDirty = true
         invalidate()
     }
 
@@ -69,10 +87,46 @@ class LocalAudioRepository(private val context: Context) {
         addedFolders().forEach { tree ->
             try { scanTree(tree, songs) } catch (_: Exception) { unreadable++ }
         }
+        val recheckSidecars = force || sidecarsDirty
+        sidecarsDirty = false
         LocalScan(songs.values.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.track.title }),
             !hasAudioPermission() || denied, unreadable)
-            .also { cachedScan = it; scannedAtMs = SystemClock.elapsedRealtime() }
+            .also { result ->
+                val generation = ++revision
+                artworkJob?.cancel()
+                cachedScan = result
+                mutableUpdates.value = result
+                scannedAtMs = SystemClock.elapsedRealtime()
+                artworkJob = artworkScope.launch { enrichArtwork(result, generation, recheckSidecars) }
+            }
     } }
+
+    private suspend fun enrichArtwork(initial: LocalScan, generation: Long, recheckSidecars: Boolean) {
+        val songs = initial.songs.toMutableList()
+        var changed = 0
+        songs.forEachIndexed { index, song ->
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
+            if (revision != generation) return
+            val recheck = recheckSidecars && song.sidecarArt != null
+            if (song.track.artworkUrl != null && !recheck) return@forEachIndexed
+            val audio = Uri.parse(song.track.url)
+            val art = runCatching { artwork.resolve(audio, song.sidecarArt, recheck) }.getOrNull() ?: return@forEachIndexed
+            if (revision != generation) return
+            songs[index] = song.copy(track = song.track.copy(artworkUrl = art))
+            changed++
+            if (changed >= 8) {
+                publishArtwork(initial, songs)
+                changed = 0
+            }
+        }
+        if (changed > 0 && revision == generation) publishArtwork(initial, songs)
+    }
+
+    private fun publishArtwork(initial: LocalScan, songs: List<LocalSong>) {
+        val updated = initial.copy(songs = songs.toList())
+        cachedScan = updated
+        mutableUpdates.value = updated
+    }
 
     private fun scanDefault(result: MutableMap<String, LocalSong>) {
         val columns = mutableListOf(AudioMedia._ID, AudioMedia.DISPLAY_NAME, AudioMedia.TITLE, AudioMedia.ARTIST,
@@ -113,7 +167,8 @@ class LocalAudioRepository(private val context: Context) {
                 val item = CatalogItem("local:$uri", CatalogKind.SONG,
                     cursor.getString(title)?.takeIf(String::isNotBlank) ?: filenameTitle(name),
                     cursor.getString(artist)?.takeUnless { it.isBlank() || it == "<unknown>" } ?: "Unknown artist",
-                    uri.toString(), durationMs = cursor.getLong(duration).takeIf { it > 0 })
+                    uri.toString(), artworkUrl = artwork.cached(uri),
+                    durationMs = cursor.getLong(duration).takeIf { it > 0 })
                 result[identity] = LocalSong(item,
                     cursor.getString(album)?.takeUnless { it.isBlank() || it == "<unknown>" }, identity)
             }
@@ -127,6 +182,8 @@ class LocalAudioRepository(private val context: Context) {
             val directory = directories.removeFirst()
             if (!visited.add(directory)) continue
             val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, directory)
+            val audioFiles = ArrayList<Pair<Uri, String>>()
+            val images = HashMap<String, Uri>()
             resolver.query(children, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID,
                 DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE),
                 null, null, null)?.use { cursor ->
@@ -140,22 +197,36 @@ class LocalAudioRepository(private val context: Context) {
                         directories.add(documentId)
                         continue
                     }
-                    if (!mediaType.startsWith("audio/", ignoreCase = true)) continue
                     val uri = DocumentsContract.buildDocumentUriUsingTree(tree, documentId)
-                    val mediaUri = if (Build.VERSION.SDK_INT >= 29)
-                        runCatching { MediaStore.getMediaUri(context, uri) }.getOrNull() else null
-                    val identity = mediaUri?.let { mapped -> runCatching {
-                        "media:${ContentUris.parseId(mapped)}"
-                    }.getOrNull() } ?: legacyTreeIdentity(documentId)
-                        ?: "${uri.authority}:$documentId"
-                    if (identity in result) continue
-                    val metadata = readMetadata(uri)
-                    val item = CatalogItem("local:$uri", CatalogKind.SONG,
-                        metadata.title ?: filenameTitle(cursor.getString(name).orEmpty()),
-                        metadata.artist ?: "Unknown artist", uri.toString(),
-                        durationMs = metadata.durationMs)
-                    result[identity] = LocalSong(item, metadata.album, identity)
+                    val filename = cursor.getString(name).orEmpty()
+                    when {
+                        mediaType.startsWith("audio/", ignoreCase = true) -> audioFiles += uri to filename
+                        mediaType.startsWith("image/", ignoreCase = true) &&
+                            filename.substringAfterLast('.', "").lowercase(Locale.ROOT) in IMAGE_EXTENSIONS ->
+                            images[filename.lowercase(Locale.ROOT)] = uri
+                    }
                 }
+            }
+            audioFiles.forEach { (uri, filename) ->
+                val documentId = DocumentsContract.getDocumentId(uri)
+                val mediaUri = if (Build.VERSION.SDK_INT >= 29)
+                    runCatching { MediaStore.getMediaUri(context, uri) }.getOrNull() else null
+                val identity = mediaUri?.let { mapped -> runCatching {
+                    "media:${ContentUris.parseId(mapped)}"
+                }.getOrNull() } ?: legacyTreeIdentity(documentId)
+                    ?: "${uri.authority}:$documentId"
+                val sidecar = localCover(filename, images)
+                if (identity in result) {
+                    if (sidecar != null) result[identity]?.let { existing ->
+                        result[identity] = existing.copy(sidecarArt = sidecar)
+                    }
+                    return@forEach
+                }
+                val metadata = readMetadata(uri)
+                val item = CatalogItem("local:$uri", CatalogKind.SONG,
+                    metadata.title ?: filenameTitle(filename), metadata.artist ?: "Unknown artist",
+                    uri.toString(), artworkUrl = artwork.cached(uri), durationMs = metadata.durationMs)
+                result[identity] = LocalSong(item, metadata.album, identity, sidecarArt = sidecar)
             }
         }
     }
@@ -173,7 +244,20 @@ class LocalAudioRepository(private val context: Context) {
         }
     }.getOrDefault(Metadata(null, null, null, null))
 
-    private companion object { const val SCAN_FRESHNESS_MS = 60_000L }
+    private companion object {
+        const val SCAN_FRESHNESS_MS = 60_000L
+        val IMAGE_EXTENSIONS = listOf("jpg", "jpeg", "png", "webp", "gif")
+    }
+}
+
+/** Match Sung's track-specific cover first, followed by common album-cover names. */
+internal fun localCover(filename: String, images: Map<String, Uri>): Uri? {
+    val stem = filename.substringBeforeLast('.', filename).lowercase(Locale.ROOT)
+    return (listOf(stem, "cover", "folder", "front", "artwork")).firstNotNullOfOrNull { base ->
+        listOf("jpg", "jpeg", "png", "webp", "gif").firstNotNullOfOrNull { extension ->
+            images["$base.$extension"]
+        }
+    }
 }
 
 internal fun filenameTitle(name: String): String = name.substringBeforeLast('.', name).ifBlank { "Untitled" }

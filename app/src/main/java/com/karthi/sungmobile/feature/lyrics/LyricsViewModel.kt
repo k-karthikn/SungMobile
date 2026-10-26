@@ -7,6 +7,7 @@ import com.karthi.sungmobile.core.data.settings.LyricsSettings
 import com.karthi.sungmobile.core.data.settings.SettingsRepository
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.lyrics.*
+import com.karthi.sungmobile.feature.feedback.DiagnosticLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -57,7 +58,10 @@ class LyricsViewModel(
             if (track.isLocalSong()) {
                 try { primary = local.read(track) }
                 catch (cancelled: CancellationException) { throw cancelled }
-                catch (_: Exception) { error = "Lyrics in this file could not be read." }
+                catch (failure: Exception) {
+                    DiagnosticLog.recordError("local_lyrics_failed", failure)
+                    error = "Lyrics in this file could not be read."
+                }
             } else {
                 try {
                     if (!refresh && preferences.value.cacheEnabled) primary = cache.get(key, LyricsOrigin.YOUTUBE)
@@ -66,7 +70,10 @@ class LyricsViewModel(
                         if (!privateMode && preferences.value.cacheEnabled) cache.put(key, it)
                     }
                 } catch (cancelled: CancellationException) { throw cancelled }
-                catch (_: Exception) { error = "YouTube lyrics could not be loaded." }
+                catch (failure: Exception) {
+                    DiagnosticLog.recordError("youtube_lyrics_failed", failure)
+                    error = "YouTube lyrics could not be loaded."
+                }
             }
             var lrclib: LyricsDocument? = null
             ensureActive()
@@ -78,7 +85,10 @@ class LyricsViewModel(
                         if (preferences.value.cacheEnabled) cache.put(key, it)
                     }
                 } catch (cancelled: CancellationException) { throw cancelled }
-                catch (_: Exception) { error = "Lyrics could not be loaded. Check your connection and retry." }
+                catch (failure: Exception) {
+                    DiagnosticLog.recordError("lrclib_lyrics_failed", failure)
+                    error = "Lyrics could not be loaded. Check your connection and retry."
+                }
             }
             val document = selectLyrics(primary, lrclib)
             val finalBytes = runCatching { cache.bytes() }.getOrDefault(bytes)

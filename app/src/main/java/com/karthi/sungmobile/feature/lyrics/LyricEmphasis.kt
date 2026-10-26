@@ -33,6 +33,7 @@ private val posterFaces = listOf(
 )
 
 internal fun emphasizedLyric(text: String, accent: Color, foreground: Color): AnnotatedString {
+    if (!supportsPosterFace(text)) return AnnotatedString(text)
     val words = Regex("\\S+").findAll(text).filter { match -> match.value.any(Char::isLetter) }.toList()
     if (words.isEmpty()) return AnnotatedString(text)
     val seed = Math.floorMod(text.fold(0) { hash, char -> (hash * 31 + char.code) % 997 },
@@ -47,3 +48,8 @@ internal fun emphasizedLyric(text: String, accent: Color, foreground: Color): An
         }
     }
 }
+
+/** The poster font has Latin glyphs; mixed and other scripts use Android's shaping fallback. */
+internal fun supportsPosterFace(text: String): Boolean =
+    text.any { it in 'A'..'Z' || it in 'a'..'z' } &&
+        text.none { it.isLetter() && it !in 'A'..'Z' && it !in 'a'..'z' }

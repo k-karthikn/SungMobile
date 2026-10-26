@@ -15,6 +15,7 @@ okhttp = "4.12.0"
 coroutines = "1.10.2"
 desugar = "2.1.5"
 coil = "3.3.0"
+materialKolor = "4.0.5"
 robolectric = "4.17"
 roborazzi = "1.76.0"
 
@@ -49,6 +50,7 @@ coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ve
 desugar = { module = "com.android.tools:desugar_jdk_libs_nio", version.ref = "desugar" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
+material-kolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }

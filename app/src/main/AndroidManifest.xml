@@ -37,6 +37,12 @@
         <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.updates" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" />
         </provider>
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.feedback" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/feedback_paths" />
+        </provider>
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.artwork" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/artwork_paths" />
+        </provider>
         <!-- Media3 system controllers connect here. PlaybackSessionCallback rejects untrusted UIDs. -->
         <service android:name=".playback.SungPlaybackService" tools:ignore="ExportedService"
             android:foregroundServiceType="mediaPlayback" android:exported="true">

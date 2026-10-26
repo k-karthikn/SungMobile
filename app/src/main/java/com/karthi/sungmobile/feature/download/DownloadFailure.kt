@@ -1,6 +1,7 @@
 package com.karthi.sungmobile.feature.download
 
 import android.util.Log
+import com.karthi.sungmobile.feature.feedback.DiagnosticLog
 import com.karthi.sungmobile.core.model.SourceException
 import java.io.IOException
 
@@ -18,6 +19,7 @@ internal fun downloadFailureMessage(error: Exception): String = when (error) {
 }
 
 internal fun logDownloadFailure(error: Exception) {
+    DiagnosticLog.recordError("download_failed", error)
     // Exception messages may contain signed URLs. Log only type and code locations.
     val frames = error.stackTrace.take(5).joinToString(" | ") {
         "${it.className}.${it.methodName}:${it.lineNumber}"

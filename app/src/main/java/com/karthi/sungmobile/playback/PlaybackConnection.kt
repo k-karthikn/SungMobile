@@ -11,6 +11,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.karthi.sungmobile.core.model.*
 import com.karthi.sungmobile.core.playback.*
 import com.karthi.sungmobile.core.playback.session.*
+import com.karthi.sungmobile.feature.feedback.DiagnosticLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -47,7 +48,11 @@ class PlaybackConnection(private val context: Context, private val scope: Corout
         pending.addListener({
             if (!closed) {
                 try { controller = pending.get().also { it.addListener(listener) }; publish() }
-                catch (_: Exception) { future = null; mutableState.update { it.copy(connected = false) } }
+                catch (failure: Exception) {
+                    DiagnosticLog.recordError("playback_connection_failed", failure)
+                    future = null
+                    mutableState.update { it.copy(connected = false) }
+                }
             }
         }, ContextCompat.getMainExecutor(context))
     }

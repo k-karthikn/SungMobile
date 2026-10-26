@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.karthi.sungmobile.core.data.settings.LyricsSettings
@@ -25,10 +26,11 @@ internal fun TimedLyricRow(line: LyricLine, index: Int, current: Int, settings: 
     val active = index == current
     val foreground = if (active) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
     val accent = MaterialTheme.colorScheme.primary
+    val posterFace = active && supportsPosterFace(line.text)
     val motion = LocalSungMotionEnabled.current
     val color = if (motion) animateColorAsState(foreground, label = "Lyric text").value else foreground
-    val text = remember(line.text, active, accent, foreground) {
-        if (active) emphasizedLyric(line.text, accent, foreground) else AnnotatedString(line.text)
+    val text = remember(line.text, posterFace, accent, foreground) {
+        if (posterFace) emphasizedLyric(line.text, accent, foreground) else AnnotatedString(line.text)
     }
     Text(text, Modifier.fillMaxWidth().heightIn(min = 48.dp).then(if (seekable) Modifier.clickable {
         onSeek(seekForLine(line, offsetMs, durationMs))
@@ -39,9 +41,10 @@ internal fun TimedLyricRow(line: LyricLine, index: Int, current: Int, settings: 
         style = if (active) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.bodyLarge,
         fontSize = (settings.textSizeSp + if (active) 2 else 0).sp,
         lineHeight = ((settings.textSizeSp + if (active) 2 else 0) * 1.3f).sp,
-        fontWeight = if (active) FontWeight.Medium else FontWeight.Normal,
-        letterSpacing = if (active) (-0.35).sp else 0.sp,
-        color = color, textAlign = TextAlign.Start)
+        fontFamily = if (active && !posterFace) FontFamily.Default else null,
+        fontWeight = if (active && !posterFace) FontWeight.Bold else if (active) FontWeight.Medium else FontWeight.Normal,
+        letterSpacing = if (posterFace) (-0.35).sp else 0.sp,
+        color = if (active && !posterFace) accent else color, textAlign = TextAlign.Start)
 }
 
 @Composable

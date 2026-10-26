@@ -18,6 +18,7 @@ import com.karthi.sungmobile.core.designsystem.theme.SungSpacing
 import com.karthi.sungmobile.core.model.CatalogKind
 import com.karthi.sungmobile.core.playback.PlaybackState
 import com.karthi.sungmobile.feature.appearance.AppearanceScreen
+import com.karthi.sungmobile.feature.feedback.FeedbackScreen
 import com.karthi.sungmobile.feature.home.HomeScreen
 import com.karthi.sungmobile.feature.library.LibraryScreen
 import com.karthi.sungmobile.feature.player.*
@@ -25,7 +26,7 @@ import com.karthi.sungmobile.feature.search.SearchScreen
 import com.karthi.sungmobile.feature.lyrics.*
 import com.karthi.sungmobile.core.data.settings.LyricsSettings
 
-private enum class Overlay { NONE, PLAYER, APPEARANCE, HISTORY, COLLECTION, LYRICS, SESSIONS }
+private enum class Overlay { NONE, PLAYER, APPEARANCE, FEEDBACK, HISTORY, COLLECTION, LYRICS, SESSIONS }
 
 /** Navigation belongs to the UI. Playback is observed from the service across destination changes. */
 @Composable
@@ -57,6 +58,12 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     var sessionsFromPlayer by rememberSaveable { mutableStateOf(false) }
     var miniVolume by rememberSaveable { mutableStateOf(false) }
     var miniQueueRequest by remember { mutableStateOf(false) }
+    var frozenBackdropUrl by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(appearance.ambientBackdrop, appearance.backdropFollowsMusic, playback.track?.artworkUrl) {
+        if (appearance.ambientBackdrop && (appearance.backdropFollowsMusic || frozenBackdropUrl == null)) {
+            frozenBackdropUrl = playback.track?.artworkUrl
+        }
+    }
     LaunchedEffect(playback.track?.id) { miniVolume = false }
     if (miniVolume && playback.track != null) AlertDialog(onDismissRequest = { miniVolume = false },
         title = { Text("Sound control") }, text = { volumeContent(playback) },
@@ -82,6 +89,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     val back = {
         when {
             overlay == Overlay.LYRICS -> overlay = Overlay.PLAYER
+            overlay == Overlay.FEEDBACK -> overlay = Overlay.APPEARANCE
             overlay == Overlay.SESSIONS -> overlay = if (sessionsFromPlayer && playback.track != null) Overlay.PLAYER else Overlay.NONE
             overlay == Overlay.HISTORY -> overlay = Overlay.APPEARANCE
             overlay == Overlay.COLLECTION -> { closeDetail(); overlay = Overlay.NONE }
@@ -142,6 +150,8 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                             Overlay.PLAYER -> LivePlaybackContent(playback, livePlayback) { live ->
                                 PlayerScreen(live, playerActions, back, Modifier.weight(1f),
                                     { }, { overlay = Overlay.LYRICS },
+                                    ambientBackdrop = appearance.ambientBackdrop,
+                                    backdropArtworkUrl = if (appearance.backdropFollowsMusic) live.track?.artworkUrl else frozenBackdropUrl,
                                     expandQueueRequest = miniQueueRequest,
                                     onQueueRequestHandled = { miniQueueRequest = false },
                                     moreContent = { playerMoreContent(live) { sessionsFromPlayer = true; overlay = Overlay.SESSIONS } }) {
@@ -155,9 +165,11 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                             }
                             Overlay.SESSIONS -> LivePlaybackContent(playback, livePlayback) { live -> sessionsContent(live, back) }
                             Overlay.HISTORY -> historyContent?.invoke(content, back)
+                            Overlay.FEEDBACK -> FeedbackScreen(back, content)
                             Overlay.APPEARANCE -> AppearanceScreen(appearance, onAppearance, back, content,
                                 lyricsSettings, onLyricsSettings, lyricsState.cacheBytes, onClearLyricsCache,
-                                onHistory = { overlay = Overlay.HISTORY }, localFolders = localFoldersContent)
+                                onHistory = { overlay = Overlay.HISTORY }, localFolders = localFoldersContent,
+                                onFeedback = { overlay = Overlay.FEEDBACK })
                             Overlay.NONE -> when (destination) {
                                 Destination.HOME -> screenState.SaveableStateProvider("home") { if (homeContent != null) homeContent(Modifier.weight(1f),
                                     { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { overlay = Overlay.APPEARANCE }, { destination = Destination.LIBRARY })

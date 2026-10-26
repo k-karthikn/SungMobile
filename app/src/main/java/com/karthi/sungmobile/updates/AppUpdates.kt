@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.FileProvider
+import com.karthi.sungmobile.feature.feedback.DiagnosticLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -98,6 +99,7 @@ class AppUpdates internal constructor(private val context: Context) {
             message("Update check paused. You can check again in Settings.")
             throw cancelled
         } catch (error: Exception) {
+            DiagnosticLog.recordError("update_failed", error)
             message("Update could not be prepared. Check your connection or the release files, then retry.")
             false
         } finally {

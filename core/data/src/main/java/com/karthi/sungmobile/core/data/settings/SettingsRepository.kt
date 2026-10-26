@@ -11,7 +11,10 @@ import com.karthi.sungmobile.core.model.PlaybackSpeed
 private val Context.sungSettings by preferencesDataStore("sung_settings",
     produceMigrations = { context -> listOf(SharedPreferencesMigration(context, "appearance")) })
 
-data class AppearanceSettings(val theme: String = "SYSTEM", val colors: String = "BLUE", val reduceMotion: Boolean = false)
+data class AppearanceSettings(val theme: String = "SYSTEM", val colors: String = "BLUE", val reduceMotion: Boolean = false,
+    val useArtworkAccent: Boolean = false, val accentColor: Int = 0xFF006C91.toInt(),
+    val ambientBackdrop: Boolean = false, val backdropFollowsMusic: Boolean = true,
+    val colorScheme: String = "BALANCED")
 data class LyricsSettings(val lrclibEnabled: Boolean = false, val textSizeSp: Int = 24,
     val cacheEnabled: Boolean = true)
 data class AdvancedPlaybackSettings(val smartShuffle: Boolean = false, val relatedAutoplay: Boolean = false,
@@ -25,6 +28,11 @@ class SettingsRepository(context: Context) {
     private val theme = stringPreferencesKey("theme")
     private val colors = stringPreferencesKey("colors")
     private val motion = booleanPreferencesKey("reduce_motion")
+    private val artworkAccent = booleanPreferencesKey("appearance_artwork_accent")
+    private val accentColor = intPreferencesKey("appearance_accent_color")
+    private val ambientBackdrop = booleanPreferencesKey("appearance_ambient_backdrop")
+    private val backdropFollowsMusic = booleanPreferencesKey("appearance_backdrop_follows_music")
+    private val colorScheme = stringPreferencesKey("appearance_color_scheme")
     private val fallback = booleanPreferencesKey("lyrics_lrclib")
     private val lyricsSize = intPreferencesKey("lyrics_text_size")
     private val lyricsCache = booleanPreferencesKey("lyrics_cache_enabled")
@@ -34,7 +42,10 @@ class SettingsRepository(context: Context) {
     private val smartShuffle = booleanPreferencesKey("playback_smart_shuffle")
     private val relatedAutoplay = booleanPreferencesKey("playback_related_autoplay")
     private val trackTrims = stringPreferencesKey("playback_track_trims")
-    val appearance = store.data.map { AppearanceSettings(it[theme] ?: "SYSTEM", it[colors] ?: "BLUE", it[motion] ?: false) }
+    val appearance = store.data.map { AppearanceSettings(it[theme] ?: "SYSTEM", it[colors] ?: "BLUE", it[motion] ?: false,
+        it[artworkAccent] ?: false, it[accentColor] ?: 0xFF006C91.toInt(),
+        it[ambientBackdrop] ?: false, it[backdropFollowsMusic] ?: true,
+        it[colorScheme] ?: "BALANCED") }
     val lyrics = store.data.map { LyricsSettings(it[fallback] ?: false, (it[lyricsSize] ?: 24).coerceIn(18, 34),
         it[lyricsCache] ?: true) }
     val playbackSpeed = store.data.map { PlaybackSpeed((it[speedTenths] ?: 10).coerceIn(5, 20),
@@ -44,7 +55,12 @@ class SettingsRepository(context: Context) {
             parseTrims(preferences[trackTrims].orEmpty()))
     }
     suspend fun setAppearance(value: AppearanceSettings) {
-        store.edit { it[theme] = value.theme; it[colors] = value.colors; it[motion] = value.reduceMotion }
+        store.edit {
+            it[theme] = value.theme; it[colors] = value.colors; it[motion] = value.reduceMotion
+            it[artworkAccent] = value.useArtworkAccent; it[accentColor] = value.accentColor
+            it[ambientBackdrop] = value.ambientBackdrop; it[backdropFollowsMusic] = value.backdropFollowsMusic
+            it[colorScheme] = value.colorScheme
+        }
     }
 
     suspend fun setLyrics(value: LyricsSettings) {

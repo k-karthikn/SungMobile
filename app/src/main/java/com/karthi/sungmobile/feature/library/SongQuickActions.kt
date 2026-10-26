@@ -28,7 +28,7 @@ fun SongQuickActions(song: CatalogItem, playbackReady: Boolean, playNext: () -> 
             stringResource(if (liked) R.string.unlike_song else R.string.like_song, song.title))
     }
     Box {
-        FilledTonalIconButton(onClick = { menu = true }, shapes = IconButtonDefaults.shapes(),
+        IconButton(onClick = { menu = true },
             modifier = Modifier.size(48.dp).testTag("${tagPrefix}_actions_${song.id}")) {
             SungIcon(SungSymbol.More, stringResource(R.string.song_actions, song.title))
         }

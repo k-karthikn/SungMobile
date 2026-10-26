@@ -2,12 +2,17 @@ package com.karthi.sungmobile.feature.player
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -19,11 +24,13 @@ import com.karthi.sungmobile.core.designsystem.icon.*
 import com.karthi.sungmobile.core.playback.PlaybackState
 import com.karthi.sungmobile.core.model.lyrics.lyricsStorageKey
 import kotlinx.coroutines.launch
+import coil3.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Unit, modifier: Modifier = Modifier,
     openQueue: () -> Unit = {}, openLyrics: () -> Unit = {},
+    ambientBackdrop: Boolean = false, backdropArtworkUrl: String? = null,
     expandQueueRequest: Boolean = false, onQueueRequestHandled: () -> Unit = {},
     moreContent: @Composable () -> Unit = {},
     convenienceContent: @Composable () -> Unit = {}) {
@@ -44,9 +51,18 @@ fun PlayerScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Uni
     BoxWithConstraints(modifier.fillMaxSize()) {
         val sheetHeight = (maxHeight - 24.dp).coerceAtLeast(200.dp)
         val horizontalPadding = if (maxWidth < 360.dp) 16.dp else 24.dp
+        if (ambientBackdrop && backdropArtworkUrl != null) {
+            Box(Modifier.matchParentSize().clipToBounds().background(MaterialTheme.colorScheme.surface)) {
+                AsyncImage(model = backdropArtworkUrl, contentDescription = null,
+                    modifier = Modifier.matchParentSize().blur(48.dp), contentScale = ContentScale.Crop)
+                Box(Modifier.matchParentSize().background(MaterialTheme.colorScheme.surface.copy(alpha = .78f)))
+            }
+        }
         BottomSheetScaffold(scaffoldState = scaffoldState, sheetPeekHeight = 88.dp,
             sheetDragHandle = null, sheetShape = MaterialTheme.shapes.extraLarge,
             sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = if (ambientBackdrop && backdropArtworkUrl != null) Color.Transparent
+                else MaterialTheme.colorScheme.surface,
             sheetContent = {
                 PlayerQueueSheet(state, actions, expanded, onToggle = {
                     scope.launch {

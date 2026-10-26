@@ -4,6 +4,9 @@ import android.content.Context
 import android.provider.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -38,6 +41,26 @@ class AppearanceTest {
     @Test fun blueDarkRolesMeetNormalTextContrast() = contrast(ThemeMode.DARK)
     @Test fun darkBlueSurfaceLadderKeepsContentAndControlsDistinct() = surfaceLadder(ThemeMode.DARK)
     @Test fun lightBlueSurfaceLadderKeepsContentAndControlsDistinct() = surfaceLadder(ThemeMode.LIGHT)
+
+    @Test fun customAccentAndSchemeChangeTheRenderedPalette() {
+        var seed by mutableStateOf(0xFF006C91.toInt())
+        var style by mutableStateOf(ColorSchemeStyle.BALANCED)
+        var primary = Color.Unspecified
+        compose.setContent {
+            SungTheme(ThemeMode.LIGHT, ColorMode.ACCENT, colorSchemeStyle = style, accentColor = seed) {
+                val current = MaterialTheme.colorScheme.primary
+                SideEffect { primary = current }
+            }
+        }
+        var blue = Color.Unspecified
+        compose.runOnIdle { blue = primary; seed = 0xFF985440.toInt() }
+        var terracotta = Color.Unspecified
+        compose.runOnIdle { terracotta = primary; style = ColorSchemeStyle.EXPRESSIVE }
+        compose.runOnIdle {
+            assertNotEquals(blue, terracotta)
+            assertNotEquals(terracotta, primary)
+        }
+    }
 
     private fun contrast(mode: ThemeMode) {
         var pairs = emptyList<Pair<Color, Color>>()

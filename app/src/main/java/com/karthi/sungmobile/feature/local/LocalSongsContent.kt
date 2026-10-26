@@ -31,6 +31,7 @@ fun LocalSongsContent(repository: LocalAudioRepository, connected: Boolean,
     var refreshing by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
     var filter by remember { mutableStateOf("") }
+    LaunchedEffect(repository) { repository.updates.collect { scan -> if (scan != null) result = scan } }
     fun refresh(force: Boolean = false) { scope.launch {
         refreshing = true
         runCatching { repository.scan(force) }.onSuccess { result = it; message = null }

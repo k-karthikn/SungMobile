@@ -8,6 +8,7 @@ import android.provider.MediaStore
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.DownloadStreamResolver
 import com.karthi.sungmobile.feature.local.SUNG_MUSIC_PATH
+import com.karthi.sungmobile.feature.local.LocalArtworkRepository
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -115,6 +116,8 @@ internal class AudioTransfer(private val context: Context, private val streams: 
             if (resolver.update(destinationUri, ContentValues().apply { put(MediaStore.Audio.Media.IS_PENDING, 0) },
                     null, null) != 1) throw IOException("Could not publish the audio file")
             published = true
+            // The source audio often has no embedded image. Keep its known cover by media URI.
+            runCatching { LocalArtworkRepository(context).saveDownloaded(destinationUri, track.artworkUrl) }
             return destinationUri
         } finally {
             http.disconnect()

@@ -57,7 +57,9 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
     LaunchedEffect(player.track?.id, player.engine.durationMs) {
         convenience.loadResume(player.track, player.engine.durationMs)
     }
-    SungTheme(preferences.theme, preferences.colors, preferences.reduceMotion) {
+    SungTheme(preferences.theme, preferences.colors, preferences.reduceMotion,
+        preferences.colorScheme, preferences.accentColor, preferences.useArtworkAccent,
+        player.track?.artworkUrl) {
         val view = LocalView.current
         val light = MaterialTheme.colorScheme.surface.luminance() > .5f
         SideEffect { WindowCompat.getInsetsController(window, view).apply {

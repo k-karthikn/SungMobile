@@ -1,10 +1,8 @@
 package com.karthi.sungmobile.feature.library
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -276,9 +274,8 @@ private fun TopSongsSection(songs: List<TopSong>, all: Boolean, toggle: () -> Un
             if (songs.isEmpty()) Text("Your top songs will appear after qualified listening.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             else {
-                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    songs.take(3).forEachIndexed { rank, song -> RankedSongCard(rank + 1, song, songs.first().plays) }
+                songs.take(3).forEachIndexed { rank, song ->
+                    RankedSongHighlight(rank + 1, song, songs.first().plays)
                 }
                 songs.drop(3).take(if (all) Int.MAX_VALUE else 2).forEachIndexed { index, song ->
                     RankedSongRow(index + 4, song, songs.first().plays)
@@ -289,30 +286,43 @@ private fun TopSongsSection(songs: List<TopSong>, all: Boolean, toggle: () -> Un
 }
 
 @Composable
-private fun RankedSongCard(rank: Int, song: TopSong, maxPlays: Int) {
+private fun RankedSongHighlight(rank: Int, song: TopSong, maxPlays: Int) {
     val scheme = MaterialTheme.colorScheme
     val container = when (rank) { 1 -> scheme.primaryContainer; 2 -> scheme.secondaryContainer; else -> scheme.tertiaryContainer }
     val ink = when (rank) { 1 -> scheme.onPrimaryContainer; 2 -> scheme.onSecondaryContainer; else -> scheme.onTertiaryContainer }
-    Surface(modifier = Modifier.width(148.dp), shape = RoundedCornerShape(24.dp), color = container) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween) {
-                Surface(shape = CircleShape, color = ink.copy(alpha = .12f)) {
-                    Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
-                        Text(rank.toString(), style = MaterialTheme.typography.titleMedium,
-                            color = ink, fontWeight = FontWeight.Bold)
-                    }
+    val accent = when (rank) { 1 -> scheme.primary; 2 -> scheme.secondary; else -> scheme.tertiary }
+    val cardShape = when (rank) {
+        1 -> RoundedCornerShape(topStart = 30.dp, topEnd = 16.dp, bottomEnd = 30.dp, bottomStart = 16.dp)
+        2 -> RoundedCornerShape(topStart = 16.dp, topEnd = 30.dp, bottomEnd = 16.dp, bottomStart = 30.dp)
+        else -> RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp, bottomEnd = 14.dp, bottomStart = 26.dp)
+    }
+    val badgeShape = when (rank) {
+        1 -> StatisticsFlowerShape
+        2 -> RoundedCornerShape(14.dp)
+        else -> CircleShape
+    }
+    Surface(modifier = Modifier.fillMaxWidth().testTag("stats_top_$rank"), shape = cardShape,
+        color = container) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Surface(Modifier.size(42.dp), shape = badgeShape,
+                color = accent.copy(alpha = .20f), contentColor = ink) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(rank.toString(), style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold)
                 }
-                SungArtwork(song.track.artworkUrl, Modifier.size(60.dp).clip(RoundedCornerShape(12.dp)),
-                    mask = ArtworkMask.SQUARE)
             }
-            Text(song.track.title, style = MaterialTheme.typography.titleSmall, color = ink,
-                fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.heightIn(min = 42.dp))
-            Text("${song.plays} ${if (song.plays == 1) "play" else "plays"}",
-                style = MaterialTheme.typography.titleMedium, color = ink)
-            Text(listeningTime(song.listenedMs), style = MaterialTheme.typography.bodySmall, color = ink)
-            RankProgress(song.plays.toFloat() / maxPlays.coerceAtLeast(1), ink)
+            SungArtwork(song.track.artworkUrl, Modifier.size(62.dp).clip(RoundedCornerShape(15.dp)),
+                mask = ArtworkMask.SQUARE)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(song.track.title, style = MaterialTheme.typography.titleMedium, color = ink,
+                    fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("${song.plays} ${if (song.plays == 1) "play" else "plays"} · ${listeningTime(song.listenedMs)}",
+                    style = MaterialTheme.typography.bodySmall, color = ink.copy(alpha = .82f),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                RankProgress(song.plays.toFloat() / maxPlays.coerceAtLeast(1), accent)
+            }
         }
     }
 }

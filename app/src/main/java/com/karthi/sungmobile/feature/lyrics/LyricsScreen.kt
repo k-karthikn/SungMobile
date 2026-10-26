@@ -1,8 +1,6 @@
 package com.karthi.sungmobile.feature.lyrics
 
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
-import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -19,7 +17,6 @@ import com.karthi.sungmobile.core.designsystem.component.SungLoading
 import com.karthi.sungmobile.core.model.lyrics.*
 import com.karthi.sungmobile.core.playback.PlaybackState
 import com.karthi.sungmobile.core.designsystem.theme.LocalSungMotionEnabled
-import kotlinx.coroutines.flow.first
 
 @Composable
 fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: LyricsSettings,
@@ -35,15 +32,7 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
     val dragged by list.interactionSource.collectIsDraggedAsState()
     LaunchedEffect(dragged) { if (dragged) follow = false }
     LaunchedEffect(current, follow, timed, settings.textSizeSp) { if (follow && current >= 0) {
-        snapshotFlow { list.layoutInfo.viewportSize.height }.first { it > 0 }
-        if (list.layoutInfo.visibleItemsInfo.none { it.index == current }) {
-            if (motionEnabled) list.animateScrollToItem(current) else list.scrollToItem(current)
-        }
-        val active = snapshotFlow { list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == current } }
-            .first { it != null } ?: return@LaunchedEffect
-        val distance = list.layoutInfo.beforeContentPadding + active.offset + active.size / 2f -
-            list.layoutInfo.viewportSize.height / 2f
-        if (motionEnabled) list.animateScrollBy(distance) else list.scrollBy(distance)
+        if (motionEnabled) list.animateScrollToItem(current) else list.scrollToItem(current)
     } }
     Column(modifier.fillMaxSize().padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -70,9 +59,9 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
                 }
             }
             timed.isNotEmpty() -> BoxWithConstraints(Modifier.weight(1f)) {
-                val breathingRoom = maxHeight / 2
                 LazyColumn(state = list, modifier = Modifier.fillMaxSize().testTag("timed_lyrics_list"),
-                    contentPadding = PaddingValues(vertical = breathingRoom),
+                    // Trailing space lets even the final line reach the top of the viewport.
+                    contentPadding = PaddingValues(top = 12.dp, bottom = maxHeight),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     itemsIndexed(timed, key = { index, _ -> index }) { index, line ->
                         TimedLyricRow(line, index, current, settings, playback.engine.seekable,

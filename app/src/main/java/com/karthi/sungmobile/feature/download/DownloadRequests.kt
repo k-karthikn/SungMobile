@@ -18,6 +18,7 @@ internal data class DownloadRequest(val id: Int, val track: CatalogItem) {
     fun extras() = PersistableBundle().apply {
         putString("trackId", track.id); putString("title", track.title)
         putString("artist", track.subtitle); putString("url", track.url)
+        putString("artwork", track.artworkUrl)
     }
 
     companion object {
@@ -26,7 +27,7 @@ internal data class DownloadRequest(val id: Int, val track: CatalogItem) {
             val title = extras.getString("title") ?: return null
             val url = extras.getString("url") ?: return null
             return DownloadRequest(id, CatalogItem(trackId, CatalogKind.SONG, title,
-                extras.getString("artist").orEmpty(), url))
+                extras.getString("artist").orEmpty(), url, artworkUrl = extras.getString("artwork")))
         }
     }
 }
@@ -59,7 +60,8 @@ internal object DownloadRequests {
                 ContextCompat.startForegroundService(context, Intent(context, AudioDownloadService::class.java)
                     .setAction(AudioDownloadService.START).putExtra("requestId", id)
                     .putExtra("trackId", track.id).putExtra("title", track.title)
-                    .putExtra("artist", track.subtitle).putExtra("url", track.url))
+                    .putExtra("artist", track.subtitle).putExtra("url", track.url)
+                    .putExtra("artwork", track.artworkUrl))
             }
             "Download started. Watch its notification for progress."
         } catch (_: Exception) {

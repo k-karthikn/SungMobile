@@ -15,6 +15,7 @@ SungMobile uses GPL-3.0-or-later for its original application code. The full GPL
 | Kotlin / kotlinx.coroutines | Compiler 2.2.10 / coroutines 1.10.2 | Apache-2.0 — [Kotlin](https://github.com/JetBrains/kotlin), [coroutines](https://github.com/Kotlin/kotlinx.coroutines) |
 | OkHttp / Okio | See resolved runtime graph (also used by Coil) | Apache-2.0 — [Square](https://github.com/square/okhttp) |
 | Coil | 3.3.0 | Apache-2.0 — [Coil](https://github.com/coil-kt/coil/tree/3.3.0) |
+| MaterialKolor / Material Color Utilities | 4.0.5 | MIT / Apache-2.0 — [MaterialKolor](https://github.com/jordond/MaterialKolor), [Material Color Utilities](https://github.com/material-foundation/material-color-utilities) |
 | Core library desugaring NIO | 2.1.5 | See [upstream licenses](https://github.com/google/desugar_jdk_libs/blob/master/LICENSE) for Apache-2.0 and included OpenJDK notices. |
 
 NewPipeExtractor also brings nanojson (MIT), jsoup (MIT), protobuf-javalite (BSD-3-Clause), JSR-305 annotations (BSD-3-Clause), and Rhino/Rhino Engine (MPL-2.0). Their resolved versions are recorded by `:core:youtube:dependencies --configuration runtimeClasspath`. Build tools and test dependencies have separate upstream notices; they are not all shipped in the application APK.
@@ -25,7 +26,7 @@ The Sung Linux code and documentation informed behavior and architecture. Stage 
 
 Google Sans Flex is bundled unmodified from [Google Fonts](https://github.com/google/fonts/tree/main/ofl/googlesansflex). Font Git blob: `1d8d8ae5a7c6d0e48312d2a0a478bad92caee73a`; SHA-256: `a9ac770798857d5e8ac593ced42b22e40a7c08cec98319f92b0eccc2783a77ba`. Its SIL Open Font License and upstream trademark notice are bundled in the same licenses directory. The font is not relicensed under the application's GPL.
 
-The blue role tables use the Material 3 Tonal Spot scheme with seed `#789DFF` and normal contrast. They were generated using Sung's HCT color implementation, which follows Google's Apache-2.0 [Material Color Utilities](https://github.com/material-foundation/material-color-utilities). The generator is not a runtime dependency. Material shape paths are provided by AndroidX Material 3, not copied into application code.
+The fixed blue role tables use the Material 3 Tonal Spot scheme with seed `#789DFF` and normal contrast. They were generated using Sung's HCT color implementation. Wallpaper palettes are generated at runtime by MaterialKolor using Material Color Utilities. Material shape paths are provided by AndroidX Material 3, not copied into application code.
 
 Catalog metadata and artwork belong to their respective sources/rightsholders, not this application's license. Two small YouTube video thumbnail fixtures are used only for offline UI tests: Coldplay “The Scientist” (`RB-RcX5DS5A`) and “Viva La Vida” (`dvgZkm1xWPE`), fetched from `i.ytimg.com/vi/<id>/mqdefault.jpg`. They are under `app/src/test/resources/artwork`, are not APK resources, and are not offered as redistributable application artwork.
 

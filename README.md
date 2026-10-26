@@ -1,6 +1,8 @@
 # SungMobile
 
-Latest production candidate: **0.14.0 (code 34)** — a dedicated Material 3 listening statistics dashboard with total time, a 7/30-day activity graph, compact metrics, top songs, and recent listening. Its Home entry is prominent, and the mini-player is hidden while the page is open. [Signed APK and verification](Stages/Listening_Statistics_Results/README.md). Phone acceptance is pending.
+Latest production candidate: **0.14.1 (code 35)** — a vertical, colorful top-three ranking in Listening statistics; feedback with optional diagnostic logs; local-song artwork recovery; wallpaper-based color generation; top-aligned synced lyrics with a non-Latin fallback; and a cleaner Search actions button. Phone acceptance is pending.
+
+Earlier production candidate: **0.14.0 (code 34)** — a dedicated Material 3 listening statistics dashboard with total time, a 7/30-day activity graph, compact metrics, top songs, and recent listening. Its Home entry is prominent, and the mini-player is hidden while the page is open. [Signed APK and verification](Stages/Listening_Statistics_Results/README.md). Phone acceptance is pending.
 
 Earlier production candidate: **0.13.1 (code 33)** — a compact, regular Queue list with cleaned artist names, square artwork, and available durations; the Search duplicate button is removed and the player seek track is refined. [Signed APK and verification](Stages/Queue_UI_Results/README.md). Phone acceptance is pending.
 
@@ -75,7 +77,7 @@ cd /home/karthi/Projects/SungMobile
 python3 scripts/production_build.py
 ```
 
-The script runs the project tests and release lint, builds the signed APK, verifies its production certificate and ZIP alignment, then creates a versioned APK, `update.json`, and `SHA256SUMS` under `release-assets/v<versionName>/`. It reads the APK's actual version and uses `v<versionName>` as the default GitHub tag. With the current `0.14.0` / code `34`, upload `release-assets/v0.14.0/SungMobile-0.14.0-code34-release.apk` and `release-assets/v0.14.0/update.json` to the matching stable GitHub release. It does not publish the release. For later updates, increase `versionCode` and set `versionName` in `app/build.gradle.kts` first; the script will then name the assets automatically. It refuses to overwrite a different APK under the same version and tag unless you pass `--replace` before publication. The release build uses the production key configured in `~/.android/sungmobile-release/signing.properties`; keep using that same key for updates.
+The script runs the project tests and release lint, builds the signed APK, verifies its production certificate and ZIP alignment, then creates a versioned APK, `update.json`, and `SHA256SUMS` under `release-assets/v<versionName>/`. It reads the APK's actual version and uses `v<versionName>` as the default GitHub tag. With the current `0.14.2` / code `36`, upload `release-assets/v0.14.2/SungMobile-0.14.2-code36-release.apk` and `release-assets/v0.14.2/update.json` to the matching stable GitHub release. It does not publish the release. For later updates, increase `versionCode` and set `versionName` in `app/build.gradle.kts` first; the script will then name the assets automatically. It refuses to overwrite a different APK under the same version and tag unless you pass `--replace` before publication. The release build uses the production key configured in `~/.android/sungmobile-release/signing.properties`; keep using that same key for updates.
 
 If Android Studio has already built the signed APK, `python3 scripts/production_build.py --apk app/build/outputs/apk/release/app-release.apk` verifies and packages that APK without rerunning Gradle. The manual equivalent for the current version is:
 
@@ -83,17 +85,17 @@ If Android Studio has already built the signed APK, `python3 scripts/production_
 cd /home/karthi/Projects/SungMobile
 JAVA_HOME=/opt/android-studio/jbr ./gradlew :app:lintRelease :app:assembleRelease
 mkdir -p release-assets
-cp app/build/outputs/apk/release/app-release.apk release-assets/SungMobile-0.14.0-code34-release.apk
-PATH=/opt/android-studio/jbr/bin:$PATH /home/karthi/Android/Sdk/build-tools/36.0.0/apksigner verify --print-certs release-assets/SungMobile-0.14.0-code34-release.apk
+cp app/build/outputs/apk/release/app-release.apk release-assets/SungMobile-0.14.2-code36-release.apk
+PATH=/opt/android-studio/jbr/bin:$PATH /home/karthi/Android/Sdk/build-tools/36.0.0/apksigner verify --print-certs release-assets/SungMobile-0.14.2-code36-release.apk
 python3 scripts/make_update_manifest.py \
-  --apk release-assets/SungMobile-0.14.0-code34-release.apk \
-  --tag v0.14.0 \
+  --apk release-assets/SungMobile-0.14.2-code36-release.apk \
+  --tag v0.14.2 \
   --package-name com.karthi.sungmobile \
   --aapt /home/karthi/Android/Sdk/build-tools/36.0.0/aapt \
   --output release-assets/update.json
 ```
 
-For the manual steps, upload `release-assets/SungMobile-0.14.0-code34-release.apk` and `release-assets/update.json` under the **same tag** (`v0.14.0`). For later updates, change the manual filename and tag to match the new version (for example, code `35`, version `0.14.1`, tag `v0.14.1`). Generate `update.json` only after the final APK filename and bytes are fixed; regenerate it if you rebuild or rename the APK. See the [full release guide](docs/updates/VERSIONING_AND_RELEASES.md).
+For the manual steps, upload `release-assets/SungMobile-0.14.2-code36-release.apk` and `release-assets/update.json` under the **same tag** (`v0.14.2`). For later updates, change the manual filename and tag to match the new version. Generate `update.json` only after the final APK filename and bytes are fixed; regenerate it if you rebuild or rename the APK. See the [full release guide](docs/updates/VERSIONING_AND_RELEASES.md).
 
 Live network probes are opt-in:
 

@@ -39,7 +39,7 @@ class LyricsScreenTest {
         "https://www.youtube.com/watch?v=RB-RcX5DS5A")
     private val lines = (0..30).map { LyricLine(it * 1_000L, "Line $it") }
 
-    @Test fun activeTimedLineStaysNearViewportCenter() {
+    @Test fun activeTimedLineStaysNearViewportTop() {
         var position by mutableLongStateOf(15_000L)
         compose.setContent {
             SungTheme(reduceMotion = true) {
@@ -49,20 +49,18 @@ class LyricsScreenTest {
                         "Test provider", lines = lines)), LyricsSettings(), {}, {}, {}, {})
             }
         }
-        fun assertCentered(index: Int) {
+        fun assertAtTop(index: Int) {
             compose.waitForIdle()
             val viewport = compose.onNodeWithTag("timed_lyrics_list").getUnclippedBoundsInRoot()
             val active = compose.onNodeWithText("Line $index").getUnclippedBoundsInRoot()
-            val viewportCenter = (viewport.top + viewport.bottom) / 2
-            val activeCenter = (active.top + active.bottom) / 2
-            assertTrue("Active lyric center $activeCenter should be near $viewportCenter",
-                kotlin.math.abs(activeCenter.value - viewportCenter.value) < (viewport.bottom - viewport.top).value * 0.12f)
+            assertTrue("Active lyric top ${active.top} should be near ${viewport.top}",
+                kotlin.math.abs(active.top.value - viewport.top.value) < 60f)
         }
-        assertCentered(15)
+        assertAtTop(15)
         compose.runOnIdle { position = 0L }
-        assertCentered(0)
+        assertAtTop(0)
         compose.runOnIdle { position = 30_000L }
-        assertCentered(30)
+        assertAtTop(30)
     }
 
     @Test fun currentLineAccentPreservesWordsAndProviderCreditIsNotDuplicated() {
@@ -74,7 +72,10 @@ class LyricsScreenTest {
         })
         assertEquals(2, styled.spanStyles.count { it.item.color == Color.Blue })
         assertTrue(styled.spanStyles.map { it.item.fontFamily }.distinct().size >= 3)
-        assertEquals("తెలుగు", emphasizedLyric("తెలుగు", Color.Blue, Color.White).text)
+        assertEquals(0, emphasizedLyric("తెలుగు", Color.Blue, Color.White).spanStyles.size)
+        assertEquals(0, emphasizedLyric("Love தமிழ்", Color.Blue, Color.White).spanStyles.size)
+        assertTrue(supportsPosterFace("I love you!"))
+        assertTrue(!supportsPosterFace("मेरा दिल"))
         assertEquals("Source: LyricFind", lyricsSourceLabel("Source: LyricFind", "Artist"))
         assertEquals("Artist", lyricsSourceLabel(null, "Artist"))
     }

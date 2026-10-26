@@ -39,7 +39,8 @@ class AudioDownloadService : Service() {
         }
         if (id in jobs) return START_NOT_STICKY
         val request = DownloadRequest(id, CatalogItem(trackId, CatalogKind.SONG,
-            intent.getStringExtra("title").orEmpty(), intent.getStringExtra("artist").orEmpty(), url))
+            intent.getStringExtra("title").orEmpty(), intent.getStringExtra("artist").orEmpty(), url,
+            artworkUrl = intent.getStringExtra("artwork")))
         val notifier = DownloadNotifications(this)
         if (!DownloadRequests.accept(id)) {
             notifier.finished(request, false, "Download cancelled")
