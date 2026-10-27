@@ -9,6 +9,8 @@ public interface HistoryDao {
     @Upsert void setPolicy(HistoryPolicyEntity policy);
     @Query("SELECT * FROM listening_events WHERE id = :id") ListeningEntity event(String id);
     @Upsert void saveEvent(ListeningEntity event);
+    @Query("SELECT * FROM listening_events WHERE qualified = 1 AND trackKey LIKE 'youtube:%' ORDER BY lastPlayedAt, id") List<ListeningEntity> qualifiedForBackup();
+    @Insert(onConflict = OnConflictStrategy.IGNORE) void importEvents(List<ListeningEntity> events);
     @Query("DELETE FROM listening_events") void clearListening();
     @Query("SELECT * FROM search_history ORDER BY submittedAt DESC, id DESC") List<SearchEntity> searches();
     @Upsert void saveSearch(SearchEntity search);

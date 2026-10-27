@@ -38,7 +38,10 @@ class MainActivity : ComponentActivity() {
     } }
     private val history by lazy { obtain(HistoryViewModel::class.java) { HistoryViewModel(container.history) } }
     private val home by lazy { obtain(HomeViewModel::class.java) { HomeViewModel(container.home, it) } }
-    private val discovery by lazy { obtain(DiscoveryFeedViewModel::class.java) { DiscoveryFeedViewModel(container.catalog) } }
+    private val discovery by lazy { obtain(DiscoveryFeedViewModel::class.java) {
+        DiscoveryFeedViewModel(container.catalog, container.catalog, container.recommendationProfile,
+            container.settings, container.catalog)
+    } }
     private val collection by lazy { obtain(CollectionViewModel::class.java) { CollectionViewModel(container.catalog, it) } }
     private val collectionActions by lazy { obtain(CollectionActionsViewModel::class.java) { CollectionActionsViewModel(container.catalog, catalog.player) } }
     private val links by lazy { obtain(LinkIntakeViewModel::class.java) { LinkIntakeViewModel(it) } }
@@ -54,7 +57,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         catalog.onSearchSubmitted = history::submitted
         catalog.onOpenLink = links::receive
-        catalog.onOpenCollection = { collection.open(CollectionRoute(it.url, it.title, it.kind)) }
+        catalog.onOpenCollection = { collection.open(CollectionRoute(it.url, it.title, it.kind, artworkUrl = it.artworkUrl)) }
         if (savedInstanceState == null) links.receive(intent)
         setContent { SungRoot(window, container, catalog, library, libraryActions, advancedLibrary, history, home,
             discovery, collection, collectionActions, links, lyrics, convenience) }

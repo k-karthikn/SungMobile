@@ -29,9 +29,15 @@ class FeedbackTest {
         attachment.parentFile?.mkdirs()
         attachment.writeText("test")
         val withLog = feedbackIntent(context, "A bug occurred", attachment)
+        assertEquals("text/plain", withLog.type)
         assertTrue(withLog.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
         assertEquals("${context.packageName}.feedback",
             withLog.getParcelableExtra<android.net.Uri>(Intent.EXTRA_STREAM)?.authority)
+        val uri = withLog.getParcelableExtra<android.net.Uri>(Intent.EXTRA_STREAM)!!
+        assertEquals("test", context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() })
+        val chooser = feedbackChooser(context, "A bug occurred", attachment)
+        assertTrue(chooser.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
+        assertEquals(uri, chooser.clipData?.getItemAt(0)?.uri)
     }
 
     @Test fun diagnosticExportOmitsExceptionMessages() {

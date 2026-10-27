@@ -6,6 +6,7 @@ import com.karthi.sungmobile.core.model.CatalogPage
 import com.karthi.sungmobile.core.model.SourceException
 import com.karthi.sungmobile.core.model.SourceFailure
 import com.karthi.sungmobile.core.model.discovery.HomeFeedSource
+import com.karthi.sungmobile.core.model.discovery.HomeCandidateSource
 import com.karthi.sungmobile.core.model.discovery.HomeShelf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -30,8 +31,11 @@ class MusicBrowseGateway(
         .callTimeout(20, TimeUnit.SECONDS).followRedirects(false).build(),
     private val endpoint: HttpUrl = HttpUrl.Builder().scheme("https").host("music.youtube.com")
         .addPathSegments("youtubei/v1/browse").build(),
-) : HomeFeedSource {
+) : HomeFeedSource, HomeCandidateSource {
+    @Volatile private var extraPage: Pair<String, String?>? = null
+
     override suspend fun homeShelves(): List<HomeShelf> {
+        extraPage = null
         val shelves = mutableListOf<HomeShelf>()
         var token: String? = null
         var visitorData: String? = null
@@ -46,12 +50,20 @@ class MusicBrowseGateway(
             }
             shelves += parsed.shelves.take(5 - shelves.size)
             visitorData = parsed.visitorData ?: visitorData
+            extraPage = parsed.continuation?.let { it to visitorData }
             if (shelves.size >= 5) return shelves
             val next = parsed.continuation
             if (next == null || !visited.add(next)) return shelves
             token = next
         }
         return shelves
+    }
+
+    override suspend fun extraHomeSongs(): List<com.karthi.sungmobile.core.model.CatalogItem> {
+        val (token, visitorData) = extraPage ?: return emptyList()
+        val parsed = MusicBrowseParser.home(post("FEmusic_home", token, visitorData), 100)
+        return parsed.shelves.flatMap { it.items }.filter { it.kind == CatalogKind.SONG }
+            .distinctBy { it.url }.take(30)
     }
 
     suspend fun openCollection(browseId: String, url: String, kind: CatalogKind): CatalogPage {

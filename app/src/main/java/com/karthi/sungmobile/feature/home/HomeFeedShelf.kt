@@ -21,12 +21,19 @@ import androidx.compose.ui.unit.dp
 import com.karthi.sungmobile.core.designsystem.artwork.ArtworkMask
 import com.karthi.sungmobile.core.designsystem.artwork.SungArtwork
 import com.karthi.sungmobile.core.designsystem.theme.LocalSungMotionEnabled
+import com.karthi.sungmobile.core.designsystem.icon.SungIcon
+import com.karthi.sungmobile.core.designsystem.icon.SungSymbol
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.CatalogKind
 import com.karthi.sungmobile.core.model.discovery.HomeShelf
+import com.karthi.sungmobile.core.model.discovery.RecommendationFeedback
+import com.karthi.sungmobile.core.model.library.libraryKeyOrNull
 
 @Composable
-internal fun HomeFeedShelf(shelf: HomeShelf, playbackReady: Boolean, open: (CatalogItem) -> Unit) {
+internal fun HomeFeedShelf(shelf: HomeShelf, playbackReady: Boolean,
+    feedback: Map<String, RecommendationFeedback> = emptyMap(),
+    onFeedback: ((CatalogItem, RecommendationFeedback?) -> Unit)? = null,
+    open: (CatalogItem) -> Unit) {
     val motion = LocalSungMotionEnabled.current
     val largeFont = LocalDensity.current.fontScale > 1.3f
     val cardWidth = if (largeFont) 216.dp else 204.dp
@@ -54,8 +61,8 @@ internal fun HomeFeedShelf(shelf: HomeShelf, playbackReady: Boolean, open: (Cata
             }
         }
         if (motion && shelf.items.size > 1) Crossfade(selected, animationSpec = tween(160), label = "Home caption") {
-            HomeFeedCaption(it)
-        } else HomeFeedCaption(selected)
+            HomeFeedCaption(it, it.libraryKeyOrNull()?.let(feedback::get), onFeedback)
+        } else HomeFeedCaption(selected, selected.libraryKeyOrNull()?.let(feedback::get), onFeedback)
     }
 }
 
@@ -83,18 +90,38 @@ private fun HomeFeedArtwork(item: CatalogItem, playbackReady: Boolean, open: () 
 }
 
 @Composable
-private fun HomeFeedCaption(item: CatalogItem) {
-    Column(Modifier.fillMaxWidth().heightIn(min = 57.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 2,
-            overflow = TextOverflow.Ellipsis)
-        val subtitle = item.subtitle.ifBlank { when (item.kind) {
-            CatalogKind.SONG -> "Song"
-            CatalogKind.ALBUM -> "Album"
-            CatalogKind.PLAYLIST -> "Playlist"
-            CatalogKind.ARTIST -> "Artist"
-        } }
-        Text(subtitle, style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
-            overflow = TextOverflow.Ellipsis)
+private fun HomeFeedCaption(item: CatalogItem, feedback: RecommendationFeedback?,
+    onFeedback: ((CatalogItem, RecommendationFeedback?) -> Unit)?) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 57.dp), verticalAlignment = Alignment.Top) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(item.title, style = MaterialTheme.typography.titleMedium, maxLines = 2,
+                overflow = TextOverflow.Ellipsis)
+            val subtitle = item.subtitle.ifBlank { when (item.kind) {
+                CatalogKind.SONG -> "Song"
+                CatalogKind.ALBUM -> "Album"
+                CatalogKind.PLAYLIST -> "Playlist"
+                CatalogKind.ARTIST -> "Artist"
+            } }
+            Text(subtitle, style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
+                overflow = TextOverflow.Ellipsis)
+        }
+        if (onFeedback != null) {
+            var menuOpen by remember(item.id) { mutableStateOf(false) }
+            Box {
+                IconButton({ menuOpen = true }) { SungIcon(SungSymbol.More, "Recommendation options for ${item.title}") }
+                DropdownMenu(menuOpen, { menuOpen = false }) {
+                    DropdownMenuItem(text = { Text(if (feedback == RecommendationFeedback.MORE)
+                        "Remove more like this" else "More from this song") }, onClick = {
+                        menuOpen = false
+                        onFeedback(item, if (feedback == RecommendationFeedback.MORE) null else RecommendationFeedback.MORE)
+                    })
+                    DropdownMenuItem(text = { Text("Hide from For you") }, onClick = {
+                        menuOpen = false
+                        onFeedback(item, RecommendationFeedback.HIDE)
+                    })
+                }
+            }
+        }
     }
 }

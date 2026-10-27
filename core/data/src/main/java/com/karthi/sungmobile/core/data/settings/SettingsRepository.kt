@@ -7,6 +7,10 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 import com.karthi.sungmobile.core.model.PlaybackSpeed
+import com.karthi.sungmobile.core.model.discovery.RecommendationFeedback
+import com.karthi.sungmobile.core.model.discovery.RecommendationPreferences
+import com.karthi.sungmobile.core.model.discovery.RecommendationSettingsStore
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 private val Context.sungSettings by preferencesDataStore("sung_settings",
     produceMigrations = { context -> listOf(SharedPreferencesMigration(context, "appearance")) })
@@ -23,7 +27,7 @@ data class AdvancedPlaybackSettings(val smartShuffle: Boolean = false, val relat
 }
 
 /** One DataStore per application; imports the Stage 1 preferences on first read. */
-class SettingsRepository(context: Context) {
+class SettingsRepository(context: Context) : PortableSettingsStore, RecommendationSettingsStore {
     private val store = context.applicationContext.sungSettings
     private val theme = stringPreferencesKey("theme")
     private val colors = stringPreferencesKey("colors")
@@ -42,6 +46,8 @@ class SettingsRepository(context: Context) {
     private val smartShuffle = booleanPreferencesKey("playback_smart_shuffle")
     private val relatedAutoplay = booleanPreferencesKey("playback_related_autoplay")
     private val trackTrims = stringPreferencesKey("playback_track_trims")
+    private val personalizedHome = booleanPreferencesKey("home_personalized")
+    private val recommendationFeedback = stringPreferencesKey("home_recommendation_feedback")
     val appearance = store.data.map { AppearanceSettings(it[theme] ?: "SYSTEM", it[colors] ?: "BLUE", it[motion] ?: false,
         it[artworkAccent] ?: false, it[accentColor] ?: 0xFF006C91.toInt(),
         it[ambientBackdrop] ?: false, it[backdropFollowsMusic] ?: true,
@@ -53,6 +59,68 @@ class SettingsRepository(context: Context) {
     val advancedPlayback = store.data.map { preferences ->
         AdvancedPlaybackSettings(preferences[smartShuffle] ?: false, preferences[relatedAutoplay] ?: false,
             parseTrims(preferences[trackTrims].orEmpty()))
+    }
+    override val recommendations = store.data.map { preferences ->
+        RecommendationPreferences(preferences[personalizedHome] ?: true,
+            RecommendationFeedbackCodec.decode(preferences[recommendationFeedback].orEmpty()))
+    }.distinctUntilChanged()
+    override suspend fun exportPortable(): PortableSettings {
+        val prefs = store.data.first()
+        return PortableSettings(
+            AppearanceSettings(prefs[theme] ?: "SYSTEM", prefs[colors] ?: "BLUE", prefs[motion] ?: false,
+                prefs[artworkAccent] ?: false, prefs[accentColor] ?: 0xFF006C91.toInt(),
+                prefs[ambientBackdrop] ?: false, prefs[backdropFollowsMusic] ?: true,
+                prefs[colorScheme] ?: "BALANCED"),
+            LyricsSettings(prefs[fallback] ?: false, (prefs[lyricsSize] ?: 24).coerceIn(18, 34),
+                prefs[lyricsCache] ?: true),
+            PlaybackSpeed((prefs[speedTenths] ?: 10).coerceIn(5, 20), prefs[preservePitch] ?: true),
+            prefs[smartShuffle] ?: false, prefs[relatedAutoplay] ?: false,
+            parseNumberMap(prefs[offsets].orEmpty(), -10_000..10_000),
+            parseTrims(prefs[trackTrims].orEmpty()),
+            prefs[personalizedHome] ?: true,
+            RecommendationFeedbackCodec.decode(prefs[recommendationFeedback].orEmpty()),
+        )
+    }
+
+    override suspend fun importPortable(value: PortableSettings) {
+        store.edit { prefs ->
+            prefs[theme] = value.appearance.theme
+            prefs[colors] = value.appearance.colors
+            prefs[motion] = value.appearance.reduceMotion
+            prefs[artworkAccent] = value.appearance.useArtworkAccent
+            prefs[accentColor] = value.appearance.accentColor
+            prefs[ambientBackdrop] = value.appearance.ambientBackdrop
+            prefs[backdropFollowsMusic] = value.appearance.backdropFollowsMusic
+            prefs[colorScheme] = value.appearance.colorScheme
+            prefs[fallback] = value.lyrics.lrclibEnabled
+            prefs[lyricsSize] = value.lyrics.textSizeSp
+            prefs[lyricsCache] = value.lyrics.cacheEnabled
+            prefs[speedTenths] = value.speed.tenths
+            prefs[preservePitch] = value.speed.preservePitch
+            prefs[smartShuffle] = value.smartShuffle
+            prefs[relatedAutoplay] = value.relatedAutoplay
+            prefs[offsets] = value.lyricOffsets.entries.joinToString("\n") { "${it.key}:${it.value}" }
+            prefs[trackTrims] = value.trackTrims.entries.joinToString("\n") { "${it.key}:${it.value}" }
+            prefs[personalizedHome] = value.recommendationsEnabled
+            prefs[recommendationFeedback] = RecommendationFeedbackCodec.encode(value.recommendationFeedback)
+        }
+    }
+    override suspend fun setRecommendationsEnabled(enabled: Boolean) {
+        store.edit { it[personalizedHome] = enabled }
+    }
+
+    override suspend fun setRecommendationFeedback(songKey: String, feedback: RecommendationFeedback?) {
+        if (!RecommendationFeedbackCodec.validKey(songKey)) return
+        store.edit { preferences ->
+            val values = RecommendationFeedbackCodec.decode(preferences[recommendationFeedback].orEmpty()).toMutableMap()
+            values.remove(songKey)
+            if (feedback != null) values[songKey] = feedback
+            preferences[recommendationFeedback] = RecommendationFeedbackCodec.encode(values)
+        }
+    }
+
+    override suspend fun clearRecommendationFeedback() {
+        store.edit { it.remove(recommendationFeedback) }
     }
     suspend fun setAppearance(value: AppearanceSettings) {
         store.edit {
@@ -101,11 +169,15 @@ class SettingsRepository(context: Context) {
         }
     }
 
-    private fun parseTrims(raw: String): Map<String, Int> = raw.lineSequence().mapNotNull { line ->
+    private fun parseTrims(raw: String): Map<String, Int> = parseNumberMap(raw, -12..0)
+
+    private fun parseNumberMap(raw: String, allowed: IntRange): Map<String, Int> = raw.lineSequence().mapNotNull { line ->
         val id = line.substringBefore(':')
         val db = line.substringAfter(':', "").toIntOrNull()
-        if (VIDEO_ID.matches(id) && db != null && db in -12..0) id to db else null
+        if (VIDEO_ID.matches(id) && db != null && db in allowed) id to db else null
     }.take(500).toMap()
 
-    private companion object { val VIDEO_ID = Regex("[A-Za-z0-9_-]{11}") }
+    private companion object {
+        val VIDEO_ID = Regex("[A-Za-z0-9_-]{11}")
+    }
 }

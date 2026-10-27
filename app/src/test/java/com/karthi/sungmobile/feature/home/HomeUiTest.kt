@@ -87,6 +87,20 @@ class HomeUiTest {
         assertTrue(statisticsOpened)
     }
 
+    @Test fun personalizedRowAddsToHomeWithoutReplacingProviderRows() {
+        feed = feed.copy(personalizedShelf = HomeShelf("personalized_for_you", "For you",
+            listOf(track, track.copy(id = "dvgZkm1xWPE", title = "Viva La Vida"),
+                track.copy(id = "BBBBBBBBBBB", title = "Another song"))))
+        show()
+        compose.onNodeWithText("For you").assertExists()
+        compose.onNodeWithTag("home_card_personalized_for_you_0").performClick()
+        compose.runOnIdle { assertEquals(track, opened) }
+        compose.onNodeWithTag("discovery_home").performScrollToKey("quick")
+        compose.onNodeWithText("Quick picks").assertExists()
+        compose.onNodeWithTag("home_card_quick_0").performClick()
+        compose.runOnIdle { assertEquals(track, opened) }
+    }
+
     @Test fun moodShortcutAndOfflineStateKeepNavigationUsable() {
         show()
         compose.onNodeWithTag("mood_focus").performClick()

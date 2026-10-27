@@ -24,6 +24,8 @@ import com.karthi.sungmobile.core.playback.PlaybackState
 import com.karthi.sungmobile.feature.queue.QueueScreen
 import com.karthi.sungmobile.feature.queue.queueArtist
 
+internal val PlayerQueuePeekHeight = 72.dp
+
 /** The peek is always visible; sheet motion and nested list scrolling belong to Material 3. */
 @Composable
 internal fun PlayerQueueSheet(state: PlaybackState, actions: PlayerActions,
@@ -31,11 +33,11 @@ internal fun PlayerQueueSheet(state: PlaybackState, actions: PlayerActions,
     Column(modifier.fillMaxSize()) {
         val count = stringResource(R.string.queue_count, state.queue.entries.size)
         val action = stringResource(if (expanded) R.string.collapse_queue else R.string.expand_queue)
-        Surface(onClick = onToggle, modifier = Modifier.fillMaxWidth().height(88.dp).testTag("open_queue")
+        Surface(onClick = onToggle, modifier = Modifier.fillMaxWidth().height(PlayerQueuePeekHeight).testTag("open_queue")
             .semantics { contentDescription = "$action, $count" },
             color = MaterialTheme.colorScheme.surfaceContainerHigh) {
             Column(horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)) {
+                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically)) {
                 Box(Modifier.size(44.dp, 5.dp).background(MaterialTheme.colorScheme.onSurfaceVariant, CircleShape))
                 Text(count, style = MaterialTheme.typography.titleMedium)
             }

@@ -2,11 +2,17 @@ package com.karthi.sungmobile.feature.local
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -18,6 +24,7 @@ import com.karthi.sungmobile.core.designsystem.component.SungSongListItem
 import com.karthi.sungmobile.core.designsystem.icon.SungIcon
 import com.karthi.sungmobile.core.designsystem.icon.SungSymbol
 import com.karthi.sungmobile.core.model.CatalogItem
+import com.karthi.sungmobile.feature.library.components.LibraryFilterToggle
 import kotlinx.coroutines.launch
 
 /** A live view of device audio, not a second library or download inventory. */
@@ -30,7 +37,8 @@ fun LocalSongsContent(repository: LocalAudioRepository, connected: Boolean,
     var loading by remember(repository) { mutableStateOf(repository.snapshot() == null) }
     var refreshing by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
-    var filter by remember { mutableStateOf("") }
+    var filter by rememberSaveable { mutableStateOf("") }
+    var filterExpanded by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(repository) { repository.updates.collect { scan -> if (scan != null) result = scan } }
     fun refresh(force: Boolean = false) { scope.launch {
         refreshing = true
@@ -48,11 +56,19 @@ fun LocalSongsContent(repository: LocalAudioRepository, connected: Boolean,
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SungFilterField(filter, { filter = it }, "Find local songs", Modifier.weight(1f))
+            Text(if (filter.isBlank()) "${result.songs.size} local songs" else "${shown.size} matching songs",
+                Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LibraryFilterToggle(filterExpanded, filter.isNotBlank(),
+                { filterExpanded = !filterExpanded }, "local song filter")
             IconButton({ refresh(true) }, Modifier.size(48.dp).testTag("refresh_local_songs"), enabled = !refreshing) {
                 if (refreshing) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
                 else SungIcon(SungSymbol.Refresh, "Refresh local songs")
             }
+        }
+        AnimatedVisibility(filterExpanded, enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()) {
+            SungFilterField(filter, { filter = it }, "Find local songs")
         }
         if (result.needsAudioPermission) {
             Text("Allow music access to show audio added by other apps.",

@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.*
 import java.util.UUID
 
 data class CollectionRoute(val url: String, val title: String, val kind: CatalogKind? = null,
-    val startMs: Long = 0, val id: String = UUID.randomUUID().toString())
+    val startMs: Long = 0, val artworkUrl: String? = null, val id: String = UUID.randomUUID().toString())
 data class CollectionState(val route: CollectionRoute? = null, val page: CatalogPage? = null,
     val entries: List<CatalogEntry> = emptyList(), val loading: Boolean = false, val error: SourceFailure? = null)
 
@@ -20,9 +20,11 @@ class CollectionViewModel(private val source: CatalogSource, private val saved: 
     private var retryAction: (() -> Unit)? = null
     private val visited = mutableSetOf<PageToken>()
     init { saved.get<String>("url")?.let { url -> open(CollectionRoute(url, saved["title"] ?: "YouTube",
-        saved.get<String>("kind")?.let(CatalogKind::valueOf), saved["start"] ?: 0L)) } }
+        saved.get<String>("kind")?.let(CatalogKind::valueOf), saved["start"] ?: 0L,
+        saved["artwork"])) } }
     fun open(route: CollectionRoute) {
         saved["url"] = route.url; saved["title"] = route.title; saved["kind"] = route.kind?.name; saved["start"] = route.startMs
+        if (route.artworkUrl != null) saved["artwork"] = route.artworkUrl else saved.remove<String>("artwork")
         mutable.value = CollectionState(route)
         refresh()
     }

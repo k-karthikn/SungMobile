@@ -20,6 +20,8 @@ import com.karthi.sungmobile.navigation.*
 import com.karthi.sungmobile.playback.PlaybackConnection
 import com.karthi.sungmobile.feature.lyrics.LyricsViewModel
 import com.karthi.sungmobile.feature.convenience.*
+import com.karthi.sungmobile.feature.backup.BackupSettingsSection
+import com.karthi.sungmobile.core.model.discovery.RecommendationPreferences
 import kotlinx.coroutines.launch
 
 /** Application composition only: feature state and work remain in their own ViewModels. */
@@ -51,6 +53,8 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
     val convenienceState by convenience.state.collectAsStateWithLifecycle()
     val advanced by container.settings.advancedPlayback.collectAsStateWithLifecycle(
         initialValue = com.karthi.sungmobile.core.data.settings.AdvancedPlaybackSettings())
+    val recommendations by container.settings.recommendations.collectAsStateWithLifecycle(
+        initialValue = RecommendationPreferences())
     val settingsScope = rememberCoroutineScope()
     var searchRequest by remember { mutableIntStateOf(0) }
     LaunchedEffect(details.route?.id) { collectionActions.cancel() }
@@ -103,8 +107,8 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                                 val songs = shelf.items.filter { it.kind == CatalogKind.SONG }
                                 val index = songs.indexOfFirst { it.id == item.id }
                                 if (index >= 0) model.player.select(songs, index)
-                            } else collection.open(CollectionRoute(item.url, item.title, item.kind))
-                        }, player.connected, modifier)
+                            } else collection.open(CollectionRoute(item.url, item.title, item.kind, artworkUrl = item.artworkUrl))
+                        }, player.connected, modifier, discovery::setRecommendationFeedback)
                 }, searchRequest = searchRequest,
                 lyricsState = lyricsState, lyricsSettings = lyricsSettings,
                 onLoadLyrics = { lyrics.load(player.track, policy?.privateMode == true) },
@@ -114,16 +118,21 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 onLyricsOffset = { player.track?.let { track -> lyrics.setOffset(track, it) } },
                 onClearLyricsCache = lyrics::clearCache,
                 localFoldersContent = { LocalFoldersSettingsSection(container.localAudio) },
-                convenienceContent = { state, openSessions ->
-                    val connection = model.player as PlaybackConnection
-                    androidx.compose.foundation.layout.Column {
-                        PlayerConvenienceControls(state, convenienceState.resume, connection::setSpeed,
-                            connection::armTimer, connection::cancelTimer, convenience::resume,
-                            convenience::startOver, openSessions, showSessions = false)
-                    }
+                backupContent = { BackupSettingsSection(container.backup) },
+                recommendationsContent = {
+                    RecommendationSettingsSection(recommendations,
+                        { enabled -> settingsScope.launch { container.settings.setRecommendationsEnabled(enabled) } },
+                        { settingsScope.launch { container.settings.clearRecommendationFeedback() } })
+                },
+                resumeContent = { state ->
+                    PlayerResumeControls(state, convenienceState.resume,
+                        convenience::resume, convenience::startOver)
                 },
                 playerMoreContent = { state, openSessions ->
+                    val connection = model.player as PlaybackConnection
                     androidx.compose.foundation.layout.Column {
+                        PlayerPlaybackOptions(state, connection::setSpeed,
+                            connection::armTimer, connection::cancelTimer)
                         androidx.compose.material3.TextButton(openSessions) { androidx.compose.material3.Text("Saved sessions") }
                         PlayerAdvancedControls(state.track, advanced, policy?.privateMode == true,
                             { enabled -> settingsScope.launch { container.settings.setSmartShuffle(enabled) } },

@@ -25,6 +25,7 @@ import com.karthi.sungmobile.feature.player.*
 import com.karthi.sungmobile.feature.search.SearchScreen
 import com.karthi.sungmobile.feature.lyrics.*
 import com.karthi.sungmobile.core.data.settings.LyricsSettings
+import kotlinx.coroutines.delay
 
 private enum class Overlay { NONE, PLAYER, APPEARANCE, FEEDBACK, HISTORY, COLLECTION, LYRICS, SESSIONS }
 
@@ -46,7 +47,9 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     onCancelLyrics: () -> Unit = {},
     onLyricsOffset: (Int) -> Unit = {}, onClearLyricsCache: () -> Unit = {},
     localFoldersContent: @Composable () -> Unit = {},
-    convenienceContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
+    backupContent: @Composable () -> Unit = {},
+    recommendationsContent: @Composable () -> Unit = {},
+    resumeContent: @Composable (PlaybackState) -> Unit = {},
     playerMoreContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
     volumeContent: @Composable (PlaybackState) -> Unit = {},
     sessionsContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
@@ -83,8 +86,13 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     LaunchedEffect(playback.track, overlay) {
         if (playback.track == null && (overlay == Overlay.PLAYER || overlay == Overlay.LYRICS)) overlay = Overlay.NONE
     }
-    LaunchedEffect(overlay, playback.track?.id, lyricsSettings.lrclibEnabled, privateMode) {
-        if (overlay == Overlay.LYRICS) onLoadLyrics() else onCancelLyrics()
+    val lyricsVisible = overlay == Overlay.PLAYER || overlay == Overlay.LYRICS
+    LaunchedEffect(lyricsVisible, playback.track?.id, lyricsSettings.lrclibEnabled, privateMode) {
+        if (lyricsVisible && playback.track != null) {
+            onCancelLyrics()
+            if (overlay == Overlay.PLAYER) delay(300)
+            onLoadLyrics()
+        } else onCancelLyrics()
     }
     val back = {
         when {
@@ -154,8 +162,9 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                                     backdropArtworkUrl = if (appearance.backdropFollowsMusic) live.track?.artworkUrl else frozenBackdropUrl,
                                     expandQueueRequest = miniQueueRequest,
                                     onQueueRequestHandled = { miniQueueRequest = false },
+                                    lyricsState = lyricsState,
                                     moreContent = { playerMoreContent(live) { sessionsFromPlayer = true; overlay = Overlay.SESSIONS } }) {
-                                    convenienceContent(live) { sessionsFromPlayer = true; overlay = Overlay.SESSIONS }
+                                    resumeContent(live)
                                 }
                             }
                             Overlay.LYRICS -> LivePlaybackContent(playback, livePlayback) { live ->
@@ -169,7 +178,8 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                             Overlay.APPEARANCE -> AppearanceScreen(appearance, onAppearance, back, content,
                                 lyricsSettings, onLyricsSettings, lyricsState.cacheBytes, onClearLyricsCache,
                                 onHistory = { overlay = Overlay.HISTORY }, localFolders = localFoldersContent,
-                                onFeedback = { overlay = Overlay.FEEDBACK })
+                                onFeedback = { overlay = Overlay.FEEDBACK }, backupContent = backupContent,
+                                recommendationsContent = recommendationsContent)
                             Overlay.NONE -> when (destination) {
                                 Destination.HOME -> screenState.SaveableStateProvider("home") { if (homeContent != null) homeContent(Modifier.weight(1f),
                                     { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { overlay = Overlay.APPEARANCE }, { destination = Destination.LIBRARY })

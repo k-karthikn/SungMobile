@@ -8,3 +8,8 @@ data class HomeShelf(val key: String, val title: String, val items: List<Catalog
 interface HomeFeedSource {
     suspend fun homeShelves(): List<HomeShelf>
 }
+
+/** Optional continuation of general provider Home music, without any local taste data. */
+interface HomeCandidateSource {
+    suspend fun extraHomeSongs(): List<CatalogItem>
+}

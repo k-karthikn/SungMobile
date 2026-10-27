@@ -3,6 +3,8 @@ package com.karthi.sungmobile.feature.feedback
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
+import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -58,12 +60,27 @@ fun FeedbackScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             scope.launch {
                 sending = true
                 error = null
+                val attachment = if (attachLog) runCatching {
+                    withContext(Dispatchers.IO) { DiagnosticLog.export(context) }
+                }.getOrElse {
+                    error = "Could not prepare the diagnostic log. You can send feedback without it."
+                    sending = false
+                    return@launch
+                } else null
+                val chooser = runCatching { feedbackChooser(context, feedback.trim(), attachment) }
+                    .getOrElse {
+                        error = "Could not attach the diagnostic log. You can send feedback without it."
+                        sending = false
+                        return@launch
+                    }
                 try {
-                    val attachment = if (attachLog) withContext(Dispatchers.IO) { DiagnosticLog.export(context) } else null
-                    context.startActivity(Intent.createChooser(feedbackIntent(context, feedback.trim(), attachment),
-                        "Send feedback"))
+                    context.startActivity(chooser)
+                } catch (_: ActivityNotFoundException) {
+                    error = "No email app could open this message. Please email $SUPPORT_EMAIL."
+                } catch (_: SecurityException) {
+                    error = "The email app could not access the log. Try sending without it."
                 } catch (_: Exception) {
-                    error = "No app could open this message. Please email $SUPPORT_EMAIL."
+                    error = "Could not open the email app. Please email $SUPPORT_EMAIL."
                 } finally { sending = false }
             }
         }, enabled = feedback.isNotBlank() && !sending, modifier = Modifier.fillMaxWidth()) {
@@ -74,7 +91,7 @@ fun FeedbackScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
 internal fun feedbackIntent(context: Context, message: String, attachment: java.io.File?): Intent =
     Intent(Intent.ACTION_SEND).apply {
-        type = "message/rfc822"
+        type = if (attachment == null) "message/rfc822" else "text/plain"
         putExtra(Intent.EXTRA_EMAIL, arrayOf(SUPPORT_EMAIL))
         putExtra(Intent.EXTRA_SUBJECT, "SungMobile feedback")
         putExtra(Intent.EXTRA_TEXT, message)
@@ -85,3 +102,15 @@ internal fun feedbackIntent(context: Context, message: String, attachment: java.
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
     }
+
+internal fun feedbackChooser(context: Context, message: String, attachment: java.io.File?): Intent {
+    val send = feedbackIntent(context, message, attachment)
+    return Intent.createChooser(send, "Send feedback").apply {
+        putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS,
+            arrayOf(ComponentName(context.packageName, "${context.packageName}.MainActivity")))
+        if (attachment != null) {
+            clipData = send.clipData
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+    }
+}

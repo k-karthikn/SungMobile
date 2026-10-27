@@ -1,10 +1,14 @@
 package com.karthi.sungmobile
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.karthi.sungmobile.app.PlayerActions
 import com.karthi.sungmobile.core.designsystem.theme.SungTheme
@@ -12,6 +16,7 @@ import com.karthi.sungmobile.core.model.*
 import com.karthi.sungmobile.core.playback.PlaybackState
 import com.karthi.sungmobile.feature.queue.QueueScreen
 import com.karthi.sungmobile.feature.queue.queueArtist
+import com.karthi.sungmobile.feature.convenience.PlayerPlaybackOptions
 import com.karthi.sungmobile.feature.player.PlayerScreen
 import org.junit.Assert.*
 import org.junit.Rule
@@ -68,6 +73,24 @@ class QueueScreenTest {
         val file = File("build/outputs/player-ui/more-options.png").apply { parentFile?.mkdirs() }
         compose.onRoot().captureRoboImage(file.absolutePath)
     }
+    @Test fun speedAndSleepTimerAppearInPlayerMoreMenu() {
+        var speed: PlaybackSpeed? = null
+        compose.setContent { SungTheme {
+            PlayerScreen(state, PlayerActions({}, {}, {}), {}, moreContent = {
+                PlayerPlaybackOptions(state, { speed = it }, { _, _, _ -> }, {})
+            })
+        } }
+        compose.onNodeWithText("Playback").assertDoesNotExist()
+        compose.onNodeWithText("Speed 1.0×").assertDoesNotExist()
+        compose.onNodeWithText("Sleep timer").assertDoesNotExist()
+
+        compose.onNodeWithTag("player_more").performClick()
+        compose.onNodeWithText("Playback").assertDoesNotExist()
+        compose.onNodeWithText("Speed 1.0×").performClick()
+        compose.onNodeWithText("Apply").performClick()
+        assertEquals(PlaybackSpeed(), speed)
+        compose.onNodeWithText("Sleep timer").assertIsDisplayed()
+    }
     @Test fun duplicateSongMenuActsOnTheChosenOccurrence() {
         var removed: String? = null
         compose.setContent { SungTheme { QueueScreen(state, PlayerActions({}, {}, {}, remove = { removed = it }), {}) } }
@@ -116,8 +139,27 @@ class QueueScreenTest {
         compose.onRoot().captureRoboImage(file.absolutePath)
     }
 
+    @Test fun longTrackTitlesDoNotMoveSeekOrNextControls() {
+        var displayed by mutableStateOf(state)
+        compose.setContent { SungTheme { PlayerScreen(displayed, PlayerActions({}, {}, {}), {}) } }
+        val nextBefore = compose.onNodeWithTag("next_track").fetchSemanticsNode().boundsInRoot.top
+        val seekBefore = compose.onNodeWithTag("seek_slider").fetchSemanticsNode().boundsInRoot.top
+
+        compose.runOnIdle {
+            displayed = displayed.copy(track = song.copy(
+                title = "A very long song title with many more words than the player can fit on two lines, " +
+                    "even on a wide screen, followed by another long phrase",
+                subtitle = "A very long artist and channel credit that should not wrap below the title"))
+        }
+        compose.waitForIdle()
+        compose.onNodeWithTag("player_title").assertTextContains("A very long song title", substring = true)
+        assertEquals(seekBefore, compose.onNodeWithTag("seek_slider").fetchSemanticsNode().boundsInRoot.top, .5f)
+        assertEquals(nextBefore, compose.onNodeWithTag("next_track").fetchSemanticsNode().boundsInRoot.top, .5f)
+    }
+
     @Test fun queuePeeksOnPlayerAndExpandsWithSwipe() {
         compose.setContent { SungTheme { PlayerScreen(state, PlayerActions({}, {}, {}), {}) } }
+        compose.onNodeWithTag("open_queue").assertHeightIsEqualTo(72.dp)
         compose.onNodeWithTag("open_queue").assertIsDisplayed().performTouchInput { swipeUp() }
         compose.onNodeWithTag("queue_now_playing").assertIsDisplayed()
         compose.onNodeWithTag("queue_options_1").assertIsDisplayed()

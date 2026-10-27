@@ -56,4 +56,17 @@ class CollectionViewModelTest {
         assertNull(model.state.value.error)
     }
 
+    @Test fun searchArtworkSurvivesStateRestoration() = runTest(dispatcher) {
+        val saved = SavedStateHandle()
+        val model = CollectionViewModel(TestCatalog(), saved).also { store.put("artwork", it) }
+        model.open(CollectionRoute("url", "Mix", CatalogKind.PLAYLIST,
+            artworkUrl = "https://example.com/cover.jpg"))
+        runCurrent()
+        val restored = CollectionViewModel(TestCatalog(),
+            SavedStateHandle(saved.keys().associateWith { saved.get<Any?>(it) }))
+            .also { store.put("artwork-restored", it) }
+        runCurrent()
+        assertEquals("https://example.com/cover.jpg", restored.state.value.route?.artworkUrl)
+    }
+
 }

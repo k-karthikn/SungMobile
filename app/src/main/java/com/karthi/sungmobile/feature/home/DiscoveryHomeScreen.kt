@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.karthi.sungmobile.core.designsystem.component.SungLoading
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.discovery.HomeShelf
+import com.karthi.sungmobile.core.model.discovery.RecommendationFeedback
 
 private val moods = listOf("Feel good" to "feel good songs", "Focus" to "instrumental focus",
     "Unwind" to "chill evening", "Energize" to "workout energy")
@@ -24,7 +25,8 @@ fun DiscoveryHomeScreen(state: DiscoveryFeedState, refresh: () -> Unit, ensureFr
     search: () -> Unit, appearance: () -> Unit, openLibrary: () -> Unit,
     openStatistics: () -> Unit,
     moodSearch: (String) -> Unit, openItem: (HomeShelf, CatalogItem) -> Unit,
-    playbackReady: Boolean, modifier: Modifier = Modifier) {
+    playbackReady: Boolean, modifier: Modifier = Modifier,
+    onRecommendationFeedback: (CatalogItem, RecommendationFeedback?) -> Unit = { _, _ -> }) {
     LaunchedEffect(Unit) { ensureFresh() }
     LazyColumn(modifier.fillMaxSize().testTag("discovery_home"),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 24.dp),
@@ -56,6 +58,12 @@ fun DiscoveryHomeScreen(state: DiscoveryFeedState, refresh: () -> Unit, ensureFr
         }
         if (!state.initialLoading && state.error == null && state.shelves.isEmpty()) item("empty", "empty") {
             HomeFeedNotice("No music suggestions are available right now.", refresh, openLibrary)
+        }
+        state.personalizedShelf?.let { shelf ->
+            item("personalized_for_you", "personalized_shelf") {
+                HomeFeedShelf(shelf, playbackReady, state.recommendationFeedback,
+                    onRecommendationFeedback) { item -> openItem(shelf, item) }
+            }
         }
         items(state.shelves, key = HomeShelf::key, contentType = { "provider_shelf" }) { shelf ->
             HomeFeedShelf(shelf, playbackReady) { item -> openItem(shelf, item) }

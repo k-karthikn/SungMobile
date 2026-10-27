@@ -17,6 +17,7 @@ import com.karthi.sungmobile.core.model.library.*
 import com.karthi.sungmobile.feature.library.components.LibraryHeader
 import com.karthi.sungmobile.feature.library.components.LibraryDestination
 import com.karthi.sungmobile.feature.library.components.LibraryListControls
+import com.karthi.sungmobile.feature.library.components.LibraryPlaylistControls
 import com.karthi.sungmobile.feature.home.HomeState
 import com.karthi.sungmobile.testing.*
 import org.junit.*
@@ -98,6 +99,88 @@ class LibraryUiTest {
         compose.onNodeWithContentDescription("More play options").performClick()
         compose.onNodeWithText("Play next").performClick()
         assertTrue(next)
+    }
+
+    @Test fun libraryFiltersOpenOnlyWhenRequested() {
+        var expanded by mutableStateOf(false)
+        compose.setContent { SungTheme {
+            LibraryListControls("", "Filter liked songs", {}, LibrarySort.DEFAULT, {}, false, true,
+                {}, {}, {}, {}, {}, expanded, { expanded = !expanded })
+        } }
+        compose.onNodeWithText("Filter liked songs").assertDoesNotExist()
+        compose.onNodeWithText("A–Z").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Show filters and sort").performClick()
+        compose.onNodeWithText("Filter liked songs").assertIsDisplayed()
+        compose.onNodeWithText("A–Z").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Hide filters and sort").performClick()
+        compose.onNodeWithText("Filter liked songs").assertDoesNotExist()
+    }
+
+    @Test fun playlistFiltersAreCollapsedBesideNewPlaylist() {
+        var expanded by mutableStateOf(false)
+        compose.setContent { SungTheme {
+            LibraryPlaylistControls("", {}, LibrarySort.DEFAULT, {}, expanded,
+                { expanded = !expanded }, {})
+        } }
+        compose.onNodeWithText("New playlist").assertIsDisplayed()
+        compose.onNodeWithText("Filter playlists").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Show filters and sort").performClick()
+        compose.onNodeWithText("Filter playlists").assertIsDisplayed()
+        compose.onNodeWithText("A–Z").assertIsDisplayed()
+    }
+
+    @Test fun cleanupPageKeepsDestructiveActionsBehindReview() {
+        val repo = TestLocalLibrary()
+        val player = RecordingPlayer()
+        val advanced = AdvancedLibraryViewModel(TestAdvancedRepository(), repo, TestCatalog(), player)
+            .also { store.put("cleanup", it) }
+        val entries = listOf(LibrarySong("first", testSong, true), LibrarySong("second", testSong, true))
+        val state = AdvancedLibraryState(page = AdvancedPage.CLEANUP, playlistId = "playlist",
+            playlistName = "Evening favorites", entries = entries, selected = setOf("second"),
+            revisions = listOf(PlaylistRevision("version", "playlist", "Evening favorites", 1_000L, 2)))
+        compose.setContent { SungTheme { AdvancedLibraryScreen(advanced, state) } }
+        compose.onNodeWithText("Duplicates").assertIsDisplayed()
+        compose.onNodeWithText("Review removal (1)").performClick()
+        compose.onNodeWithText("Remove 1 playlist entries?").assertIsDisplayed()
+        compose.onNodeWithText("Cancel").performClick()
+        compose.onNodeWithText("Remove 1 playlist entries?").assertDoesNotExist()
+        val dir = File("build/outputs/library-ui").apply { mkdirs() }
+        compose.onRoot().captureRoboImage(File(dir, "playlist-cleanup.png").absolutePath)
+        compose.onNodeWithTag("advanced_library_list").performScrollToNode(hasText("Saved versions (1)"))
+        compose.onNodeWithText("Saved versions (1)").assertIsDisplayed()
+    }
+
+    @Test fun selectedPlaylistVersionOpensAnImmediatePreview() {
+        val repo = TestLocalLibrary()
+        val player = RecordingPlayer()
+        val advanced = AdvancedLibraryViewModel(TestAdvancedRepository(), repo, TestCatalog(), player)
+            .also { store.put("version-preview", it) }
+        val revision = PlaylistRevision("version", "playlist", "Old favorites", 1_000L, 1)
+        val state = AdvancedLibraryState(page = AdvancedPage.CLEANUP, playlistId = "playlist",
+            playlistName = "Current favorites", revisionDetail = RevisionDetail(revision,
+                listOf(RevisionEntry("old", "song", "Old song"))))
+        compose.setContent { SungTheme { AdvancedLibraryScreen(advanced, state) } }
+        compose.onNodeWithText("Version preview").assertIsDisplayed()
+        compose.onNodeWithText("Show songs").performClick()
+        compose.onNodeWithText("1. Old song").assertIsDisplayed()
+    }
+
+    @Test fun savedPlaylistUsesTheSameCollapsibleFilters() {
+        val repo = TestLocalLibrary()
+        val player = RecordingPlayer()
+        val browser = LibraryBrowserViewModel(repo).also { store.put("playlist-browser", it) }
+        val actions = LibraryActionsViewModel(repo, player).also { store.put("playlist-actions", it) }
+        val advanced = AdvancedLibraryViewModel(TestAdvancedRepository(), repo, TestCatalog(), player)
+            .also { store.put("playlist-advanced", it) }
+        val page = LibraryPage(query = LibraryQuery(LibraryCollection.Playlist("playlist")),
+            songs = listOf(LibrarySong("song", testSong, true)), title = "Evening favorites", loading = false)
+        compose.setContent { SungTheme {
+            LibraryScreen(browser, page, actions, advanced, AdvancedLibraryState(), {})
+        } }
+        compose.onNodeWithText("Filter this playlist").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Show filters and sort").performClick()
+        compose.onNodeWithText("Filter this playlist").assertIsDisplayed()
+        compose.onNodeWithText("Playlist order").assertIsDisplayed()
     }
 
     @Test fun mixesShowRealCardsAndSavedSmartList() {

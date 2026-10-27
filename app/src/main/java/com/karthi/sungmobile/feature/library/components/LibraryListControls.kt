@@ -1,5 +1,10 @@
 package com.karthi.sungmobile.feature.library.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,15 +21,22 @@ import com.karthi.sungmobile.core.model.library.LibrarySort
 internal fun LibraryListControls(filter: String, filterLabel: String, onFilter: (String) -> Unit,
     sort: LibrarySort, onSort: (LibrarySort) -> Unit, playlistOrder: Boolean,
     hasSongs: Boolean, onPlay: () -> Unit, onShuffle: () -> Unit,
-    onPlayNext: () -> Unit, onAddToQueue: () -> Unit, onSelect: () -> Unit) {
+    onPlayNext: () -> Unit, onAddToQueue: () -> Unit, onSelect: () -> Unit,
+    filtersExpanded: Boolean = false, onToggleFilters: () -> Unit = {}) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             LibraryPlaySplitButton(hasSongs, onPlay, onShuffle, onAddToQueue, onPlayNext)
             Spacer(Modifier.weight(1f))
+            LibraryFilterToggle(filtersExpanded, filter.isNotBlank() || sort != LibrarySort.DEFAULT, onToggleFilters)
             TextButton(onSelect, enabled = hasSongs, modifier = Modifier.heightIn(min = 48.dp)) { Text("Select") }
         }
-        SungFilterField(filter, onFilter, filterLabel)
-        LibrarySortChoices(sort, onSort, playlistOrder)
+        AnimatedVisibility(filtersExpanded, enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SungFilterField(filter, onFilter, filterLabel)
+                LibrarySortChoices(sort, onSort, playlistOrder)
+            }
+        }
     }
 }
 

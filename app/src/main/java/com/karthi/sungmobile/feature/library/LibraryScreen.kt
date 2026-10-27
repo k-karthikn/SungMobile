@@ -28,6 +28,7 @@ fun LibraryScreen(browser: LibraryBrowserViewModel, page: LibraryPage, actions: 
     var localSelected by rememberSaveable { mutableStateOf(false) }
     val smart by advanced.smartOverview.collectAsStateWithLifecycle()
     val collection = page.query.collection
+    var filtersExpanded by rememberSaveable(collection?.toString()) { mutableStateOf(false) }
     LaunchedEffect(collection) { mixesSelected = false }
     if (advancedState.page != AdvancedPage.CLOSED) {
         AdvancedLibraryScreen(advanced, advancedState, modifier)
@@ -102,10 +103,9 @@ fun LibraryScreen(browser: LibraryBrowserViewModel, page: LibraryPage, actions: 
                         TextButton({ advanced.openCleanup(playlist.id) }) { Text("Cleanup & versions") }
                     }
                     if (collection == null) {
-                        FilledTonalButton({ create = true }, modifier = Modifier.heightIn(min = 48.dp)) { Text("New playlist") }
-                        com.karthi.sungmobile.core.designsystem.component.SungFilterField(
-                            page.query.filter, browser::filter, "Filter playlists")
-                        LibrarySortChoices(page.query.sort, browser::sort, false)
+                        LibraryPlaylistControls(page.query.filter, browser::filter,
+                            page.query.sort, browser::sort, filtersExpanded,
+                            { filtersExpanded = !filtersExpanded }, { create = true })
                     } else {
                         LibraryListControls(page.query.filter, when (collection) {
                             LibraryCollection.Likes -> "Filter liked songs"
@@ -114,7 +114,8 @@ fun LibraryScreen(browser: LibraryBrowserViewModel, page: LibraryPage, actions: 
                         }, browser::filter, page.query.sort, browser::sort, playlist != null, page.songs.isNotEmpty(),
                             { actions.play(collection, false) }, { actions.play(collection, true) },
                             { actions.enqueueCollection(collection, true) }, { actions.enqueueCollection(collection, false) },
-                            { selecting = true; selected = emptySet() })
+                            { selecting = true; selected = emptySet() }, filtersExpanded,
+                            { filtersExpanded = !filtersExpanded })
                     }
                     if (selecting) LibrarySelectionBar(selected.size, { selecting = false; selected = emptySet() },
                         { selected = page.songs.map { it.rowId }.toSet() },

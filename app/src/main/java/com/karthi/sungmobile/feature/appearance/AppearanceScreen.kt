@@ -36,7 +36,9 @@ import com.karthi.sungmobile.feature.lyrics.LyricsSettingsSection
 fun AppearanceScreen(value: Appearance, onChange: (Appearance) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier,
     lyrics: LyricsSettings = LyricsSettings(), onLyrics: (LyricsSettings) -> Unit = {},
     cacheBytes: Long = 0, onClearCache: () -> Unit = {}, onHistory: () -> Unit = {},
-    localFolders: @Composable () -> Unit = {}, onFeedback: () -> Unit = {}) {
+    localFolders: @Composable () -> Unit = {}, onFeedback: () -> Unit = {},
+    backupContent: @Composable () -> Unit = {},
+    recommendationsContent: @Composable () -> Unit = {}) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())
         .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)) {
@@ -98,6 +100,8 @@ fun AppearanceScreen(value: Appearance, onChange: (Appearance) -> Unit, onBack: 
                 { onChange(value.copy(reduceMotion = it)) })
         }
         HistorySettingsEntry(onHistory)
+        recommendationsContent()
+        backupContent()
         SungSettingsGroup("Help") {
             TextButton(onFeedback, Modifier.fillMaxWidth()) { Text("Feedback & report") }
         }

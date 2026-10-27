@@ -2,24 +2,26 @@
 
 ## Two different version numbers
 
-In `app/build.gradle.kts`:
+In `app/build.gradle.kts` (the values below are examples; read the file for the current source version):
 
 ```kotlin
-versionCode = 35
-versionName = "0.14.1"
+versionCode = 123
+versionName = "1.2.3"
 ```
 
-- **versionCode** is Android's ordering number within an application ID. Increase it for every update to that app: 35 → 36 → 37. Never reuse or reduce it for production hotfixes or prereleases. Choose a number higher than every production APK already distributed.
-- **versionName** is the readable label. For example, the next small fix can be `0.14.2`, then a feature release `0.15.0`. This string and the GitHub tag do not decide whether an update is newer.
+- **versionCode** is Android's ordering number within an application ID. Increase it for every update to that app. Never reuse or reduce it for production hotfixes or prereleases. Choose a number higher than every production APK already distributed.
+- **versionName** is the readable label. For example, a small fix can change `1.2.3` to `1.2.4`, while a feature release can use `1.3.0`. This string and the GitHub tag do not decide whether an update is newer.
 - To undo a bad release, restore the desired source changes but build with a NEW, higher versionCode. Do not distribute an older-code APK as the fix.
 
 Sung's updater rejects equal or lower codes. Android also protects against normal downgrade installations. The production application ID is **`com.karthi.sungmobile`**. Keep that ID and the dedicated production signing key for every future production APK; changing either breaks in-place updates. The earlier debug application ID, `com.karthi.sungmobile.stage0`, is a separate Android app with separate data. Installing production does not transfer Likes, playlists, history, or settings from debug. Do not uninstall the debug app until you have finished anything you need there.
 
 ## Publish a future update
 
-1. Increase versionCode (next after this build: **36**) and choose versionName.
-2. Build/test the production APK with `./gradlew :app:assembleRelease`. Local signing configuration is read from `~/.android/sungmobile-release/signing.properties`. Back up both that file and `~/.android/sungmobile-release/sungmobile-release.p12` securely; without the same private key, future APKs cannot update an installed production app. Never commit either file. Use `apksigner verify --print-certs` to confirm the signer. The debug APK and debug key remain separate.
-3. Choose a GitHub tag, e.g. `v0.14.2`. Use the exact final APK filename when generating metadata:
+1. Increase `versionCode` above every production APK already distributed and choose a new `versionName`.
+2. Run `python3 scripts/production_build.py` from the project root. It runs tests and release lint, builds the production APK, verifies its package and signing certificate, and generates the versioned APK, `update.json` and `SHA256SUMS` in `release-assets/v<versionName>/`. Local signing configuration is read from `~/.android/sungmobile-release/signing.properties`. Back up that file and the production private key securely; without the same key, future APKs cannot update an installed production app. Never commit either file. The debug APK and debug key remain separate.
+3. If packaging an already-built APK instead, run `python3 scripts/production_build.py --apk app/build/outputs/apk/release/app-release.apk`. This verifies and packages the APK but skips Gradle tests, lint and assembly. The script generates metadata from the APK's actual package, version and bytes.
+
+The lower-level metadata generator is available if manual packaging is needed. Replace every example path and tag with the final APK's values:
 
 ```bash
 python3 scripts/make_update_manifest.py \
@@ -30,11 +32,11 @@ python3 scripts/make_update_manifest.py \
   --output /absolute/path/update.json
 ```
 
-4. Create a release at https://github.com/k-karthikn/SungMobile/releases. Upload **both the exact APK and `update.json` as release assets**. Publish it as a normal stable release, not a draft or prerelease, and make it the latest release. A tag or source-code archive alone is insufficient.
+4. Create a release at https://github.com/k-karthikn/SungMobile/releases with the matching tag. Upload **both the exact APK and `update.json` as release assets**. Publish it as a normal stable release, not a draft or prerelease, and make it the latest release. A tag or source-code archive alone is insufficient.
 5. Do not rename/rebuild/replace the APK after generating the JSON. If you change it, regenerate the JSON. The SHA-256 must match the uploaded bytes.
 6. Test from the previous installed code: check/download, allow installation from Sung if Android asks, then confirm the update. Verify library data remains.
 
-The generator reads package ID/versionCode/versionName from the APK and hashes that same file. It does not publish anything or verify your signing key; verify with SDK apksigner before publishing. GitHub releases should contain one matching universal APK referenced by update.json. The script defaults to the production package; use `--package-name com.karthi.sungmobile.stage0` only when deliberately packaging an old debug build.
+The low-level manifest generator reads package ID/versionCode/versionName from the APK and hashes that same file. Unlike `production_build.py`, it does not verify the signing key; verify with SDK apksigner before publishing if you use it directly. GitHub releases should contain one matching universal APK referenced by update.json. The generator defaults to the production package; use `--package-name com.karthi.sungmobile.stage0` only when deliberately packaging an old debug build.
 
 ## How the feature behaves
 

@@ -5,6 +5,7 @@ import com.karthi.sungmobile.core.data.settings.*
 import com.karthi.sungmobile.core.data.lyrics.LyricsCache
 import com.karthi.sungmobile.core.model.lyrics.*
 import com.karthi.sungmobile.core.model.PlaybackSpeed
+import com.karthi.sungmobile.core.model.discovery.RecommendationFeedback
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -45,5 +46,29 @@ class SettingsRepositoryTest {
             SettingsRepository(context).advancedPlayback.first())
         repository.setTrackTrim("dQw4w9WgXcQ", 0)
         assertEquals(0, repository.advancedPlayback.first().trimFor("dQw4w9WgXcQ"))
+        val backup = repository.exportPortable()
+        repository.setAppearance(AppearanceSettings("DARK", "BLUE"))
+        repository.setOffset("dQw4w9WgXcQ", 0)
+        repository.importPortable(backup)
+        assertEquals(updated, repository.appearance.first())
+        assertEquals(-350, repository.offset("dQw4w9WgXcQ"))
+    }
+
+    @Test fun recommendationChoicePersistsAndCanBeClearedOrRestored() = runBlocking {
+        val repository = SettingsRepository(RuntimeEnvironment.getApplication())
+        val key = "youtube:dQw4w9WgXcQ"
+        repository.setRecommendationsEnabled(false)
+        repository.setRecommendationFeedback(key, RecommendationFeedback.MORE)
+        val saved = repository.exportPortable()
+        assertFalse(saved.recommendationsEnabled)
+        assertEquals(RecommendationFeedback.MORE, saved.recommendationFeedback[key])
+        repository.setRecommendationsEnabled(true)
+        repository.clearRecommendationFeedback()
+        assertTrue(repository.recommendations.first().feedback.isEmpty())
+        repository.importPortable(saved)
+        assertFalse(repository.recommendations.first().enabled)
+        assertEquals(RecommendationFeedback.MORE, repository.recommendations.first().feedback[key])
+        repository.setRecommendationFeedback(key, null)
+        assertTrue(repository.recommendations.first().feedback.isEmpty())
     }
 }

@@ -15,14 +15,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.karthi.sungmobile.R
 import com.karthi.sungmobile.app.PlayerActions
 import com.karthi.sungmobile.core.designsystem.icon.*
 import com.karthi.sungmobile.core.playback.PlaybackState
-import com.karthi.sungmobile.core.model.lyrics.lyricsStorageKey
+import com.karthi.sungmobile.feature.lyrics.LyricsUiState
 import kotlinx.coroutines.launch
 import coil3.compose.AsyncImage
 
@@ -32,8 +30,9 @@ fun PlayerScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Uni
     openQueue: () -> Unit = {}, openLyrics: () -> Unit = {},
     ambientBackdrop: Boolean = false, backdropArtworkUrl: String? = null,
     expandQueueRequest: Boolean = false, onQueueRequestHandled: () -> Unit = {},
+    lyricsState: LyricsUiState = LyricsUiState(),
     moreContent: @Composable () -> Unit = {},
-    convenienceContent: @Composable () -> Unit = {}) {
+    resumeContent: @Composable () -> Unit = {}) {
     var more by remember { mutableStateOf(false) }
     if (more) PlayerMoreSheet(actions, { more = false }, moreContent)
     val scope = rememberCoroutineScope()
@@ -58,7 +57,7 @@ fun PlayerScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Uni
                 Box(Modifier.matchParentSize().background(MaterialTheme.colorScheme.surface.copy(alpha = .78f)))
             }
         }
-        BottomSheetScaffold(scaffoldState = scaffoldState, sheetPeekHeight = 88.dp,
+        BottomSheetScaffold(scaffoldState = scaffoldState, sheetPeekHeight = PlayerQueuePeekHeight,
             sheetDragHandle = null, sheetShape = MaterialTheme.shapes.extraLarge,
             sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             containerColor = if (ambientBackdrop && backdropArtworkUrl != null) Color.Transparent
@@ -81,21 +80,11 @@ fun PlayerScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Uni
                     IconButton({ more = true }, Modifier.testTag("player_more")) { SungIcon(SungSymbol.More, "More playback options") }
                 }
                 PlayerArtwork(state, actions.jump, Modifier.widthIn(max = 420.dp).fillMaxWidth().align(Alignment.CenterHorizontally))
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(state.track?.title.orEmpty(), Modifier.testTag("player_title").semantics { heading() }, style = MaterialTheme.typography.headlineLarge)
-                        Text(state.track?.subtitle.orEmpty(), style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(stringResource(state.statusLabel()), Modifier.testTag("player_status"), style = MaterialTheme.typography.bodyMedium,
-                            color = if (state.sourceError != null || state.engine.error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    state.track?.let { PlayerLibraryActions(it) }
-                }
+                PlayerTrackDetails(state)
                 PlayerSeek(state, actions.seek)
                 PlayerTransport(state, actions)
-                convenienceContent()
-                FilledTonalButton(openLyrics, Modifier.fillMaxWidth().heightIn(min = 48.dp),
-                    enabled = state.track?.lyricsStorageKey() != null) { Text(stringResource(R.string.lyrics)) }
+                resumeContent()
+                PlayerLyricsPreview(state, lyricsState, openLyrics)
                 Text(stringResource(R.string.background_notice), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 24.dp))
             }

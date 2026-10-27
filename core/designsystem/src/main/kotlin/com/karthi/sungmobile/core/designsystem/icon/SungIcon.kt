@@ -15,7 +15,7 @@ enum class SungSymbol(@param:DrawableRes val resource: Int) {
     Close(R.drawable.ic_close), Plus(R.drawable.ic_plus), Volume(R.drawable.ic_volume),
     Heart(R.drawable.ic_heart), HeartFilled(R.drawable.ic_heart_filled), Refresh(R.drawable.ic_refresh),
     Equalizer(R.drawable.ic_equalizer), Bookmark(R.drawable.ic_bookmark), QueueMusic(R.drawable.ic_queue_music),
-    Tune(R.drawable.ic_tune), More(R.drawable.ic_more),
+    Tune(R.drawable.ic_tune), Filter(R.drawable.ic_filter), More(R.drawable.ic_more),
     SkipNext(R.drawable.ic_skip_next), SkipPrevious(R.drawable.ic_skip_previous),
     Shuffle(R.drawable.ic_shuffle), Repeat(R.drawable.ic_repeat),
     Check(R.drawable.ic_check), ExpandMore(R.drawable.ic_expand_more), Clock(R.drawable.ic_clock),
