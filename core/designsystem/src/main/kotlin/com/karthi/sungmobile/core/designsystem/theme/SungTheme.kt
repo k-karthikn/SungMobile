@@ -111,21 +111,19 @@ fun SungTheme(
         ColorSchemeStyle.EXPRESSIVE -> PaletteStyle.Expressive
         ColorSchemeStyle.FAITHFUL -> PaletteStyle.Fidelity
     }
+    val systemWallpaperScheme = if (colorMode == ColorMode.WALLPAPER && Build.VERSION.SDK_INT >= 31) {
+        if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    } else null
     val colors = when {
         useArtworkAccent && artworkSeed != null ->
             dynamicColorScheme(seedColor = artworkSeed!!, isDark = dark, style = style)
         colorMode == ColorMode.ACCENT ->
             dynamicColorScheme(seedColor = Color(accentColor), isDark = dark, style = style)
-        colorMode == ColorMode.WALLPAPER && Build.VERSION.SDK_INT >= 31 && wallpaperSeed != null ->
-            dynamicColorScheme(seedColor = wallpaperSeed!!, isDark = dark, style = style)
-        colorMode == ColorMode.WALLPAPER && Build.VERSION.SDK_INT >= 31 ->
-            if (colorSchemeStyle == ColorSchemeStyle.BALANCED) {
-                if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            } else {
-                val systemPrimary = if (dark) dynamicDarkColorScheme(context).primary
-                    else dynamicLightColorScheme(context).primary
-                dynamicColorScheme(seedColor = systemPrimary, isDark = dark, style = style)
-            }
+        colorMode == ColorMode.WALLPAPER && systemWallpaperScheme != null &&
+            colorSchemeStyle == ColorSchemeStyle.BALANCED -> systemWallpaperScheme
+        colorMode == ColorMode.WALLPAPER && systemWallpaperScheme != null ->
+            dynamicColorScheme(seedColor = wallpaperSeed ?: systemWallpaperScheme.primary,
+                isDark = dark, style = style)
         colorSchemeStyle != ColorSchemeStyle.BALANCED ->
             dynamicColorScheme(seedColor = Color(0xFF377893), isDark = dark, style = style)
         dark -> SungDarkColors
