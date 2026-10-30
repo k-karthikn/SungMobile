@@ -4,7 +4,7 @@ Date: 10 October 2026 (Asia/Kolkata). Build: **0.1.1-stage0**, version code 2.
 
 ## Outcome
 
-Stage 0's provider-to-player proof is implemented. The user tested the initial build on their POCO M6 Pro 5G and reported working search, playback, pause, stop and +10-second seeking. All eight screenshots in `Stages/Stage0_Results/` were reviewed. They show song results, album and playlist contents, paused playback, a finished track, and the artist browsing failure.
+Stage 0's provider-to-player proof is implemented. The user tested the initial build on their POCO M6 Pro 5G and reported working search, playback, pause, stop and +10-second seeking. All eight screenshots in `Stages/Stage0_Results/` (files removed 30 October 2026) were reviewed. They show song results, album and playlist contents, paused playback, a finished track, and the artist browsing failure.
 
 The stabilization build handles that artist limitation explicitly, bounds loading operations, and corrects buffering/replay behavior. It remains a foreground-only development app. Full background playback and automatic queue advancement belong to Stage 2. Leaving the app or locking the screen pauses playback; reaching the end exposes Replay. These are intentional Stage 0 limits.
 

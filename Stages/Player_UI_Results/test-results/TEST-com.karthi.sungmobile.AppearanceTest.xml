@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.karthi.sungmobile.AppearanceTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-21T14:40:51.205Z" hostname="cachyos" time="11.971">
-  <properties/>
-  <testcase name="blueDarkRolesMeetNormalTextContrast" classname="com.karthi.sungmobile.AppearanceTest" time="10.41"/>
-  <testcase name="blueLightRolesMeetNormalTextContrast" classname="com.karthi.sungmobile.AppearanceTest" time="0.119"/>
-  <testcase name="systemDisabledAnimationsAlsoDisableExpressiveMotion" classname="com.karthi.sungmobile.AppearanceTest" time="0.14"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

@@ -8,4 +8,4 @@ Queue, Lyrics, Speed and Sleep timer stay on the player. Countdown/resume prompt
 
 No Search/Library redesign, new feature, data migration, provider change or device installation in this slice. Existing mini-player/navigation and previous clock-update isolation are retained. Home scrolling remained laggy according to the owner; profiling is deferred and this build does not establish its cause.
 
-Validation results and packaged evidence are recorded in `Stages/Player_UI_Results/README.md`. Manual checks: `Stages/Player_UI_Results/PHONE_TEST_CHECKLIST.md`.
+Validation results and packaged evidence are recorded in `Stages/Player_UI_Results/README.md` (files removed 30 October 2026). Manual checks: `Stages/Player_UI_Results/PHONE_TEST_CHECKLIST.md` (files removed 30 October 2026).

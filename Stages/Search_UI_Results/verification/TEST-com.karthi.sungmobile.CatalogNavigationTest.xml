@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.karthi.sungmobile.CatalogNavigationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-22T15:15:54.458Z" hostname="cachyos" time="16.907">
-  <properties/>
-  <testcase name="backRestoresSearchScrollAndRecreationRetainsDetailRoute" classname="com.karthi.sungmobile.CatalogNavigationTest" time="15.641"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

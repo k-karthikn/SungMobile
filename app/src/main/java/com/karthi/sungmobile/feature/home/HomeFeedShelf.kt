@@ -37,10 +37,9 @@ internal fun HomeFeedShelf(shelf: HomeShelf, playbackReady: Boolean,
     val motion = LocalSungMotionEnabled.current
     val largeFont = LocalDensity.current.fontScale > 1.3f
     val cardWidth = if (largeFont) 216.dp else 204.dp
+    if (shelf.items.isEmpty()) return
     val state = rememberCarouselState { shelf.items.size }
     val rowState = rememberLazyListState()
-    val selectedIndex = if (motion && shelf.items.size > 1) state.currentItem else rowState.firstVisibleItemIndex
-    val selected = shelf.items.getOrNull(selectedIndex) ?: shelf.items.first()
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(shelf.title, style = MaterialTheme.typography.titleLarge,
             maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -52,6 +51,7 @@ internal fun HomeFeedShelf(shelf: HomeShelf, playbackReady: Boolean,
                     Modifier.fillMaxSize().maskClip(RoundedCornerShape(24.dp))
                         .testTag("home_card_${shelf.key}_$index"))
             }
+            HomeFeedCarouselCaption(shelf.items, state, feedback, onFeedback)
         } else {
             LazyRow(state = rowState, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 itemsIndexed(shelf.items, key = { _, item -> "${item.kind}:${item.id}" }) { index, item ->
@@ -59,10 +59,22 @@ internal fun HomeFeedShelf(shelf: HomeShelf, playbackReady: Boolean,
                         Modifier.size(cardWidth).testTag("home_card_${shelf.key}_$index"))
                 }
             }
+            val selected = shelf.items.getOrNull(rowState.firstVisibleItemIndex) ?: shelf.items.first()
+            HomeFeedCaption(selected, selected.libraryKeyOrNull()?.let(feedback::get), onFeedback)
         }
-        if (motion && shelf.items.size > 1) Crossfade(selected, animationSpec = tween(160), label = "Home caption") {
-            HomeFeedCaption(it, it.libraryKeyOrNull()?.let(feedback::get), onFeedback)
-        } else HomeFeedCaption(selected, selected.libraryKeyOrNull()?.let(feedback::get), onFeedback)
+    }
+}
+
+@Composable
+private fun HomeFeedCarouselCaption(items: List<CatalogItem>, state: androidx.compose.material3.carousel.CarouselState,
+    feedback: Map<String, RecommendationFeedback>, onFeedback: ((CatalogItem, RecommendationFeedback?) -> Unit)?) {
+    var selectedIndex by remember(state) { mutableIntStateOf(0) }
+    LaunchedEffect(state) {
+        snapshotFlow { state.currentItem }.collect { selectedIndex = it }
+    }
+    val selected = items.getOrNull(selectedIndex) ?: items.firstOrNull() ?: return
+    Crossfade(selected, animationSpec = tween(160), label = "Home caption") {
+        HomeFeedCaption(it, it.libraryKeyOrNull()?.let(feedback::get), onFeedback)
     }
 }
 

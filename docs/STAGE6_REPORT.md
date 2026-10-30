@@ -1,6 +1,6 @@
 # Stage 6 — playback convenience
 
-Implemented 18 October 2026 as `0.7.0-stage6`, code 10, with a sleep-timer countdown display patch in `0.7.1-stage6`, code 11. The owner confirmed the patch works on the POCO and reported all Stage 6 functions done. **Stage 6 is accepted.** The signed debug APK and phone checklist are in `Stages/Stage6_Results/`.
+Implemented 18 October 2026 as `0.7.0-stage6`, code 10, with a sleep-timer countdown display patch in `0.7.1-stage6`, code 11. The owner confirmed the patch works on the POCO and reported all Stage 6 functions done. **Stage 6 is accepted.** The signed debug APK and phone checklist are in `Stages/Stage6_Results/` (files removed 30 October 2026).
 
 ## Delivered behavior
 

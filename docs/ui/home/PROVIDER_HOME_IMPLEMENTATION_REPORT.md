@@ -16,4 +16,4 @@ The `core:youtube` and app debug unit suites passed, including parser, continuat
 
 The endpoint is unofficial and may change its renderer or access behavior. The feed is cached only in memory, so a cold offline start offers Retry and Library rather than old recommendations. Physical-phone review of the final carousel motion and collection playback remains useful after installing the APK.
 
-The signed production build is [0.13.0 (code 32)](../../../Stages/Provider_Home_Results/README.md). It was built and verified locally; no phone installation or release publication was part of this implementation.
+The signed production build is 0.13.0 (code 32) (files removed 30 October 2026). It was built and verified locally; no phone installation or release publication was part of this implementation.

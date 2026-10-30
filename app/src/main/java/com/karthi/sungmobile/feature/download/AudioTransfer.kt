@@ -1,5 +1,6 @@
 package com.karthi.sungmobile.feature.download
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
@@ -7,8 +8,8 @@ import android.os.Build
 import android.provider.MediaStore
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.DownloadStreamResolver
-import com.karthi.sungmobile.feature.local.SUNG_MUSIC_PATH
-import com.karthi.sungmobile.feature.local.LocalArtworkRepository
+import com.karthi.sungmobile.core.data.local.SUNG_MUSIC_PATH
+import com.karthi.sungmobile.core.data.local.LocalArtworkRepository
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -27,7 +28,7 @@ internal class AudioTransfer(private val context: Context, private val streams: 
     fun cancel() { cancelled = true; connection?.disconnect() }
 
     suspend fun run(track: CatalogItem, progress: (Long, Long?) -> Unit): Uri = withContext(Dispatchers.IO) {
-        check(Build.VERSION.SDK_INT >= 29) { "Downloads require Android 10 or newer" }
+        if (Build.VERSION.SDK_INT < 29) throw IllegalStateException("Downloads require Android 10 or newer")
         check(!cancelled)
         // Signed provider URLs can be invalid by the time the job starts. Resolve once more
         // after an authorization/expiry response instead of failing the notification at 0%.
@@ -41,6 +42,8 @@ internal class AudioTransfer(private val context: Context, private val streams: 
         }
     }
 
+    // run() checks API 29 before either call; lint does not follow that guard through withContext.
+    @SuppressLint("InlinedApi")
     private suspend fun transfer(track: CatalogItem, stream: com.karthi.sungmobile.core.model.ResolvedStream,
         progress: (Long, Long?) -> Unit): Uri {
         currentCoroutineContext().ensureActive()

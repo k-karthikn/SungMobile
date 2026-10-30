@@ -11,6 +11,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import kotlinx.coroutines.runBlocking
+import java.io.File
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [27])
@@ -72,5 +74,59 @@ class UpdateSafetyTest {
         updater.setEnabled(false)
         assertTrue(scheduler.allPendingJobs.isEmpty())
         assertFalse(AppUpdates(context).enabled())
+    }
+
+    @Test fun startupClearsCorruptSavedPairAndAbandonedStagingFiles() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val updates = File(context.filesDir, "updates").apply { deleteRecursively(); mkdirs() }
+        context.getSharedPreferences("app_updates", 0).edit().clear().putBoolean("enabled", false).commit()
+        val apk = File(updates, "update.apk").apply { writeText("truncated apk") }
+        val manifestFile = File(updates, "update.json").apply { writeText("{") }
+        val partial = File(updates, "update.part").apply { writeText("abandoned download") }
+        val partialManifest = File(updates, "update.json.part").apply { writeText("abandoned metadata") }
+
+        val updater = AppUpdates(context)
+        updater.start().join()
+
+        assertFalse(updater.state.value.ready)
+        assertTrue(updater.state.value.message.contains("could not be verified"))
+        assertFalse(apk.exists())
+        assertFalse(manifestFile.exists())
+        assertFalse(partial.exists())
+        assertFalse(partialManifest.exists())
+    }
+
+    @Test fun startupRejectsTruncatedApkAgainstAValidManifest() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val updates = File(context.filesDir, "updates").apply { deleteRecursively(); mkdirs() }
+        context.getSharedPreferences("app_updates", 0).edit().clear().putBoolean("enabled", false).commit()
+        val code = UpdateApk.code(UpdateApk.installed(context)) + 1
+        File(updates, "update.apk").writeText("not an apk")
+        File(updates, "update.json").writeText(json(code = code))
+
+        val updater = AppUpdates(context)
+        updater.start().join()
+
+        assertFalse(updater.state.value.ready)
+        assertTrue(updater.state.value.message.contains("could not be verified"))
+        assertFalse(File(updates, "update.apk").exists())
+        assertFalse(File(updates, "update.json").exists())
+    }
+
+    @Test fun startupDropsAnUpdateThatIsAlreadyInstalled() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val updates = File(context.filesDir, "updates").apply { deleteRecursively(); mkdirs() }
+        context.getSharedPreferences("app_updates", 0).edit().clear().putBoolean("enabled", false).commit()
+        val installedCode = UpdateApk.code(UpdateApk.installed(context))
+        File(updates, "update.apk").writeText("no longer relevant")
+        File(updates, "update.json").writeText(json(code = installedCode))
+
+        val updater = AppUpdates(context)
+        updater.start().join()
+
+        assertFalse(updater.state.value.ready)
+        assertTrue(updater.state.value.message.contains("already installed"))
+        assertFalse(File(updates, "update.apk").exists())
+        assertFalse(File(updates, "update.json").exists())
     }
 }

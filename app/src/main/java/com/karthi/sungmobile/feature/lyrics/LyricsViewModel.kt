@@ -3,6 +3,7 @@ package com.karthi.sungmobile.feature.lyrics
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.karthi.sungmobile.core.data.lyrics.LyricsCache
+import com.karthi.sungmobile.core.data.lyrics.LocalLyricsSource
 import com.karthi.sungmobile.core.data.settings.LyricsSettings
 import com.karthi.sungmobile.core.data.settings.SettingsRepository
 import com.karthi.sungmobile.core.model.CatalogItem

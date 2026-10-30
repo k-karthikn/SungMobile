@@ -32,7 +32,7 @@ Home uses actual results from the current search/collection. A fresh install has
 | Instrumentation APK | Built; not executed on the phone |
 | Android lint | 0 errors; 10 newer-version advisories |
 
-The core regression run and final app verification logs are in `Stages/Stage1_Results/`. Commands:
+The core regression run and final app verification logs are in `Stages/Stage1_Results/` (files removed 30 October 2026). Commands:
 
 ```bash
 JAVA_HOME=/opt/android-studio/jbr ./gradlew \
@@ -40,7 +40,7 @@ JAVA_HOME=/opt/android-studio/jbr ./gradlew \
   :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug
 ```
 
-Twenty-one PNGs are in [Stage1_Results](../Stages/Stage1_Results/README.md). Actual Compose layouts were rendered and inspected at 393 dp width in light/dark, 200% font scale and reduced motion, plus 320 dp narrow Home and 1000 dp expanded Home. The large player button retains its touch target; long content scrolls. Fresh Home, Search, Library and Appearance states were also inspected. The selected readable blue color pairs meet 4.5:1 contrast in both themes.
+Twenty-one PNGs are in Stage1_Results (files removed 30 October 2026). Actual Compose layouts were rendered and inspected at 393 dp width in light/dark, 200% font scale and reduced motion, plus 320 dp narrow Home and 1000 dp expanded Home. The large player button retains its touch target; long content scrolls. Fresh Home, Search, Library and Appearance states were also inspected. The selected readable blue color pairs meet 4.5:1 contrast in both themes.
 
 The visual pass corrected a squeezed play button at 200% text, clipping at rotated artwork-mask bounds, and search-control spacing. Host image loading uses Coil's real fetch/cache pipeline with its BitmapFactory decoder; Robolectric cannot execute Android ImageDecoder's file-descriptor path. Production keeps Coil's default decoder. Fixture thumbnails are local test resources, with provenance in [third-party notices](../THIRD_PARTY_NOTICES.md).
 
@@ -51,7 +51,7 @@ These are host renders and behavioral tests, not phone screenshots, pixel-diff a
 1. Install `app/build/outputs/apk/debug/app-debug.apk`. The existing debug ID `com.karthi.sungmobile.stage0` is retained so this upgrades Stage 0. The displayed app name is now **Sung**.
 2. Search a song, play it, switch to Home and tap the mini-player. Check artwork, pause/resume, seek and Stop.
 3. Open Home's Appearance button. Try light/dark, Sung blue/wallpaper colors and reduced motion. Restart to check that these choices persist.
-4. Increase Android font size. Scroll Home and the player, and check that controls and text remain reachable. Save any screenshots or notes in `Stages/Stage1_Results/`.
+4. Increase Android font size. Scroll Home and the player, and check that controls and text remain reachable. Save any screenshots or notes in `Stages/Stage1_Results/` (files removed 30 October 2026).
 
 ## Remaining stages
 

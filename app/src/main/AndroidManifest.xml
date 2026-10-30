@@ -17,6 +17,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.RUN_USER_INITIATED_JOBS" />
 
+    <!-- Backups are opt-in through the app's validated JSON export/restore flow. -->
     <application
         android:name=".SungApplication"
         android:allowBackup="false"

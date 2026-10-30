@@ -4,6 +4,6 @@
 
 Appearance keeps the existing theme and color choices and groups Motion, App updates, Lyrics and About with a shared settings surface. The lyric cache, LRCLIB, text size, notification and updater controls retain their behavior. A shared confirmation dialog gives lyric-cache, queue-clear and library confirmation actions consistent shape and buttons. Other dialogs with custom fields and previews remain purpose-built so their actions are preserved.
 
-Application ID, signing certificate and Room schema 5 are unchanged. This pass does not claim a scrolling performance fix; device profiling remains separate. Manual phone acceptance is pending; see `Stages/Lyrics_UI_Results/`.
+Application ID, signing certificate and Room schema 5 are unchanged. This pass does not claim a scrolling performance fix; device profiling remains separate. Manual phone acceptance is pending; see `Stages/Lyrics_UI_Results/` (files removed 30 October 2026).
 
-Verification: 15 focused host tests passed, no failures or skips; lint 0 errors and 20 warnings; debug APK assembled and prior signer verified. Evidence is in `Stages/Lyrics_UI_Results/verification/`.
+Verification: 15 focused host tests passed, no failures or skips; lint 0 errors and 20 warnings; debug APK assembled and prior signer verified. Evidence is in `Stages/Lyrics_UI_Results/verification/` (files removed 30 October 2026).

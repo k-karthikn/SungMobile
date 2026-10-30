@@ -29,7 +29,7 @@ For implementation conventions and build commands, see [PLAYBACK_GUIDE.md](PLAYB
 - The migration test creates a database from the exported Stage 2 schema, opens it with the version 2 Room builder, and checks persisted queue data after migration.
 - Playback tests cover collection shuffle/bulk queue insertion and listening qualification, pause gaps, and checkpoint restoration.
 - The app regression suite exercises Media3 session/controller behavior, Search, queue, appearance and the existing ViewModel flows.
-- Final test/lint/build output: see `Stages/Stage3_Results/build.log`; exact counts and APK SHA-256 are in `Stages/Stage3_Results/build-summary.json`.
+- Final test/lint/build output: see `Stages/Stage3_Results/build.log` (files removed 30 October 2026); exact counts and APK SHA-256 are in `Stages/Stage3_Results/build-summary.json` (files removed 30 October 2026).
 
 ## POCO acceptance checklist
 

@@ -4,4 +4,4 @@
 
 The existing package ID and debug signer remain. No UI, playback, storage or database behavior changes. The source logo has not been regenerated or recolored. Owner phone check is needed on the POCO launcher; no device screenshot or installation was performed by Codex.
 
-Verification: assembleDebug and lintDebug passed; lint 0 errors and 22 warnings. APK metadata, adaptive-icon XML and retained certificate were checked. Evidence is in `Stages/Icon_Results/verification/`.
+Verification: assembleDebug and lintDebug passed; lint 0 errors and 22 warnings. APK metadata, adaptive-icon XML and retained certificate were checked. Evidence is in `Stages/Icon_Results/verification/` (files removed 30 October 2026).

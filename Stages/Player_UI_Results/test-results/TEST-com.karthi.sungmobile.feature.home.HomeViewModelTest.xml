@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.karthi.sungmobile.feature.home.HomeViewModelTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-21T14:41:28.525Z" hostname="cachyos" time="0.027">
-  <properties/>
-  <testcase name="privateModeAndClearInvalidateRecentMixWithoutRemovingDeliberateLikes" classname="com.karthi.sungmobile.feature.home.HomeViewModelTest" time="0.027"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

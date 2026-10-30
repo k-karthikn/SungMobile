@@ -15,6 +15,7 @@ public interface PlaylistDao {
     @Query("UPDATE local_playlists SET updatedAt = :time WHERE id = :id") void touch(String id, long time);
     @Query("DELETE FROM local_playlists WHERE id = :id") void delete(String id);
     @Query("SELECT * FROM playlist_entries WHERE playlistId = :id ORDER BY position, id") List<PlaylistEntryEntity> entries(String id);
+    @Query("SELECT * FROM playlist_entries WHERE id = :entryId") PlaylistEntryEntity entry(String entryId);
     @Insert void insertEntries(List<PlaylistEntryEntity> entries);
     @Insert(onConflict = OnConflictStrategy.IGNORE) void importEntries(List<PlaylistEntryEntity> entries);
     @Query("DELETE FROM playlist_entries WHERE playlistId = :id") void clearEntries(String id);

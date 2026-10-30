@@ -1,6 +1,6 @@
 # Local songs and downloads
 
-The 0.12.11 (code 31) [production APK](../../Stages/Playback_Reliability_Results/README.md) includes local-song lyrics. Its download behavior carries forward the Android 15 fix verified with code 30, which saved an `.m4a` song successfully on the connected phone.
+The 0.12.11 (code 31) production APK (files removed 30 October 2026) includes local-song lyrics. Its download behavior carries forward the Android 15 fix verified with code 30, which saved an `.m4a` song successfully on the connected phone.
 
 In **Library → Local songs**, SungMobile scans `Music/SungMobile/` and its subfolders. A compact refresh icon beside the filter picks up files copied in by another app; recent scan results stay visible when you switch tabs. You can grant music access for those files, and add other folders through **Settings → Local songs**. Folder selection uses Android's system picker; **Remove access** only removes that folder from SungMobile, leaving files untouched. Local tracks play and queue in the existing player. Likes, playlists, and listening history remain online-song features.
 

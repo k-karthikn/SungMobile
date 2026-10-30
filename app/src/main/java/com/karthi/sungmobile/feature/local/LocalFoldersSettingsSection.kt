@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.karthi.sungmobile.core.designsystem.component.SungSettingsGroup
+import com.karthi.sungmobile.core.data.local.LocalAudioRepository
 
 @Composable
 fun LocalFoldersSettingsSection(repository: LocalAudioRepository) {

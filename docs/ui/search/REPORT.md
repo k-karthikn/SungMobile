@@ -6,6 +6,6 @@ Song results reuse `SungSongListItem` with direct heart and a plus menu for play
 
 Material 3 Expressive buttons and toggle shapes use the theme's motion scheme, including Reduced Motion. Result rows remain lazy and keyed by provider ID. This pass does not claim to fix the separately reported scrolling lag; phone profiling remains later work.
 
-Manual phone acceptance pending. See `Stages/Search_UI_Results/` for APK, checks and verification evidence.
+Manual phone acceptance pending. See `Stages/Search_UI_Results/` (files removed 30 October 2026) for APK, checks and verification evidence.
 
-Verification: 20 focused nonvisual host tests passed with 0 failures and 0 errors; lint 0 errors and 18 warnings; APK assembled and signer verified. Evidence is in `Stages/Search_UI_Results/verification/`.
+Verification: 20 focused nonvisual host tests passed with 0 failures and 0 errors; lint 0 errors and 18 warnings; APK assembled and signer verified. Evidence is in `Stages/Search_UI_Results/verification/` (files removed 30 October 2026).

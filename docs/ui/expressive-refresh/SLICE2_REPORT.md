@@ -8,6 +8,6 @@ Liked, Recents and playlist details now use a compact Play button with a split m
 
 Implementation is split among the Library header, list controls, Mixes content, existing ViewModels and a small Settings entry component. The shared mini-player and bottom navigation from slice 1 remain unchanged.
 
-Verification: debug Kotlin compilation succeeded; all 84 app unit tests passed, including seven focused Library UI tests. Debug lint reported zero errors and the same 22 pre-existing warnings. An optimized, signed 0.12.5 code-25 production APK containing this slice was then built and release-linted; see [the artifact record](../../../Stages/Expressive_Library_Results/README.md). The owner will check the layout and interactions on a phone.
+Verification: debug Kotlin compilation succeeded; all 84 app unit tests passed, including seven focused Library UI tests. Debug lint reported zero errors and the same 22 pre-existing warnings. An optimized, signed 0.12.5 code-25 production APK containing this slice was then built and release-linted; see the artifact record (files removed 30 October 2026). The owner will check the layout and interactions on a phone.
 
 Next planned slice: Home, using only its existing mixes, recently played songs, pinned playlists and liked songs.

@@ -1,6 +1,6 @@
 # Stage 5 — lyrics and essential settings
 
-Implemented 18 October 2026. Host checks passed; the owner reported the updated Stage 5 app working on the POCO and accepted Stage 5 on 18 October 2026. The APK and checklist are under `Stages/Stage5_Results/`.
+Implemented 18 October 2026. Host checks passed; the owner reported the updated Stage 5 app working on the POCO and accepted Stage 5 on 18 October 2026. The APK and checklist are under `Stages/Stage5_Results/` (files removed 30 October 2026).
 
 ## Delivered behavior
 

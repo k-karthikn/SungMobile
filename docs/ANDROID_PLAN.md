@@ -7,7 +7,7 @@ Prepared: 10 October 2026.
 
 ## 1. Confirmed direction
 
-- SungMobile is the Android project. Sung and sung-docs-linux are reference material.
+- SungMobile is the Android project. The Linux desktop reference notes are under `docs/reference/sung-linux/`.
 - Build a native Android version of Sung's music experience with strict Material 3 Expressive design.
 - Use reference image 1 for Home composition and image 4 for Now Playing. Adapt all four references to actual Material components, interaction patterns, accessibility and Android window sizes.
 - Music comes from YouTube / YouTube Music only. LRCLIB is permitted as an optional lyrics fallback.

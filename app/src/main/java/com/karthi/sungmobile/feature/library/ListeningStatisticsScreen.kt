@@ -26,7 +26,6 @@ import com.karthi.sungmobile.core.designsystem.artwork.SungArtwork
 import com.karthi.sungmobile.core.designsystem.component.SungLoading
 import com.karthi.sungmobile.core.designsystem.icon.SungIcon
 import com.karthi.sungmobile.core.designsystem.icon.SungSymbol
-import com.karthi.sungmobile.core.model.library.DailyListening
 import com.karthi.sungmobile.core.model.library.ListeningEvent
 import com.karthi.sungmobile.core.model.library.ListeningStats
 import com.karthi.sungmobile.core.model.library.TopSong
@@ -34,7 +33,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -86,7 +84,6 @@ internal fun ListeningStatisticsScreen(state: AdvancedLibraryState, onBack: () -
         }
     }
 }
-
 @Composable
 private fun StatisticsHero(stats: ListeningStats) {
     Surface(modifier = Modifier.testTag("stats_total"), shape = RoundedCornerShape(28.dp),
@@ -257,15 +254,6 @@ private fun ActivityPeriodChips(days: Int, changeDays: (Int) -> Unit) {
     }
 }
 
-internal fun activityWindow(activity: List<DailyListening>, days: Int, today: LocalDate): List<DailyListening> {
-    require(days == 7 || days == 30)
-    val byDay = activity.associateBy(DailyListening::day)
-    return List(days) { index ->
-        val date = today.minusDays((days - 1 - index).toLong()).toString()
-        byDay[date] ?: DailyListening(date, 0, 0)
-    }
-}
-
 @Composable
 private fun TopSongsSection(songs: List<TopSong>, all: Boolean, toggle: () -> Unit) {
     Surface(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
@@ -399,26 +387,3 @@ private fun SectionHeader(title: String, action: String?, onAction: () -> Unit) 
         if (action != null) TextButton(onAction) { Text(action) }
     }
 }
-
-internal fun listeningTime(ms: Long): String {
-    val minutes = ms.coerceAtLeast(0) / 60_000
-    return if (minutes >= 60) "${minutes / 60}h ${minutes % 60}m" else "${minutes}m"
-}
-
-private fun averageTime(ms: Long): String {
-    val seconds = ms.coerceAtLeast(0) / 1000
-    return if (seconds >= 3600) listeningTime(ms)
-        else if (seconds >= 60) "${seconds / 60}m ${seconds % 60}s" else "${seconds}s"
-}
-
-private fun chartTime(ms: Long, compact: Boolean = false): String {
-    val minutes = ms.coerceAtLeast(0) / 60_000
-    return if (!compact && minutes >= 60) "${minutes / 60}h${minutes % 60}m" else "${minutes}m"
-}
-
-private fun dayLabel(day: String, locale: Locale): String = runCatching {
-    LocalDate.parse(day).format(DateTimeFormatter.ofPattern("d MMM", locale))
-}.getOrDefault(day)
-
-private fun timeLabel(ms: Long, locale: Locale): String = Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault())
-    .format(DateTimeFormatter.ofPattern("h:mm a", locale))

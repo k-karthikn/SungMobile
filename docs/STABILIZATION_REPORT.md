@@ -17,7 +17,7 @@ The pass inspected the single service-owned player, queue persistence, network r
 
 Migration fixtures cover schema 1, schema 2 (accepted pre-Stage 7 builds), schema 3 (optional device-audio prototype) and schema 4, all opening through the supported migration chain. The active schema remains 5; no additional migration is needed for code 16. Settings and saved-session persistence retain their existing formats. No destructive fallback was added.
 
-The full offline test suite, lint and debug APK build passed: 163 tests passed, 6 opt-in live-provider probes were skipped, and there were no test failures. Lint reported 0 errors and 10 warnings. The host result counts, lint status, APK metadata and checksum are saved in `Stages/Stabilization_Results/`. The app ID remains `com.karthi.sungmobile.stage0`; the verified certificate matches code 15: `137475c127f1805b413c4362ddd69573e41f70c3cde76fd38a1bf5ebabfbe850`.
+The full offline test suite, lint and debug APK build passed: 163 tests passed, 6 opt-in live-provider probes were skipped, and there were no test failures. Lint reported 0 errors and 10 warnings. The host result counts, lint status, APK metadata and checksum are saved in `Stages/Stabilization_Results/` (files removed 30 October 2026). The app ID remains `com.karthi.sungmobile.stage0`; the verified certificate matches code 15: `137475c127f1805b413c4362ddd69573e41f70c3cde76fd38a1bf5ebabfbe850`.
 
 ## Feature inventory and remaining gates
 

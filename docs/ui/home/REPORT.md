@@ -37,7 +37,7 @@ App ID remains `com.karthi.sungmobile.stage0`; Room schema stays 5 and storage f
 
 ## Verification
 
-The final run passed all 64 app tests, including 10 new Home UI cases and the Media3 controller integration tests. Lint has 0 errors and 13 dependency-version notices; APK assembly passed. The saved package/version and certificate were verified. See `Stages/Home_UI_Results/` for the completed build/check summary, signature, checksum and manual phone checklist. UI tests render actual Discovery Home with offline artwork, cover heart/menu/mix actions, privacy and scroll restoration, and check that live seek/countdown values survive the clock subscription split. The existing app regression suite also covers shared navigation/player behavior.
+The final run passed all 64 app tests, including 10 new Home UI cases and the Media3 controller integration tests. Lint has 0 errors and 13 dependency-version notices; APK assembly passed. The saved package/version and certificate were verified. See `Stages/Home_UI_Results/` (files removed 30 October 2026) for the completed build/check summary, signature, checksum and manual phone checklist. UI tests render actual Discovery Home with offline artwork, cover heart/menu/mix actions, privacy and scroll restoration, and check that live seek/countdown values survive the clock subscription split. The existing app regression suite also covers shared navigation/player behavior.
 
 ## References used
 

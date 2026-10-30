@@ -38,18 +38,18 @@ The exported service follows Media3's connection model. Its callback accepts the
 
 ## Artifact
 
-- APK: [`Stages/Stage2_Results/Sung-0.3.0-stage2-debug.apk`](../Stages/Stage2_Results/Sung-0.3.0-stage2-debug.apk)
+- APK: `Stages/Stage2_Results/Sung-0.3.0-stage2-debug.apk` (files removed 30 October 2026)
 - Version: `0.3.0-stage2`, code `4`
 - Application ID: `com.karthi.sungmobile.stage0` (retained for in-place updates)
 - Size: `22,266,355` bytes
 - SHA-256: `1cae675ec6b06cc94f82fc40062f62abe3cbca6b10c880b4afd77cf4afca9be5`
-- Results, XML test reports, relevant screenshots and build summary: `Stages/Stage2_Results/`
+- Results, XML test reports, relevant screenshots and build summary: `Stages/Stage2_Results/` (files removed 30 October 2026)
 
 `final-core-checks.log` records the passing core tests and an initial lint failure for renamed Media3 constants. Those constants were corrected; `final-app-build.log` records the final successful app checks, APK builds and lint. Nothing remains waived from that failure.
 
 ## Device acceptance and limits
 
-The user reported successful completion of the [phone checklist](../Stages/Stage2_Results/PHONE_TEST_CHECKLIST.md) on 12 October 2026. The checklist remains available for later regression tests.
+The user reported successful completion of the phone checklist (files removed 30 October 2026) on 12 October 2026. The checklist remains available for later regression tests.
 
 The supplied checklist covers actual YouTube playback, leaving/locking the POCO, automatic next with the screen off, system media controls, audio focus/headphone disconnects, rapid changes, process restoration and network failure recovery. The user reported the checklist working without problems; no per-case logs or independent automated device results were supplied. The agent made no OEM battery-management changes. An abrupt process kill may lose up to approximately one checkpoint interval of position; force-stop is expected to stop audio and requires an explicit resume.
 

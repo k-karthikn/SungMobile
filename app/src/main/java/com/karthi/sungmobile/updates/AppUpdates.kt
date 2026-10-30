@@ -1,9 +1,9 @@
 package com.karthi.sungmobile.updates
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import com.karthi.sungmobile.feature.feedback.DiagnosticLog
@@ -11,8 +11,12 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.json.JSONObject
 import java.io.File
+import java.io.FileOutputStream
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 /** One updater per process. Files and preferences are private; installation is always user initiated. */
 class AppUpdates internal constructor(private val context: Context) {
@@ -20,9 +24,15 @@ class AppUpdates internal constructor(private val context: Context) {
     private val directory = File(context.filesDir, "updates").apply { mkdirs() }
     private val apk = File(directory, "update.apk")
     private val manifestFile = File(directory, "update.json")
+    private val partial = File(directory, "update.part")
+    private val partialManifest = File(directory, "update.json.part")
     private val lock = Mutex()
+    private val startupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val initialMessage = prefs.getString("message", "Updates have not been checked yet.").orEmpty()
+        .let { if (it.endsWith("is ready to install.") && !(apk.exists() && manifestFile.exists()))
+            "Updates have not been checked yet." else it }
     private val mutable = MutableStateFlow(UpdateState(enabled = enabled(),
-        ready = apk.exists() && manifestFile.exists(), message = prefs.getString("message", "Updates have not been checked yet.").orEmpty()))
+        ready = false, message = if (apk.exists() && manifestFile.exists()) "Checking saved update…" else initialMessage))
     val state = mutable.asStateFlow()
     fun enabled() = prefs.getBoolean("enabled", true)
     fun setEnabled(value: Boolean) {
@@ -31,18 +41,74 @@ class AppUpdates internal constructor(private val context: Context) {
         UpdateSchedule.configure(context, value)
         if (value) UpdateSchedule.checkSoon(context)
     }
-    fun start() {
-        // After an APK update, discard the already-installed download even while auto checks are off.
-        if (manifestFile.exists()) runCatching {
+    fun start(): Job {
+        mutable.value = mutable.value.copy(busy = true)
+        return startupScope.launch {
+            try {
+                lock.withLock { validateSavedUpdate() }
+            } finally {
+                mutable.value = mutable.value.copy(busy = false)
+            }
+            UpdateSchedule.configure(context, enabled())
+            if (enabled() && System.currentTimeMillis() - prefs.getLong("checked", 0) > 12 * 60 * 60 * 1000L)
+                UpdateSchedule.checkSoon(context)
+        }
+    }
+
+    private fun validateSavedUpdate() {
+        // A process may have stopped while downloading or while committing the pair.
+        partial.delete()
+        partialManifest.delete()
+        if (!apk.exists() && !manifestFile.exists()) {
+            if (prefs.getString("message", "").orEmpty().endsWith("is ready to install.")) {
+                UpdateNotifications.cancel(context)
+                message("Updates have not been checked yet.", false)
+            }
+            return
+        }
+        if (!apk.isFile || !manifestFile.isFile) {
+            discardSavedUpdate("The saved update is incomplete. Check again to download a fresh copy.")
+            return
+        }
+        try {
             val manifest = UpdateManifest.parse(manifestFile.readText())
             if (!manifest.newerThan(UpdateApk.code(UpdateApk.installed(context)), context.packageName)) {
-                apk.delete(); manifestFile.delete(); UpdateNotifications.cancel(context)
-                message("The downloaded update is already installed.", false)
+                discardSavedUpdate("The downloaded update is already installed.")
+                return
             }
+            UpdateApk.validate(context, apk, manifest)
+            message("${manifest.versionName} is ready to install.", true)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            DiagnosticLog.recordError("saved_update_invalid", error)
+            discardSavedUpdate("The saved update could not be verified. Check again to download a fresh copy.")
         }
-        UpdateSchedule.configure(context, enabled())
-        if (enabled() && System.currentTimeMillis() - prefs.getLong("checked", 0) > 12 * 60 * 60 * 1000L)
-            UpdateSchedule.checkSoon(context)
+    }
+
+    private fun discardSavedUpdate(text: String) {
+        apk.delete()
+        manifestFile.delete()
+        partial.delete()
+        partialManifest.delete()
+        UpdateNotifications.cancel(context)
+        message(text, false)
+    }
+
+    private fun commitDownloadedUpdate(text: String, manifest: UpdateManifest) {
+        writeAndSync(partialManifest, text)
+        // Both temporary files are complete and verified before either saved file changes.
+        // The manifest is the commit marker and is atomically replaced last.
+        Files.move(partial.toPath(), apk.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        Files.move(partialManifest.toPath(), manifestFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+        UpdateApk.validate(context, apk, manifest)
+    }
+
+    private fun writeAndSync(file: File, text: String) {
+        FileOutputStream(file).use { output ->
+            output.write(text.toByteArray(Charsets.UTF_8))
+            output.fd.sync()
+        }
     }
     private fun message(text: String, ready: Boolean = mutable.value.ready) {
         prefs.edit().putString("message", text).apply()
@@ -51,7 +117,6 @@ class AppUpdates internal constructor(private val context: Context) {
     suspend fun check(automatic: Boolean): Boolean = withContext(Dispatchers.IO) {
         if (!lock.tryLock()) return@withContext true
         mutable.value = mutable.value.copy(busy = true)
-        val partial = File(directory, "update.part")
         try {
             if (automatic && !enabled()) return@withContext true
             message("Checking GitHub for updates…")
@@ -75,9 +140,9 @@ class AppUpdates internal constructor(private val context: Context) {
                 message("No newer compatible update is available.", false)
                 return@withContext true
             }
-            if (apk.exists() && manifestFile.exists() && manifestFile.readText() == text) {
-                UpdateApk.validate(context, apk, manifest)
-            } else {
+            val cachedIsValid = apk.isFile && manifestFile.isFile && manifestFile.readText() == text &&
+                runCatching { UpdateApk.validate(context, apk, manifest) }.isSuccess
+            if (!cachedIsValid) {
                 message("Downloading ${manifest.versionName}…")
                 partial.outputStream().use { kotlin.check(UpdateHttp.read(manifest.apkUrl, it, 150L * 1024 * 1024) == 200) { "Update download failed." } }
                 coroutineContext.ensureActive()
@@ -85,9 +150,8 @@ class AppUpdates internal constructor(private val context: Context) {
                 UpdateApk.validate(context, partial, manifest)
                 coroutineContext.ensureActive()
                 if (automatic && !enabled()) return@withContext true
-                // No installer can read a partially downloaded file; installation uses the same mutex.
-                kotlin.check(partial.renameTo(apk)) { "Could not save the update." }
-                manifestFile.writeText(text)
+                mutable.value = mutable.value.copy(ready = false)
+                commitDownloadedUpdate(text, manifest)
             }
             coroutineContext.ensureActive()
             if (automatic && !enabled()) return@withContext true
@@ -104,6 +168,7 @@ class AppUpdates internal constructor(private val context: Context) {
             false
         } finally {
             partial.delete()
+            partialManifest.delete()
             prefs.edit().putLong("checked", System.currentTimeMillis()).apply()
             mutable.value = mutable.value.copy(busy = false)
             lock.unlock()
@@ -113,9 +178,10 @@ class AppUpdates internal constructor(private val context: Context) {
         if (!lock.tryLock()) return
         try {
             withContext(Dispatchers.IO) {
+                require(apk.isFile && manifestFile.isFile) { "No verified update is saved" }
                 UpdateApk.validate(context, apk, UpdateManifest.parse(manifestFile.readText()))
             }
-            if (Build.VERSION.SDK_INT >= 26 && !context.packageManager.canRequestPackageInstalls()) {
+            if (!context.packageManager.canRequestPackageInstalls()) {
                 activity.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${context.packageName}")))
                 message("Allow Sung to install updates, return here, then tap Install again.")
             } else {
@@ -130,6 +196,8 @@ class AppUpdates internal constructor(private val context: Context) {
         } finally { lock.unlock() }
     }
     companion object {
+        // get() stores only applicationContext, so this process-wide singleton cannot retain an Activity.
+        @field:SuppressLint("StaticFieldLeak")
         @Volatile private var instance: AppUpdates? = null
         fun get(context: Context): AppUpdates = instance ?: synchronized(this) {
             instance ?: AppUpdates(context.applicationContext).also { instance = it }

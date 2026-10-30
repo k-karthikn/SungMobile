@@ -1,6 +1,6 @@
 # Stage 7 — device music and visible downloads
 
-Prototyped 18 October 2026 as `0.8.0-stage7`, version code 12. Stage 6 code 11 is accepted on the owner's POCO. **The owner deferred Stage 7 before phone acceptance.** Its source is preserved in `deferred/stage7/` outside the active build. The active code 13 app is online-only. The assistant did not install or test code 12 on the phone.
+Prototyped 18 October 2026 as `0.8.0-stage7`, version code 12. Stage 6 code 11 is accepted on the owner's POCO. **The owner deferred Stage 7 before phone acceptance.** Its source snapshot was kept outside the active build until the owner removed `deferred/` on 30 October 2026. The active code 13 app was online-only. The assistant did not install or test code 12 on the phone.
 
 ## Delivered behavior
 
@@ -12,6 +12,6 @@ Prototyped 18 October 2026 as `0.8.0-stage7`, version code 12. Stage 6 code 11 i
 
 ## Verification and limits
 
-The offline host suite passed **139 tests**, with six opt-in live-provider probes skipped and zero failures. Tests include the 2→3 migration and local track identity. `lintDebug` passed with zero errors, and `assembleDebug` produced the signed APK. The package metadata and certificate were checked against code 11. The APK and manual checklist are in `Stages/Stage7_Results/`.
+The offline host suite passed **139 tests**, with six opt-in live-provider probes skipped and zero failures. Tests include the 2→3 migration and local track identity. `lintDebug` passed with zero errors, and `assembleDebug` produced the signed APK. The package metadata and certificate were checked against code 11. The APK and manual checklist are in `Stages/Stage7_Results/` (files removed 30 October 2026).
 
 Phone behavior remains unverified. In particular, confirm the POCO's permission prompt, MediaStore visibility, folder picker, background transfer and airplane-mode playback before accepting Stage 7. Android 8–9 require a user-selected writable download folder; the shared `Music/SungMobile/` default uses Android 10+ MediaStore. Arbitrary SAF folders refresh on opening the device view or by **Scan now**; there is no background periodic scan. The scan reports its found-file count and an access error where applicable, but not an added/changed/missing breakdown. Partial transfers restart rather than resume bytes, because a fresh stream cannot prove byte identity. Automatic keep-played caching remains off and was not added.

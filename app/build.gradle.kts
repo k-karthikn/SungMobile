@@ -10,7 +10,6 @@ val productionSigning = Properties().apply {
     val settings = File(System.getProperty("user.home"), ".android/sungmobile-release/signing.properties")
     if (settings.isFile) settings.inputStream().use(::load)
 }
-
 android {
     namespace = "com.karthi.sungmobile"
     compileSdk {
@@ -21,8 +20,8 @@ android {
         applicationId = "com.karthi.sungmobile"
         minSdk = 26
         targetSdk = 37
-        versionCode = 41
-        versionName = "0.14.7"
+        versionCode = 43
+        versionName = "0.14.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

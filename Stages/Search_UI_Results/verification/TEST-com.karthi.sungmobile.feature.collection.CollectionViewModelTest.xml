@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.karthi.sungmobile.feature.collection.CollectionViewModelTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-22T15:16:12.577Z" hostname="cachyos" time="0.029">
-  <properties/>
-  <testcase name="paginationPreservesDuplicateOccurrenceIdsAndRefreshReplacesThem" classname="com.karthi.sungmobile.feature.collection.CollectionViewModelTest" time="0.014"/>
-  <testcase name="closingRejectsLateResponseAndRestorationUsesOnlyDurableRoute" classname="com.karthi.sungmobile.feature.collection.CollectionViewModelTest" time="0.008"/>
-  <testcase name="failedRefreshRetriesRefreshEvenWhenOldPageHasNoContinuation" classname="com.karthi.sungmobile.feature.collection.CollectionViewModelTest" time="0.006"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

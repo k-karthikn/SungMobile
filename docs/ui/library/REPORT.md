@@ -8,4 +8,4 @@ Check boxes appear only in selection mode. Select loaded, Like/Unlike, Add to pl
 
 History/privacy, Smart playlists and Listening statistics remain in the Library overflow menu. Cleanup/versions remains on playlist details. Sessions has direct category access and returns to Library. Its save, preview/paused restore, rename and delete workflows remain intact. Advanced management screens retain their existing detailed layouts with a consistent Back icon; this pass does not rewrite their logic.
 
-Validation and evidence: Stages/Library_UI_Results/README.md. Search remains a separate upcoming UI slice. No claim of a phone scrolling performance fix.
+The original validation package and evidence were removed from the working tree on 30 October 2026. Search remains a separate UI slice; this report does not claim a phone scrolling performance fix.

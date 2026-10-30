@@ -5,7 +5,9 @@ import com.karthi.sungmobile.core.data.db.DatabaseProvider
 import com.karthi.sungmobile.core.data.library.RoomAdvancedLibraryRepository
 import com.karthi.sungmobile.core.data.library.RoomLibraryRepository
 import com.karthi.sungmobile.core.model.library.LibraryCollection
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -54,6 +56,7 @@ class Stage9MigrationTest {
             assertEquals(1L, advanced.statistics().qualifiedPlays)
             assertTrue(advanced.smartPlaylists().isEmpty())
             assertTrue(advanced.revisions("saved").isEmpty())
+            assertNull(withContext(Dispatchers.IO) { db.backupRestoreDao().pendingSettings() })
         } finally { db.close(); context.deleteDatabase(name) }
     }
 }

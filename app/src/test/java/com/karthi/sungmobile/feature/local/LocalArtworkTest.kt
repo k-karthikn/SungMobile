@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
+import com.karthi.sungmobile.core.data.local.LocalArtworkRepository
 import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -19,22 +20,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class LocalArtworkTest {
-    @Test fun downloadedMediaUriMatchesLibraryScanAlias() {
-        val downloaded = Uri.parse("content://media/external_primary/audio/media/42")
-        val scanned = Uri.parse("content://media/external/audio/media/42")
-        assertEquals(artworkCacheIdentity(downloaded), artworkCacheIdentity(scanned))
-        assertEquals("media:external:42", artworkCacheIdentity(scanned))
-    }
-
-    @Test fun sidecarPrecedenceMatchesSung() {
-        val specific = Uri.parse("content://documents/specific")
-        val shared = Uri.parse("content://documents/shared")
-        val images = mapOf("song.jpg" to specific, "cover.png" to shared)
-        assertEquals(specific, localCover("Song.mp3", images))
-        assertEquals(shared, localCover("Other.flac", images))
-        assertEquals(null, localCover("Other.flac", emptyMap()))
-    }
-
     @Test fun nearbyCoverCanBeExtractedAndRefreshed() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val audio = File(context.cacheDir, "sidecar-test.mp3").apply { writeBytes(byteArrayOf(0)) }

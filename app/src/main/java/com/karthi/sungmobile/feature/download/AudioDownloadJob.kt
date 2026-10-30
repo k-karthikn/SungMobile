@@ -5,7 +5,6 @@ import android.app.job.JobService
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.karthi.sungmobile.SungApplication
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -34,15 +33,7 @@ class AudioDownloadJob : JobService() {
         val transfer = AudioTransfer(this, catalog)
         val job = scope.launch(start = CoroutineStart.LAZY) {
             try {
-                transfer.run(request.track) { bytes, total -> notifier.showProgress(request, bytes, total) }
-                (application as SungApplication).container.localAudio.invalidate()
-                notifier.finished(request, true, "Saved to Music/SungMobile")
-            } catch (_: CancellationException) {
-                notifier.finished(request, false, "Download cancelled")
-            } catch (error: Exception) {
-                if (!transfer.isCancelled) logDownloadFailure(error)
-                notifier.finished(request, false, if (transfer.isCancelled) "Download cancelled"
-                    else downloadFailureMessage(error))
+                runAudioDownload(this@AudioDownloadJob, request, transfer, notifier)
             } finally {
                 DownloadRequests.finish(request)
                 jobs.remove(request.id)

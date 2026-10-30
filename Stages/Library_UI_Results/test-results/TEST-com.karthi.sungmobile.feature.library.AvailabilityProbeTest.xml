@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.karthi.sungmobile.feature.library.AvailabilityProbeTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-21T15:10:45.390Z" hostname="cachyos" time="0.002">
-  <properties/>
-  <testcase name="onlyConfirmedUnavailableBecomesRemovalCandidate" classname="com.karthi.sungmobile.feature.library.AvailabilityProbeTest" time="0.001"/>
-  <testcase name="cancellationStopsProbe" classname="com.karthi.sungmobile.feature.library.AvailabilityProbeTest" time="0.001"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

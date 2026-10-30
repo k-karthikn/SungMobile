@@ -46,6 +46,10 @@ internal object BackupJson {
         }
     }
 
+    internal fun encodeSettings(value: PortableSettings): String = settingsJson(value).toString()
+
+    internal fun decodeSettings(value: String): PortableSettings = readSettings(JSONObject(value))
+
     fun decode(bytes: ByteArray): BackupSnapshot {
         require(bytes.isNotEmpty() && bytes.size <= MAX_BYTES) { "Choose a SungMobile backup under 25 MB." }
         try {
@@ -103,6 +107,12 @@ internal object BackupJson {
                 qualified = true
             } }
             require(playlists.sumOf { it.entries.size } <= 100_000) { "Backup has too many playlist entries." }
+            require(likes.map { it.trackKey }.toSet().size == likes.size) { "Backup has duplicate likes." }
+            require(playlists.map { it.playlist.id }.toSet().size == playlists.size) { "Backup has duplicate playlists." }
+            val entryIds = playlists.flatMap { it.entries }.map { it.id }
+            require(entryIds.toSet().size == entryIds.size) { "Backup has duplicate playlist entries." }
+            require(smart.map { it.id }.toSet().size == smart.size) { "Backup has duplicate smart playlists." }
+            require(listening.map { it.id }.toSet().size == listening.size) { "Backup has duplicate listening records." }
             val keys = tracks.map { it.trackKey }.toSet()
             require(keys.size == tracks.size &&
                 likes.all { it.trackKey in keys } &&

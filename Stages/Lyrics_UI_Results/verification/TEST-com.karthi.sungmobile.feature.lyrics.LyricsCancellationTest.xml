@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.karthi.sungmobile.feature.lyrics.LyricsCancellationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-22T15:30:50.347Z" hostname="cachyos" time="0.334">
-  <properties/>
-  <testcase name="leavingLyricsDiscardsUncooperativeProviderResponseAndDoesNotCacheIt" classname="com.karthi.sungmobile.feature.lyrics.LyricsCancellationTest" time="0.329"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

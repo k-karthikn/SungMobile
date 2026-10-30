@@ -12,7 +12,7 @@ Implementation is split across `app/.../updates/` (manifest, HTTP, APK validatio
 
 ## Delivery and limits
 
-[APK and manual checks](../../Stages/Updater_Results/README.md). [Versioning and release guide](VERSIONING_AND_RELEASES.md). `scripts/make_update_manifest.py` reads the exact APK metadata and checksum; it does not publish anything.
+APK and manual checks (files removed 30 October 2026). [Versioning and release guide](VERSIONING_AND_RELEASES.md). `scripts/make_update_manifest.py` reads the exact APK metadata and checksum; it does not publish anything.
 
 No release was published. An actual higher-code release and manual phone installation are still required to accept the complete update flow. Job timing depends on Android/POCO scheduling and battery restrictions. Signing-key rotation is not supported; retain the current key. Manual downloads are scoped to Settings and cancel when leaving it. No screenshot/visual/device verification was performed, as requested.
 
@@ -20,5 +20,5 @@ No release was published. An actual higher-code release and manual phone install
 
 - Gradle nonvisual unit tests, lintDebug and assembleDebug: passed.
 - Selected tests: 35; failures 0, errors 0, skipped 0. Includes updater safety/scheduling tests and selected playback, lyrics, link and collection regressions.
-- Lint: 0 errors, 13 warnings. Full SARIF retained with test XML and build log under `Stages/Updater_Results/verification/`.
+- Lint: 0 errors, 13 warnings. Full SARIF retained with test XML and build log under `Stages/Updater_Results/verification/` (files removed 30 October 2026).
 - Packaged APK code 20 and retained certificate verified with aapt/apksigner; SHA256SUMS and update.json generated from the delivered APK.

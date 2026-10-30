@@ -8,56 +8,171 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.karthi.sungmobile.core.designsystem.artwork.SungArtwork
+import com.karthi.sungmobile.core.designsystem.icon.SungIcon
+import com.karthi.sungmobile.core.designsystem.icon.SungSymbol
 import com.karthi.sungmobile.core.model.CatalogItem
 import com.karthi.sungmobile.core.model.library.*
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.smartList(model: AdvancedLibraryViewModel, state: AdvancedLibraryState) {
-    item {
-        Text("Smart playlists", style = MaterialTheme.typography.headlineMedium)
-        Text("Live lists from your Likes and qualified listening history. Play and Shuffle use a snapshot of the current songs.")
+    item(key = "smart_header") {
         var create by remember { mutableStateOf(false) }
         if (create) SmartRuleDialog(null, { create = false }, model::saveSmart, model::previewRule)
-        Button({ create = true }) { Text("New smart playlist") }
-    }
-    items(state.smartPlaylists, key = { it.id }) { playlist ->
-        Surface(onClick = { model.openSmart(playlist.id) }, color = MaterialTheme.colorScheme.surfaceContainerLow,
-            shape = MaterialTheme.shapes.medium) {
-            Column(Modifier.fillMaxWidth().padding(12.dp)) {
-                Text(playlist.name, style = MaterialTheme.typography.titleMedium)
-                Text(ruleLabel(playlist.rule), style = MaterialTheme.typography.bodyMedium)
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Smart playlists", style = MaterialTheme.typography.headlineMedium)
+                Text("Lists that update automatically from your library.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            FilledTonalButton({ create = true }) {
+                SungIcon(SungSymbol.Plus, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Create smart playlist")
             }
         }
     }
-    if (state.smartPlaylists.isEmpty()) item { Text("No smart playlists yet.") }
+    if (state.smartPlaylists.isEmpty()) item(key = "smart_empty") {
+        Surface(shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerLow) {
+            Column(Modifier.fillMaxWidth().padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SungIcon(SungSymbol.QueueMusic, modifier = Modifier.size(32.dp))
+                Text("Make a mix that keeps itself fresh", style = MaterialTheme.typography.titleMedium)
+                Text("Choose Likes or listening rules and Sung will update the list for you.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+    items(state.smartPlaylists, key = { "smart:${it.id}" }) { playlist ->
+        SmartPlaylistCard(playlist) { model.openSmart(playlist.id) }
+    }
 }
 
 internal fun androidx.compose.foundation.lazy.LazyListScope.smartDetail(model: AdvancedLibraryViewModel, state: AdvancedLibraryState) {
     val playlist = state.smartPlaylists.firstOrNull { it.id == state.smartId }
-    item {
+    item(key = "smart_detail_header") {
         var edit by remember(state.smartId) { mutableStateOf(false) }
         var saveOrdinary by remember { mutableStateOf(false) }
         var delete by remember { mutableStateOf(false) }
+        var more by remember { mutableStateOf(false) }
         if (edit && playlist != null) SmartRuleDialog(playlist, { edit = false }, model::saveSmart, model::previewRule)
         if (saveOrdinary) PlaylistNameDialog("Save current songs as ordinary playlist", playlist?.name ?: "",
             "This makes an editable snapshot. Later changes to the smart list will not change it.",
             { saveOrdinary = false }, model::saveOrdinary)
         if (delete && playlist != null) ConfirmLibraryChange("Delete smart playlist?", "Its songs and Likes will remain.",
             { delete = false }, { model.deleteSmart(playlist.id) })
-        Text(playlist?.name ?: "Smart playlist", style = MaterialTheme.typography.headlineMedium)
-        playlist?.let { Text(ruleLabel(it.rule)) }
-        Text("${state.smartSongs.size} current songs")
-        Row(Modifier.horizontalScroll(rememberScrollState())) {
-            Button({ model.playSmart(false) }, enabled = state.smartSongs.isNotEmpty()) { Text("Play") }
-            Spacer(Modifier.width(8.dp))
-            OutlinedButton({ model.playSmart(true) }, enabled = state.smartSongs.isNotEmpty()) { Text("Shuffle") }
-            TextButton({ edit = true }) { Text("Edit rules") }
-            TextButton({ saveOrdinary = true }, enabled = state.smartSongs.isNotEmpty()) { Text("Save as ordinary") }
-            TextButton({ delete = true }) { Text("Delete") }
+        if (playlist == null) {
+            Text("Smart playlist unavailable", style = MaterialTheme.typography.titleLarge)
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Surface(shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.tertiaryContainer) {
+                    Row(Modifier.fillMaxWidth().padding(18.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Surface(shape = MaterialTheme.shapes.large,
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = .72f)) {
+                            Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                                SungIcon(SungSymbol.QueueMusic, modifier = Modifier.size(34.dp))
+                            }
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text("SMART PLAYLIST", style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer)
+                            Text(playlist.name, style = MaterialTheme.typography.headlineSmall,
+                                maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer)
+                            Text("${state.smartSongs.size} songs · ${ruleLabel(playlist.rule)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer)
+                        }
+                    }
+                }
+
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button({ model.playSmart(false) }, Modifier.weight(1f),
+                        enabled = state.smartSongs.isNotEmpty()) {
+                        SungIcon(SungSymbol.Play, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Play")
+                    }
+                    FilledTonalButton({ model.playSmart(true) }, Modifier.weight(1f),
+                        enabled = state.smartSongs.isNotEmpty()) {
+                        SungIcon(SungSymbol.Shuffle, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Shuffle")
+                    }
+                }
+
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    TextButton({ edit = true }, Modifier.weight(1f)) {
+                        SungIcon(SungSymbol.Equalizer, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Edit rules", maxLines = 1)
+                    }
+                    TextButton({ saveOrdinary = true }, Modifier.weight(1f),
+                        enabled = state.smartSongs.isNotEmpty()) {
+                        SungIcon(SungSymbol.Plus, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Save a copy", maxLines = 1)
+                    }
+                    Box {
+                        IconButton({ more = true }) { SungIcon(SungSymbol.More, "More playlist options") }
+                        DropdownMenu(expanded = more, onDismissRequest = { more = false }) {
+                            DropdownMenuItem(text = { Text("Delete smart playlist") }, onClick = {
+                                more = false
+                                delete = true
+                            })
+                        }
+                    }
+                }
+
+                if (state.smartSongs.isEmpty()) {
+                    Surface(shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                        Text("No songs match these rules yet. Try broadening the rules or check History & privacy.",
+                            Modifier.fillMaxWidth().padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                } else {
+                    Text("Songs", style = MaterialTheme.typography.titleLarge)
+                }
+            }
         }
-        if (state.smartSongs.isEmpty()) Text("No songs match right now. History-based results are hidden in Private mode.")
     }
-    items(state.smartSongs, key = { it.id }) { song -> SongSummary(song) }
+    items(state.smartSongs, key = { "smart_song:${it.id}" }) { song -> SmartSongRow(song) }
+}
+
+@Composable
+private fun SmartPlaylistCard(playlist: SmartPlaylist, open: () -> Unit) {
+    Surface(onClick = open, color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = MaterialTheme.shapes.extraLarge) {
+        Row(Modifier.fillMaxWidth().padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Surface(shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.secondaryContainer) {
+                Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
+                    SungIcon(SungSymbol.Shuffle, modifier = Modifier.size(26.dp))
+                }
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(playlist.name, style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(ruleLabel(playlist.rule), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+            SungIcon(SungSymbol.Chevron, modifier = Modifier.size(22.dp))
+        }
+    }
 }
 
 @Composable
@@ -78,11 +193,19 @@ private fun SmartRuleDialog(existing: SmartPlaylist?, dismiss: () -> Unit,
             OutlinedTextField(name, { name = it.take(120) }, label = { Text("Name") }, singleLine = true)
             Row { Checkbox(liked, { liked = it; previewSongs = null }); Text("Liked songs", Modifier.padding(top = 12.dp)) }
             Text("At least this many qualified plays")
-            RuleChoices(listOf(0, 1, 2, 5), plays, { plays = it; previewSongs = null }) { "$it" }
+            RuleChoices(listOf(0, 1, 2, 5), plays, { plays = it; previewSongs = null }) {
+                if (it == 0) "Any" else "$it+"
+            }
             Text("Played within")
             RuleChoices(listOf(0, 7, 30, 90), days, { days = it; previewSongs = null }) { if (it == 0) "Any time" else "$it days" }
             Text("Order")
-            RuleChoices(SmartSort.entries, sort, { sort = it; previewSongs = null }) { it.name.lowercase().replace('_', ' ') }
+            RuleChoices(SmartSort.entries, sort, { sort = it; previewSongs = null }) {
+                when (it) {
+                    SmartSort.TITLE -> "Title"
+                    SmartSort.RECENT -> "Recently played"
+                    SmartSort.MOST_PLAYED -> "Most played"
+                }
+            }
             Text("Maximum songs")
             RuleChoices(listOf(25, 50, 100), max, { max = it; previewSongs = null }) { "$it" }
             if (!valid) Text("Choose at least one filter.", color = MaterialTheme.colorScheme.error)
@@ -105,10 +228,21 @@ private fun <T> RuleChoices(options: List<T>, selected: T, choose: (T) -> Unit, 
     }
 }
 
-@Composable private fun SongSummary(song: CatalogItem) {
-    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-        Text(song.title, style = MaterialTheme.typography.titleSmall)
-        Text(song.subtitle, style = MaterialTheme.typography.bodySmall)
+@Composable
+private fun SmartSongRow(song: CatalogItem) {
+    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Row(Modifier.fillMaxWidth().padding(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            SungArtwork(song.artworkUrl, Modifier.size(52.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(song.title, style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(song.subtitle, style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
     }
 }
 
