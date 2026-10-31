@@ -1,5 +1,7 @@
 package com.karthi.sungmobile.core.designsystem.artwork
 
+import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,7 +51,18 @@ fun SungArtwork(
         contentAlignment = Alignment.Center) {
         SungIcon(SungSymbol.Disc, modifier = Modifier.size(32.dp))
         AsyncImage(model = model, contentDescription = description,
-            contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize())
+            contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize(),
+            onError = { state ->
+                val uri = when (model) {
+                    is Uri -> model
+                    is String -> runCatching { Uri.parse(model) }.getOrNull()
+                    else -> null
+                }
+                if (uri?.scheme == "content" && uri.authority?.endsWith(".artwork") == true) {
+                    Log.e("SungArtwork", "Local cover display failed for ${uri.scheme}://${uri.authority}",
+                        state.result.throwable)
+                }
+            })
     }
 }
 

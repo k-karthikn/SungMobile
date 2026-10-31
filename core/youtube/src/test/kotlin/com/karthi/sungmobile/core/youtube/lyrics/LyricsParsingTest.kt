@@ -42,4 +42,21 @@ class LyricsParsingTest {
         assertEquals("first line\nsecond line", lyrics.plainText)
         assertEquals("Source: LyricFind", lyrics.attribution)
     }
+
+    @Test fun ttmlPreservesWordSpacesAndPunctuationBetweenTimedSpans() {
+        val xml = """<tt><body><div><p begin="0s" end="2s">
+            <span begin="0s" end="0.5s">Hello</span> <span begin="0.5s" end="1s">world</span>!
+        </p></div></body></tt>"""
+        val line = TtmlLyricsParser.parse(xml).single()
+        assertEquals("Hello world!", line.text)
+        assertFalse(line.syllables[1].appendToPrevious)
+        assertEquals("world!", line.syllables[1].text)
+    }
+
+    @Test fun ttmlJoinsFragmentsInsideAWordWhenThereIsNoSeparator() {
+        val xml = """<tt><body><div><p begin="0s" end="1s"><span begin="0s" end="0.3s">sun</span><span begin="0.3s" end="0.7s">shine</span></p></div></body></tt>"""
+        val line = TtmlLyricsParser.parse(xml).single()
+        assertEquals("sunshine", line.text)
+        assertTrue(line.syllables[1].appendToPrevious)
+    }
 }

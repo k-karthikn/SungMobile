@@ -83,6 +83,71 @@ class MusicBrowseParserTest {
         assertEquals(2, playlist.items.size)
     }
 
+    @Test fun `artist shelf rows remain openable in Home`() {
+        val home = MusicBrowseParser.home("""{
+          "contents":{"singleColumnBrowseResultsRenderer":{"tabs":[{"tabRenderer":{"content":{
+            "sectionListRenderer":{"contents":[{"musicCarouselShelfRenderer":{
+              "header":{"musicCarouselShelfBasicHeaderRenderer":{"title":{"runs":[{"text":"Artists for you"}]}}},
+              "contents":[${artistRow("UC1234567890123456789012")}]}}
+            ]}
+          }}}]}}
+        }""")
+        val artist = home.shelves.single().items.single()
+        assertEquals(CatalogKind.ARTIST, artist.kind)
+        assertEquals("https://music.youtube.com/browse/UC1234567890123456789012", artist.url)
+    }
+
+    @Test fun `immersive artist pages expose song shelf rows and artist artwork`() {
+        val page = MusicBrowseParser.collection("""{
+          "header":{"musicImmersiveHeaderRenderer":{
+            "title":{"runs":[{"text":"John Michael Howell - Topic"}]},
+            "thumbnail":{"musicThumbnailRenderer":{"thumbnail":{"thumbnails":[
+              {"url":"https://yt3.googleusercontent.com/artist=w300-h300-l90-rj"}
+            ]}}}
+          }},
+          "contents":{"singleColumnBrowseResultsRenderer":{"tabs":[{"tabRenderer":{"content":{
+            "sectionListRenderer":{"contents":[{"musicShelfRenderer":{"title":{"runs":[{"text":"Songs"}]},
+              "contents":[${songRow("AAAAAAAAAAA")},${songRow("BBBBBBBBBBB")}]}}
+            ]}
+          }}}]}}
+        }""", "https://music.youtube.com/browse/UC1234567890123456789012", CatalogKind.ARTIST)
+        assertEquals("John Michael Howell - Topic", page.title)
+        assertEquals(2, page.items.size)
+        assertEquals(CatalogKind.ARTIST, page.details?.kind)
+        assertEquals("https://yt3.googleusercontent.com/artist=w544-h544-l90-rj", page.details?.artworkUrl)
+    }
+
+    @Test fun `podcast Home shelves map shows and episodes to openable rows`() {
+        val shelves = MusicBrowseParser.podcastShelves("""{
+          "contents":{"carousel":{"musicCarouselShelfRenderer":{
+            "header":{"musicCarouselShelfBasicHeaderRenderer":{"title":{"runs":[{"text":"Podcasts for you"}]}}},
+            "contents":[
+              ${podcastShowRow("MPSPPLabcde12345")},
+              {"musicMultiRowListItemRenderer":{"title":{"runs":[{"text":"Episode one"}]},
+                "onTap":{"watchEndpoint":{"videoId":"EEEEEEEEEEE"}},
+                "subtitle":{"runs":[{"text":"The daily show"}]}}}
+            ]
+          }}}
+        }""")
+        val shelf = shelves.single()
+        assertEquals("Podcasts for you", shelf.title)
+        assertEquals(listOf(CatalogKind.PLAYLIST, CatalogKind.SONG), shelf.items.map { it.kind })
+        assertEquals("https://music.youtube.com/browse/MPSPPLabcde12345", shelf.items.first().url)
+        assertEquals("https://www.youtube.com/watch?v=EEEEEEEEEEE", shelf.items.last().url)
+    }
+
+    @Test fun `podcast show cards stay out of the general music Home feed`() {
+        val home = MusicBrowseParser.home("""{
+          "contents":{"singleColumnBrowseResultsRenderer":{"tabs":[{"tabRenderer":{"content":{
+            "sectionListRenderer":{"contents":[{"musicCarouselShelfRenderer":{
+              "header":{"musicCarouselShelfBasicHeaderRenderer":{"title":{"runs":[{"text":"Popular shows"}]}}},
+              "contents":[${podcastShowRow("MPSPPLabcde12345")}]}}
+            ]}
+          }}}]}}
+        }""")
+        assertTrue(home.shelves.isEmpty())
+    }
+
     private fun songRow(id: String) = """{"musicResponsiveListItemRenderer":{
       "thumbnail":{"musicThumbnailRenderer":{"thumbnail":{"thumbnails":[{"url":"https://yt3.googleusercontent.com/art=w120-h120-l90-rj"}]}}},
       "flexColumns":[
@@ -95,5 +160,16 @@ class MusicBrowseParserTest {
         "browseId":"$id","browseEndpointContextSupportedConfigs":{"browseEndpointContextMusicConfig":{"pageType":"$type"}}
       }}}]},
       "subtitle":{"runs":[{"text":"Curator"}]}
+    }}"""
+
+    private fun artistRow(id: String) = """{"musicTwoRowItemRenderer":{
+      "title":{"runs":[{"text":"Artist name","navigationEndpoint":{"browseEndpoint":{
+        "browseId":"$id","browseEndpointContextSupportedConfigs":{"browseEndpointContextMusicConfig":{"pageType":"MUSIC_PAGE_TYPE_ARTIST"}}
+      }}}]},"subtitle":{"runs":[{"text":"Artist"}]}
+    }}"""
+
+    private fun podcastShowRow(id: String) = """{"musicTwoRowItemRenderer":{
+      "title":{"runs":[{"text":"Podcast show"}]},"subtitle":{"runs":[{"text":"Publisher"}]},
+      "navigationEndpoint":{"browseEndpoint":{"browseId":"$id"}}
     }}"""
 }

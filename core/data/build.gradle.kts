@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.room.runtime)
     annotationProcessor(libs.room.compiler)
     implementation(libs.datastore.preferences)
+    implementation(libs.okhttp)
     implementation(libs.coroutines.android)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

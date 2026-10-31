@@ -77,7 +77,21 @@ class LyricsViewModel(
                 }
             }
             var lrclib: LyricsDocument? = null
+            var wordTimed: LyricsDocument? = null
             ensureActive()
+            if (!track.isLocalSong() && preferences.value.lrclibEnabled && !privateMode && primary?.wordSynchronized != true) {
+                try {
+                    if (!refresh && preferences.value.cacheEnabled)
+                        wordTimed = cache.get(key, LyricsOrigin.BETTER_LYRICS)
+                    if (wordTimed == null) wordTimed = gateway.betterLyrics(track)?.takeIf { it.wordSynchronized }?.also {
+                        ensureActive()
+                        if (preferences.value.cacheEnabled) cache.put(key, it)
+                    }
+                } catch (cancelled: CancellationException) { throw cancelled }
+                catch (failure: Exception) {
+                    DiagnosticLog.recordError("word_timed_lyrics_failed", failure)
+                }
+            }
             if (primary?.synchronized != true && preferences.value.lrclibEnabled && !privateMode) {
                 try {
                     if (!refresh && preferences.value.cacheEnabled) lrclib = cache.get(key, LyricsOrigin.LRCLIB)
@@ -91,7 +105,7 @@ class LyricsViewModel(
                     error = "Lyrics could not be loaded. Check your connection and retry."
                 }
             }
-            val document = selectLyrics(primary, lrclib)
+            val document = selectLyrics(primary, lrclib, wordTimed)
             val finalBytes = runCatching { cache.bytes() }.getOrDefault(bytes)
             ensureActive()
             if (current == generation) mutableState.value = LyricsUiState(track.id, false, document,

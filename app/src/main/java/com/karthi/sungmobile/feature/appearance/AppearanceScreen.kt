@@ -1,6 +1,7 @@
 package com.karthi.sungmobile.feature.appearance
 
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -11,6 +12,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,17 +41,46 @@ import com.karthi.sungmobile.feature.lyrics.LyricsSettingsSection
 fun AppearanceScreen(value: Appearance, onChange: (Appearance) -> Unit, onBack: () -> Unit, modifier: Modifier = Modifier,
     lyrics: LyricsSettings = LyricsSettings(), onLyrics: (LyricsSettings) -> Unit = {},
     cacheBytes: Long = 0, onClearCache: () -> Unit = {}, onHistory: () -> Unit = {},
-    localFolders: @Composable () -> Unit = {}, onFeedback: () -> Unit = {},
+    onSpotify: () -> Unit = {},
+    onFeedback: () -> Unit = {},
     backupContent: @Composable () -> Unit = {},
     recommendationsContent: @Composable () -> Unit = {}) {
+    var area by rememberSaveable { mutableStateOf<SettingsArea?>(null) }
+    BackHandler(enabled = area != null) { area = null }
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState())
         .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onBack, Modifier.size(48.dp)) { SungIcon(SungSymbol.Back, stringResource(R.string.back)) }
-            SectionHeading("Settings")
+            IconButton({ if (area == null) onBack() else area = null }, Modifier.size(48.dp)) {
+                SungIcon(SungSymbol.Back, stringResource(R.string.back))
+            }
+            SectionHeading(area?.title ?: "Settings")
         }
-        SungSettingsGroup("Appearance") {
+        when (area) {
+            null -> SettingsCategoryHome(onOpenArea = { area = it }, onSpotify = onSpotify)
+            SettingsArea.PERSONALIZATION -> {
+                AppearanceControls(value, onChange)
+                recommendationsContent()
+            }
+            SettingsArea.YOUR_DATA -> {
+                HistorySettingsEntry(onHistory)
+                backupContent()
+            }
+            SettingsArea.PLAYBACK_APP -> {
+                LyricsSettingsSection(lyrics, onLyrics, cacheBytes, onClearCache)
+                com.karthi.sungmobile.feature.updates.UpdateSettingsSection()
+                SungSettingsGroup("Help") {
+                    TextButton(onFeedback, Modifier.fillMaxWidth()) { Text("Feedback & report") }
+                }
+                AboutSettingsSection()
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppearanceControls(value: Appearance, onChange: (Appearance) -> Unit) {
+    SungSettingsGroup("Appearance") {
             Text(stringResource(R.string.theme), style = MaterialTheme.typography.titleSmall)
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 ThemeMode.entries.forEachIndexed { index, mode ->
@@ -86,9 +120,11 @@ fun AppearanceScreen(value: Appearance, onChange: (Appearance) -> Unit, onBack: 
             }
             HorizontalDivider()
             SungSettingsToggle("Ambient artwork backdrop", value.ambientBackdrop,
-                { onChange(value.copy(ambientBackdrop = it)) })
+                { onChange(value.copy(ambientBackdrop = it)) },
+                "Show the current song artwork behind the player with a dark fade for readable controls")
             SungSettingsToggle("Backdrop follows the music", value.backdropFollowsMusic,
-                { onChange(value.copy(backdropFollowsMusic = it)) })
+                { onChange(value.copy(backdropFollowsMusic = it)) },
+                "Update the player background when the next song starts")
             HorizontalDivider()
             Text("Color scheme", style = MaterialTheme.typography.titleSmall)
             listOf(ColorSchemeStyle.NEUTRAL, ColorSchemeStyle.BALANCED, ColorSchemeStyle.VIBRANT)
@@ -99,17 +135,6 @@ fun AppearanceScreen(value: Appearance, onChange: (Appearance) -> Unit, onBack: 
             SungSettingsToggle(stringResource(R.string.reduce_motion), value.reduceMotion,
                 { onChange(value.copy(reduceMotion = it)) })
         }
-        HistorySettingsEntry(onHistory)
-        recommendationsContent()
-        backupContent()
-        SungSettingsGroup("Help") {
-            TextButton(onFeedback, Modifier.fillMaxWidth()) { Text("Feedback & report") }
-        }
-        localFolders()
-        com.karthi.sungmobile.feature.updates.UpdateSettingsSection()
-        LyricsSettingsSection(lyrics, onLyrics, cacheBytes, onClearCache)
-        AboutSettingsSection()
-    }
 }
 
 private val accentSwatches = listOf(

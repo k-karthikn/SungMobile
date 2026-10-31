@@ -17,7 +17,7 @@ private val Context.sungSettings by preferencesDataStore("sung_settings",
 
 data class AppearanceSettings(val theme: String = "SYSTEM", val colors: String = "BLUE", val reduceMotion: Boolean = false,
     val useArtworkAccent: Boolean = false, val accentColor: Int = 0xFF006C91.toInt(),
-    val ambientBackdrop: Boolean = false, val backdropFollowsMusic: Boolean = true,
+    val ambientBackdrop: Boolean = true, val backdropFollowsMusic: Boolean = true,
     val colorScheme: String = "BALANCED")
 data class LyricsSettings(val lrclibEnabled: Boolean = false, val textSizeSp: Int = 24,
     val cacheEnabled: Boolean = true)
@@ -35,6 +35,7 @@ class SettingsRepository(context: Context) : PortableSettingsStore, Recommendati
     private val artworkAccent = booleanPreferencesKey("appearance_artwork_accent")
     private val accentColor = intPreferencesKey("appearance_accent_color")
     private val ambientBackdrop = booleanPreferencesKey("appearance_ambient_backdrop")
+    private val ambientBackdropConfigured = booleanPreferencesKey("appearance_ambient_backdrop_configured")
     private val backdropFollowsMusic = booleanPreferencesKey("appearance_backdrop_follows_music")
     private val colorScheme = stringPreferencesKey("appearance_color_scheme")
     private val fallback = booleanPreferencesKey("lyrics_lrclib")
@@ -50,7 +51,10 @@ class SettingsRepository(context: Context) : PortableSettingsStore, Recommendati
     private val recommendationFeedback = stringPreferencesKey("home_recommendation_feedback")
     val appearance = store.data.map { AppearanceSettings(it[theme] ?: "SYSTEM", it[colors] ?: "BLUE", it[motion] ?: false,
         it[artworkAccent] ?: false, it[accentColor] ?: 0xFF006C91.toInt(),
-        it[ambientBackdrop] ?: false, it[backdropFollowsMusic] ?: true,
+        // Earlier versions wrote the old false default when saving any appearance setting.
+        // Treat that legacy value as the new default until the user explicitly changes it.
+        if (it[ambientBackdropConfigured] == true) it[ambientBackdrop] ?: true else true,
+        it[backdropFollowsMusic] ?: true,
         it[colorScheme] ?: "BALANCED") }
     val lyrics = store.data.map { LyricsSettings(it[fallback] ?: false, (it[lyricsSize] ?: 24).coerceIn(18, 34),
         it[lyricsCache] ?: true) }
@@ -69,7 +73,8 @@ class SettingsRepository(context: Context) : PortableSettingsStore, Recommendati
         return PortableSettings(
             AppearanceSettings(prefs[theme] ?: "SYSTEM", prefs[colors] ?: "BLUE", prefs[motion] ?: false,
                 prefs[artworkAccent] ?: false, prefs[accentColor] ?: 0xFF006C91.toInt(),
-                prefs[ambientBackdrop] ?: false, prefs[backdropFollowsMusic] ?: true,
+                if (prefs[ambientBackdropConfigured] == true) prefs[ambientBackdrop] ?: true else true,
+                prefs[backdropFollowsMusic] ?: true,
                 prefs[colorScheme] ?: "BALANCED"),
             LyricsSettings(prefs[fallback] ?: false, (prefs[lyricsSize] ?: 24).coerceIn(18, 34),
                 prefs[lyricsCache] ?: true),
@@ -127,6 +132,7 @@ class SettingsRepository(context: Context) : PortableSettingsStore, Recommendati
             it[theme] = value.theme; it[colors] = value.colors; it[motion] = value.reduceMotion
             it[artworkAccent] = value.useArtworkAccent; it[accentColor] = value.accentColor
             it[ambientBackdrop] = value.ambientBackdrop; it[backdropFollowsMusic] = value.backdropFollowsMusic
+            it[ambientBackdropConfigured] = true
             it[colorScheme] = value.colorScheme
         }
     }

@@ -17,7 +17,7 @@ import com.karthi.sungmobile.core.designsystem.icon.SungSymbol
 import com.karthi.sungmobile.core.model.CatalogItem
 
 @Composable
-internal fun LyricsTopBar(synchronized: Boolean?, onBack: () -> Unit) {
+internal fun LyricsTopBar(synchronized: Boolean?, wordSynchronized: Boolean?, onBack: () -> Unit) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         IconButton(onBack, Modifier.size(48.dp)) {
@@ -28,7 +28,7 @@ internal fun LyricsTopBar(synchronized: Boolean?, onBack: () -> Unit) {
         if (synchronized != null) {
             Surface(shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.secondaryContainer) {
-                Text(if (synchronized) "Synced" else "Plain text",
+                Text(if (wordSynchronized == true) "Word-synced" else if (synchronized) "Synced" else "Plain text",
                     Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer)
@@ -44,7 +44,7 @@ internal fun LyricsTrackCard(track: CatalogItem?, attribution: String?) {
         color = MaterialTheme.colorScheme.surfaceContainer) {
         Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            SungArtwork(track?.artworkUrl, Modifier.size(64.dp), description = null)
+            SungArtwork(track?.artworkUrl, Modifier.size(84.dp), description = null)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(track?.title.orEmpty(), style = MaterialTheme.typography.titleLarge,
                     maxLines = 2, overflow = TextOverflow.Ellipsis)

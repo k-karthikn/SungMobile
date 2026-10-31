@@ -12,6 +12,7 @@ import com.karthi.sungmobile.core.designsystem.theme.ColorSchemeStyle
 import com.karthi.sungmobile.core.designsystem.theme.SungTheme
 import java.io.File
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -34,6 +35,7 @@ class AppearanceControlsUiTest {
                 AppearanceScreen(appearance, { appearance = it }, {})
             }
         }
+        compose.onNodeWithText("Appearance & Home").performClick()
         compose.onNodeWithText("Accent").performClick()
         compose.onNodeWithContentDescription("Purple accent").performClick()
         compose.onNodeWithText("Vibrant").performScrollTo().performClick()
@@ -42,7 +44,7 @@ class AppearanceControlsUiTest {
             assertEquals(ColorMode.ACCENT, appearance.colors)
             assertEquals(0xFF7058AE.toInt(), appearance.accentColor)
             assertEquals(ColorSchemeStyle.VIBRANT, appearance.colorScheme)
-            assertTrue(appearance.ambientBackdrop)
+            assertFalse(appearance.ambientBackdrop)
         }
         val screenshot = File("build/outputs/appearance-ui/controls.png").apply { parentFile?.mkdirs() }
         compose.onRoot().captureRoboImage(screenshot.absolutePath)

@@ -7,6 +7,8 @@ import com.karthi.sungmobile.core.model.SourceException
 import com.karthi.sungmobile.core.model.SourceFailure
 import com.karthi.sungmobile.core.model.discovery.HomeFeedSource
 import com.karthi.sungmobile.core.model.discovery.HomeCandidateSource
+import com.karthi.sungmobile.core.model.discovery.HomeChip
+import com.karthi.sungmobile.core.model.discovery.HomeFeedPage
 import com.karthi.sungmobile.core.model.discovery.HomeShelf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -34,29 +36,66 @@ class MusicBrowseGateway(
 ) : HomeFeedSource, HomeCandidateSource {
     @Volatile private var extraPage: Pair<String, String?>? = null
 
-    override suspend fun homeShelves(): List<HomeShelf> {
+    override suspend fun homeShelves(): List<HomeShelf> = fetchHomeFeed(MAX_LEGACY_HOME_SHELVES).shelves
+
+    override suspend fun homePage(): HomeFeedPage = fetchHomeFeed(MAX_HOME_SHELVES)
+
+    override suspend fun homePage(onUpdate: (HomeFeedPage) -> Unit): HomeFeedPage =
+        fetchHomeFeed(MAX_HOME_SHELVES, onUpdate)
+
+    override suspend fun homeChip(chip: HomeChip): HomeFeedPage {
+        if (chip.title.contains("podcast", ignoreCase = true)) {
+            return try {
+                val shelves = MusicBrowseParser.podcastShelves(post("FEmusic_podcasts"))
+                if (shelves.isNotEmpty()) HomeFeedPage(shelves)
+                else loadHomeChipFallback(chip)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                loadHomeChipFallback(chip)
+            }
+        }
+        return loadHomeChipFallback(chip)
+    }
+
+    private suspend fun loadHomeChipFallback(chip: HomeChip): HomeFeedPage {
+        val browseId = chip.browseId?.takeIf { it.length in 1..200 } ?: "FEmusic_home"
+        val params = chip.params.takeIf { it.length in 1..4096 } ?: return HomeFeedPage()
+        return try {
+            MusicBrowseParser.homePage(post(browseId, params = params))
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            HomeFeedPage()
+        }
+    }
+
+    private suspend fun fetchHomeFeed(maxShelves: Int, onUpdate: (HomeFeedPage) -> Unit = {}): HomeFeedPage {
         extraPage = null
         val shelves = mutableListOf<HomeShelf>()
         var token: String? = null
         var visitorData: String? = null
+        var chips = emptyList<HomeChip>()
         val visited = mutableSetOf<String>()
         repeat(3) { page ->
             val parsed = try { MusicBrowseParser.home(post("FEmusic_home", token, visitorData), page * 5) }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (error: Exception) {
                 // A later page should not discard usable shelves from the first response.
-                if (shelves.isNotEmpty()) return shelves
+                if (shelves.isNotEmpty()) return HomeFeedPage(shelves, chips)
                 throw if (error is SourceException) error else SourceException(SourceFailure.EXTRACTION, error)
             }
-            shelves += parsed.shelves.take(5 - shelves.size)
+            if (page == 0) chips = parsed.chips
+            shelves += parsed.shelves.take(maxShelves - shelves.size)
+            onUpdate(HomeFeedPage(shelves.toList(), chips))
             visitorData = parsed.visitorData ?: visitorData
             extraPage = parsed.continuation?.let { it to visitorData }
-            if (shelves.size >= 5) return shelves
+            if (shelves.size >= maxShelves) return HomeFeedPage(shelves, chips)
             val next = parsed.continuation
-            if (next == null || !visited.add(next)) return shelves
+            if (next == null || !visited.add(next)) return HomeFeedPage(shelves, chips)
             token = next
         }
-        return shelves
+        return HomeFeedPage(shelves, chips)
     }
 
     override suspend fun extraHomeSongs(): List<com.karthi.sungmobile.core.model.CatalogItem> {
@@ -74,7 +113,7 @@ class MusicBrowseGateway(
     }
 
     private suspend fun post(browseId: String, continuation: String? = null,
-        visitorData: String? = null): String {
+        visitorData: String? = null, params: String? = null): String {
         val body = JsonObject().apply {
             add("context", JsonObject().apply {
                 add("client", JsonObject().apply {
@@ -85,6 +124,7 @@ class MusicBrowseGateway(
                 })
             })
             addProperty("browseId", browseId)
+            params?.let { addProperty("params", it) }
         }
         val url = endpoint.newBuilder().addQueryParameter("prettyPrint", "false")
             .apply { if (continuation != null) {
@@ -135,5 +175,9 @@ class MusicBrowseGateway(
         }
     }
 
-    private companion object { const val MAX_RESPONSE_BYTES = 2_097_152L }
+    private companion object {
+        const val MAX_RESPONSE_BYTES = 2_097_152L
+        const val MAX_HOME_SHELVES = 15
+        const val MAX_LEGACY_HOME_SHELVES = 5
+    }
 }

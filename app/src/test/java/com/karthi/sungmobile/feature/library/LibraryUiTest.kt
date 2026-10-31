@@ -197,7 +197,7 @@ class LibraryUiTest {
         } } }
         compose.onNodeWithContentDescription("Refresh mixes").performClick()
         assertTrue(refreshed)
-        compose.onNodeWithTag("play_mix_Liked shuffle").performClick()
+        compose.onNodeWithTag("play_library_mix_Liked shuffle").performClick()
         assertEquals(songs, player.batches.single())
         compose.onNodeWithText("Evening mix").performScrollTo().performClick()
         assertEquals("smart-1", opened)

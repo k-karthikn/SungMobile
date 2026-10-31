@@ -112,6 +112,9 @@ class DesignFoundationTest {
             }
         }
         compose.onNodeWithTag("appearance").performClick()
+        compose.onNodeWithText("Appearance & Home").assertIsDisplayed()
+        compose.onNodeWithText("Spotify").assertIsDisplayed()
+        compose.onNodeWithText("Appearance & Home").performClick()
         compose.onNodeWithText("System").assertIsDisplayed()
         compose.onNodeWithText("Sung blue").assertIsDisplayed()
         capture("appearance", waitForArtwork = false)

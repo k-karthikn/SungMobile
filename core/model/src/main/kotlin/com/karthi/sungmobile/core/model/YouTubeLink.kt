@@ -50,7 +50,7 @@ sealed interface YouTubeLink {
                 }
                 if (host == "music.youtube.com" && path.startsWith("/browse/")) {
                     val browse = path.removePrefix("/browse/")
-                    if (!Regex("(?:MPRE|VL|UC|MPLA)[A-Za-z0-9_-]{5,190}").matches(browse)) invalid()
+                    if (!Regex("(?:MPRE|MPSPPL|VL|UC|MPLA)[A-Za-z0-9_-]{5,190}").matches(browse)) invalid()
                     return Browse(browse)
                 }
                 if (path == "/playlist" && host in hosts) {

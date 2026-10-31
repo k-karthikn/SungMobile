@@ -6,6 +6,8 @@ import com.karthi.sungmobile.core.youtube.home.MusicBrowseGateway
 import com.karthi.sungmobile.core.model.discovery.HomeFeedSource
 import com.karthi.sungmobile.core.model.discovery.HomeCandidateSource
 import com.karthi.sungmobile.core.model.discovery.HomeShelf
+import com.karthi.sungmobile.core.model.discovery.HomeChip
+import com.karthi.sungmobile.core.model.discovery.HomeFeedPage
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.localization.*
 import java.io.Closeable
@@ -23,13 +25,25 @@ class YouTubeSource : CatalogSource, StreamResolver, DownloadStreamResolver, Rel
     override suspend fun nextPage(token: PageToken) = catalogExecution.run { catalog.nextPage(token) }
     override suspend fun open(url: String): CatalogPage {
         val browse = runCatching { YouTubeLink.parse(url) }.getOrNull() as? YouTubeLink.Browse
-        if (browse != null && (browse.browseId.startsWith("MPRE") || browse.browseId.startsWith("VL"))) {
-            val kind = if (browse.browseId.startsWith("MPRE")) CatalogKind.ALBUM else CatalogKind.PLAYLIST
-            return musicBrowse.openCollection(browse.browseId, url, kind)
+        if (browse != null && (browse.browseId.startsWith("MPRE") || browse.browseId.startsWith("VL") ||
+                browse.browseId.startsWith("MPSPPL") || browse.browseId.startsWith("UC"))) {
+            val kind = when {
+                browse.browseId.startsWith("MPRE") -> CatalogKind.ALBUM
+                browse.browseId.startsWith("UC") -> CatalogKind.ARTIST
+                else -> CatalogKind.PLAYLIST
+            }
+            return try {
+                musicBrowse.openCollection(browse.browseId, url, kind)
+            } catch (error: SourceException) {
+                if (kind != CatalogKind.ARTIST) throw error
+                catalogExecution.run { catalog.open("https://www.youtube.com/channel/${browse.browseId}") }
+            }
         }
         return catalogExecution.run { catalog.open(url) }
     }
     override suspend fun homeShelves(): List<HomeShelf> = musicBrowse.homeShelves()
+    override suspend fun homePage(): HomeFeedPage = musicBrowse.homePage()
+    override suspend fun homeChip(chip: HomeChip): HomeFeedPage = musicBrowse.homeChip(chip)
     override suspend fun extraHomeSongs() = musicBrowse.extraHomeSongs()
     override suspend fun resolve(track: CatalogItem) = streamExecution.run { streams.resolve(track) }
     override suspend fun resolveDownload(track: CatalogItem) = streamExecution.run { streams.resolveDownload(track) }

@@ -7,7 +7,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import android.os.SystemClock
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
@@ -17,6 +19,9 @@ import com.karthi.sungmobile.core.designsystem.component.SungLoading
 import com.karthi.sungmobile.core.model.lyrics.*
 import com.karthi.sungmobile.core.playback.PlaybackState
 import com.karthi.sungmobile.core.designsystem.theme.LocalSungMotionEnabled
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: LyricsSettings,
@@ -25,8 +30,34 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
     val track = playback.track
     val document = state.document?.takeIf { state.videoId == track?.id }
     val timed = document?.lines.orEmpty()
-    val current = currentLyricLine(timed, playback.engine.positionMs, state.offsetMs)
+    var lyricPositionMs by remember(track?.id) { mutableLongStateOf(playback.engine.positionMs) }
+    var anchorPositionMs by remember(track?.id) { mutableLongStateOf(playback.engine.positionMs) }
+    var anchorElapsedMs by remember(track?.id) { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    var clockRunning by remember(track?.id) { mutableStateOf(false) }
+    var playbackRate by remember(track?.id) { mutableFloatStateOf(playback.speed.multiplier) }
+    LaunchedEffect(track?.id, playback.engine.positionMs, playback.engine.playing,
+        playback.engine.buffering, playback.speed.multiplier) {
+        anchorPositionMs = playback.engine.positionMs
+        anchorElapsedMs = SystemClock.elapsedRealtime()
+        clockRunning = playback.engine.playing && !playback.engine.buffering
+        playbackRate = playback.speed.multiplier
+        lyricPositionMs = playback.engine.positionMs
+    }
+    LaunchedEffect(track?.id) {
+        while (true) {
+            kotlinx.coroutines.delay(40)
+            lyricPositionMs = if (clockRunning) {
+                anchorPositionMs + ((SystemClock.elapsedRealtime() - anchorElapsedMs) * playbackRate).toLong()
+            } else anchorPositionMs
+        }
+    }
+    val current = currentLyricLine(timed, lyricPositionMs, state.offsetMs)
     var follow by remember(track?.id) { mutableStateOf(true) }
+    var showShareDialog by remember(track?.id) { mutableStateOf(false) }
+    var sharingCard by remember(track?.id) { mutableStateOf(false) }
+    var shareError by remember(track?.id) { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val list = rememberLazyListState()
     val motionEnabled = LocalSungMotionEnabled.current
     val dragged by list.interactionSource.collectIsDraggedAsState()
@@ -36,8 +67,15 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
     } }
     Column(modifier.fillMaxSize().padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        LyricsTopBar(document?.synchronized, onBack)
+        LyricsTopBar(document?.synchronized, document?.wordSynchronized, onBack)
         LyricsTrackCard(track, document?.attribution)
+        if (document != null && track != null) {
+            FilledTonalButton(
+                onClick = { showShareDialog = true; shareError = null },
+                modifier = Modifier.fillMaxWidth().testTag("lyrics_share_card"),
+                enabled = !sharingCard,
+            ) { Text("Create lyric share card") }
+        }
         if (timed.isNotEmpty()) {
             LyricsTimingCard(state.offsetMs, follow, onOffset, { follow = true })
         }
@@ -53,7 +91,7 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
                         verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(state.message ?: stringResource(R.string.lyrics_missing), style = MaterialTheme.typography.bodyLarge)
                         if (track?.isLocalSong() == true && !settings.lrclibEnabled)
-                            FilledTonalButton(onEnableOnline) { Text("Search LRCLIB online") }
+                            FilledTonalButton(onEnableOnline) { Text("Search online lyrics") }
                         FilledTonalButton(onRetry) { Text(stringResource(R.string.retry)) }
                     }
                 }
@@ -65,7 +103,7 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     itemsIndexed(timed, key = { index, _ -> index }) { index, line ->
                         TimedLyricRow(line, index, current, settings, playback.engine.seekable,
-                            state.offsetMs, playback.engine.durationMs, onSeek)
+                            state.offsetMs, playback.engine.durationMs, lyricPositionMs, onSeek)
                     }
                 }
             }
@@ -73,5 +111,31 @@ fun LyricsScreen(playback: PlaybackState, state: LyricsUiState, settings: Lyrics
                 item { PlainLyrics(document.plainText.orEmpty(), settings) }
             }
         }
+    }
+    if (showShareDialog && document != null && track != null) {
+        LyricShareDialog(
+            initialQuote = lyricShareQuote(document, current),
+            trackTitle = track.title,
+            sharing = sharingCard,
+            error = shareError,
+            onDismiss = { if (!sharingCard) showShareDialog = false },
+            onShare = { quote ->
+                scope.launch {
+                    sharingCard = true
+                    shareError = null
+                    try {
+                        val file = withContext(Dispatchers.IO) {
+                            renderLyricShareCard(context, quote, track.title, track.subtitle, document.attribution)
+                        }
+                        context.startActivity(lyricCardChooser(context, file, track.title))
+                        showShareDialog = false
+                    } catch (_: Exception) {
+                        shareError = "Could not create the image. Please try again."
+                    } finally {
+                        sharingCard = false
+                    }
+                }
+            },
+        )
     }
 }

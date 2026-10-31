@@ -44,6 +44,7 @@ class ListeningStatisticsUiTest {
         compose.setContent { SungTheme { ListeningStatisticsScreen(
             AdvancedLibraryState(page = AdvancedPage.STATISTICS, stats = stats), {}, {}, {}) } }
         compose.onAllNodesWithText("1h 19m").assertCountEquals(2)
+        compose.onNodeWithText("Your week").assertDoesNotExist()
         compose.onNodeWithText("37 qualified plays").assertExists()
         compose.onNodeWithTag("stats_total").assertIsDisplayed()
         compose.onNodeWithTag("stats_activity").assertIsDisplayed()

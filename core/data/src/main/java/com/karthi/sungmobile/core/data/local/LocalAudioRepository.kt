@@ -3,6 +3,7 @@ package com.karthi.sungmobile.core.data.local
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.os.SystemClock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
@@ -60,6 +61,7 @@ class LocalAudioRepository(private val context: Context) {
         val now = SystemClock.elapsedRealtime()
         cachedScan?.takeIf { !force && now - scannedAtMs < SCAN_FRESHNESS_MS }?.let { return@withLock it }
         val result = scanner.scan(addedFolders())
+        Log.i(LOCAL_AUDIO_TAG, "Device scan found ${result.songs.size} audio tracks; permissionNeeded=${result.needsAudioPermission}")
         val recheckSidecars = force || sidecarsDirty
         sidecarsDirty = false
         result.also { scan ->
@@ -75,22 +77,37 @@ class LocalAudioRepository(private val context: Context) {
     private suspend fun enrichArtwork(initial: LocalScan, generation: Long, recheckSidecars: Boolean) {
         val songs = initial.songs.toMutableList()
         var changed = 0
+        var extracted = 0
+        var attempted = 0
+        var withoutArtwork = 0
         songs.forEachIndexed { index, song ->
             kotlinx.coroutines.currentCoroutineContext().ensureActive()
             if (revision != generation) return
             val recheck = recheckSidecars && song.sidecarArt != null
             if (song.track.artworkUrl != null && !recheck) return@forEachIndexed
+            attempted++
             val audio = Uri.parse(song.track.url)
-            val art = runCatching { artwork.resolve(audio, song.sidecarArt, recheck) }.getOrNull() ?: return@forEachIndexed
+            val art = try {
+                artwork.resolve(audio, song.sidecarArt, recheck)
+            } catch (error: Exception) {
+                Log.w(LOCAL_AUDIO_TAG, "Cover extraction failed for ${audio.scheme}://${audio.authority}", error)
+                null
+            }
+            if (art == null) {
+                withoutArtwork++
+                return@forEachIndexed
+            }
             if (revision != generation) return
             songs[index] = song.copy(track = song.track.copy(artworkUrl = art))
             changed++
+            extracted++
             if (changed >= 8) {
                 publishArtwork(initial, songs)
                 changed = 0
             }
         }
         if (changed > 0 && revision == generation) publishArtwork(initial, songs)
+        Log.i(LOCAL_AUDIO_TAG, "Cover extraction finished: $extracted extracted, $withoutArtwork unavailable, $attempted attempted")
     }
 
     private fun publishArtwork(initial: LocalScan, songs: List<LocalSong>) {
@@ -100,6 +117,7 @@ class LocalAudioRepository(private val context: Context) {
     }
 
     private companion object {
+        const val LOCAL_AUDIO_TAG = "SungLocalAudio"
         const val SCAN_FRESHNESS_MS = 60_000L
     }
 }

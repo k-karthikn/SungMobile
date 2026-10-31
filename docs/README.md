@@ -8,6 +8,7 @@ Use this page to find the current project guidance. The milestone reports are hi
 - [Contribution workflow and code conventions](../CONTRIBUTE.md)
 - [Architecture and dependency direction](ARCHITECTURE.md)
 - [Current reliability review and open work](PRODUCTION_READINESS_REVIEW.md)
+- [Active contributor TODO list](TODO.md)
 - [Project handoff](../PROJECT_HANDOFF.md)
 
 ## Current technical guides

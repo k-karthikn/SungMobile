@@ -5,9 +5,17 @@ import com.karthi.sungmobile.core.model.YouTubeLink
 import java.security.MessageDigest
 import java.util.Base64
 
-enum class LyricsOrigin { YOUTUBE, LRCLIB, LOCAL }
+enum class LyricsOrigin { YOUTUBE, LRCLIB, BETTER_LYRICS, LOCAL }
 
-data class LyricLine(val startMs: Long, val text: String)
+data class LyricSyllable(
+    val startMs: Long,
+    val durationMs: Long,
+    val text: String,
+    val isBackground: Boolean = false,
+    val appendToPrevious: Boolean = false,
+)
+
+data class LyricLine(val startMs: Long, val text: String, val syllables: List<LyricSyllable> = emptyList())
 
 data class LyricsDocument(
     val origin: LyricsOrigin,
@@ -16,16 +24,20 @@ data class LyricsDocument(
     val lines: List<LyricLine> = emptyList(),
 ) {
     val synchronized get() = lines.isNotEmpty()
+    val wordSynchronized get() = lines.any { it.syllables.isNotEmpty() }
     init { require(plainText != null || lines.isNotEmpty()) }
 }
 
 interface LyricsGateway {
     suspend fun youtube(track: CatalogItem): LyricsDocument?
     suspend fun lrclib(track: CatalogItem): LyricsDocument?
+    suspend fun betterLyrics(track: CatalogItem): LyricsDocument? = null
 }
 
-/** Keep YouTube's text unless LRCLIB supplies timing that YouTube lacks. */
-fun selectLyrics(youtube: LyricsDocument?, lrclib: LyricsDocument?): LyricsDocument? = when {
+/** Prefer character-timed lyrics, then exact-video timing, then catalog line sync/plain text. */
+fun selectLyrics(youtube: LyricsDocument?, lrclib: LyricsDocument?, wordTimed: LyricsDocument? = null): LyricsDocument? = when {
+    youtube?.wordSynchronized == true -> youtube
+    wordTimed?.wordSynchronized == true -> wordTimed
     youtube?.synchronized == true -> youtube
     lrclib?.synchronized == true -> lrclib
     else -> youtube ?: lrclib

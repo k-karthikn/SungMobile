@@ -18,11 +18,24 @@ class LyricsCache(context: Context) {
         if (!file.isFile || file.length() > ENTRY_LIMIT || System.currentTimeMillis() - file.lastModified() > MAX_AGE) return@withContext null
         runCatching {
             DataInputStream(BufferedInputStream(FileInputStream(file))).use { input ->
-                if (input.readInt() != 1) return@runCatching null
+                val version = input.readInt()
+                if (version !in 1..3 || origin == LyricsOrigin.BETTER_LYRICS && version < 3)
+                    return@runCatching null
                 val attribution = input.readUTF()
                 val plain = readText(input)
                 val count = input.readInt().coerceIn(0, 4_000)
-                val lines = List(count) { LyricLine(input.readLong(), readText(input).orEmpty()) }
+                val lines = List(count) {
+                    val start = input.readLong()
+                    val text = readText(input).orEmpty()
+                    val syllables = if (version >= 2) {
+                        val syllableCount = input.readInt().also { require(it in 0..MAX_SYLLABLES_PER_LINE) }
+                        List(syllableCount) {
+                            LyricSyllable(input.readLong(), input.readLong(), readText(input).orEmpty(),
+                                input.readBoolean(), input.readBoolean())
+                        }
+                    } else emptyList()
+                    LyricLine(start, text, syllables)
+                }
                 LyricsDocument(origin, attribution, plain, lines)
             }
         }.getOrNull()
@@ -35,11 +48,23 @@ class LyricsCache(context: Context) {
         val temporary = File(directory, "${target.name}.tmp")
         runCatching {
             DataOutputStream(BufferedOutputStream(FileOutputStream(temporary))).use { output ->
-                output.writeInt(1)
+                output.writeInt(3)
                 output.writeUTF(document.attribution.take(1_000))
                 writeText(output, document.plainText)
                 output.writeInt(document.lines.size)
-                document.lines.forEach { output.writeLong(it.startMs); writeText(output, it.text) }
+                document.lines.forEach { line ->
+                    output.writeLong(line.startMs)
+                    writeText(output, line.text)
+                    val syllables = line.syllables.take(MAX_SYLLABLES_PER_LINE)
+                    output.writeInt(syllables.size)
+                    syllables.forEach { syllable ->
+                        output.writeLong(syllable.startMs)
+                        output.writeLong(syllable.durationMs)
+                        writeText(output, syllable.text)
+                        output.writeBoolean(syllable.isBackground)
+                        output.writeBoolean(syllable.appendToPrevious)
+                    }
+                }
             }
             if (temporary.length() <= ENTRY_LIMIT && temporary.renameTo(target)) trim() else temporary.delete()
         }.onFailure { temporary.delete() }
@@ -73,5 +98,6 @@ class LyricsCache(context: Context) {
         const val ENTRY_LIMIT = 300_000L
         const val TOTAL_LIMIT = 8L * 1024 * 1024
         const val MAX_AGE = 30L * 24 * 60 * 60 * 1_000
+        const val MAX_SYLLABLES_PER_LINE = 200
     }
 }

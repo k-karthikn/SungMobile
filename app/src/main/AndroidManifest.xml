@@ -35,13 +35,13 @@
         <service android:name=".feature.download.AudioDownloadService" android:foregroundServiceType="dataSync"
             android:exported="false" />
         <receiver android:name=".feature.download.DownloadCancelReceiver" android:exported="false" />
-        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.updates" android:exported="false" android:grantUriPermissions="true">
+        <provider android:name=".updates.UpdateFileProvider" android:authorities="${applicationId}.updates" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" />
         </provider>
-        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.feedback" android:exported="false" android:grantUriPermissions="true">
+        <provider android:name=".feature.feedback.FeedbackFileProvider" android:authorities="${applicationId}.feedback" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/feedback_paths" />
         </provider>
-        <provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.artwork" android:exported="false" android:grantUriPermissions="true">
+        <provider android:name=".feature.local.LocalArtworkFileProvider" android:authorities="${applicationId}.artwork" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/artwork_paths" />
         </provider>
         <!-- Media3 system controllers connect here. PlaybackSessionCallback rejects untrusted UIDs. -->

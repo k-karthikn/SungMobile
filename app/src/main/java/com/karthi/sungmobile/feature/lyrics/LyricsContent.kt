@@ -11,6 +11,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -22,15 +24,18 @@ import com.karthi.sungmobile.core.model.lyrics.seekForLine
 
 @Composable
 internal fun TimedLyricRow(line: LyricLine, index: Int, current: Int, settings: LyricsSettings,
-    seekable: Boolean, offsetMs: Int, durationMs: Long, onSeek: (Long) -> Unit) {
+    seekable: Boolean, offsetMs: Int, durationMs: Long, positionMs: Long, onSeek: (Long) -> Unit) {
     val active = index == current
-    val foreground = if (active) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+    val foreground = if (active) MaterialTheme.colorScheme.onSurface
+        else MaterialTheme.colorScheme.onSurface.copy(alpha = .48f)
     val accent = MaterialTheme.colorScheme.primary
-    val posterFace = active && supportsPosterFace(line.text)
+    val posterFace = active && line.syllables.isEmpty() && supportsPosterFace(line.text)
     val motion = LocalSungMotionEnabled.current
     val color = if (motion) animateColorAsState(foreground, label = "Lyric text").value else foreground
-    val text = remember(line.text, posterFace, accent, foreground) {
-        if (posterFace) emphasizedLyric(line.text, accent, foreground) else AnnotatedString(line.text)
+    val effectivePositionMs = if (active) positionMs else 0L
+    val text = remember(line, posterFace, accent, foreground, active, effectivePositionMs, offsetMs) {
+        if (posterFace) emphasizedLyric(line.text, accent, foreground)
+        else karaokeLyricText(line, active, effectivePositionMs + offsetMs, accent, foreground)
     }
     Text(text, Modifier.fillMaxWidth().heightIn(min = 48.dp).then(if (seekable) Modifier.clickable {
         onSeek(seekForLine(line, offsetMs, durationMs))
@@ -45,6 +50,44 @@ internal fun TimedLyricRow(line: LyricLine, index: Int, current: Int, settings: 
         fontWeight = if (active && !posterFace) FontWeight.Bold else if (active) FontWeight.Medium else FontWeight.Normal,
         letterSpacing = if (posterFace) (-0.35).sp else 0.sp,
         color = if (active && !posterFace) accent else color, textAlign = TextAlign.Start)
+}
+
+private fun karaokeLyricText(line: LyricLine, active: Boolean, positionMs: Long,
+    accent: Color, foreground: Color): AnnotatedString {
+    val parts = line.syllables
+    if (!active || parts.isEmpty()) return AnnotatedString(line.text)
+    val builder = AnnotatedString.Builder()
+    val ranges = mutableListOf<Pair<IntRange, Int>>()
+    parts.forEachIndexed { index, part ->
+        if (index > 0 && !part.appendToPrevious) builder.append(' ')
+        val start = builder.length
+        builder.append(part.text)
+        ranges += (start until builder.length) to index
+    }
+    ranges.forEach { (range, index) ->
+        val part = parts[index]
+        val nextStart = parts.getOrNull(index + 1)?.startMs
+        val endMs = when {
+            part.durationMs > 0 -> part.startMs + part.durationMs
+            nextStart != null -> nextStart
+            else -> Long.MAX_VALUE
+        }
+        val elapsed = positionMs - part.startMs
+        val fraction = when {
+            elapsed < 0 -> 0f
+            endMs == Long.MAX_VALUE || endMs <= part.startMs -> 1f
+            positionMs >= endMs -> 1f
+            else -> (elapsed.toFloat() / (endMs - part.startMs)).coerceIn(0f, 1f)
+        }
+        val chars = part.text.codePointCount(0, part.text.length)
+        val filledChars = (chars * fraction).toInt().coerceIn(0, chars)
+        val filledEnd = if (filledChars == 0) range.first else
+            range.first + part.text.offsetByCodePoints(0, filledChars)
+        if (filledEnd > range.first) builder.addStyle(SpanStyle(color = accent), range.first, filledEnd)
+        if (filledEnd < range.last + 1) builder.addStyle(SpanStyle(color = foreground.copy(alpha = .56f)),
+            filledEnd, range.last + 1)
+    }
+    return builder.toAnnotatedString()
 }
 
 @Composable

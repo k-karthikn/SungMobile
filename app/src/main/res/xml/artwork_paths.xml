@@ -1,3 +1,4 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <files-path name="local_artwork" path="local-artwork/" />
+    <cache-path name="lyric_cards" path="shared/lyrics_cards/" />
 </paths>

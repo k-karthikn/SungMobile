@@ -22,6 +22,8 @@ NewPipeExtractor also brings nanojson (MIT), jsoup (MIT), protobuf-javalite (BSD
 
 ## Reference and assets
 
+The Spotify web-session connector and account-library import, YouTube Music Home feed extraction, and lyrics timing integration in SungMobile are adapted from [LastWave-Native](https://github.com/Clash-Projects/LastWave-Native), Copyright the LastWave-Native contributors, under GPL-3.0. SungMobile is GPL-3.0-or-later, which permits these adaptations. The lyrics screen queries the independent [BetterLyrics API](https://lyrics-api.boidu.dev) for word-timed TTML using song title and artist. When Spotify's player bundle cannot be read, the connector fetches OTP secret data from [spot-secrets-go](https://github.com/xyloflake/spot-secrets-go), whose repository is licensed AGPL-3.0. These upstream projects are independent and are not endorsed by Spotify, YouTube, or Apple. Spotify's web-player token and private library-query flows, YouTube Music's browse responses, and community lyric APIs may change.
+
 The Sung Linux code and documentation informed behavior and architecture. Stage 1 converts 14 of its Material Symbols Rounded SVG files to Android vectors, preserving path data and the original viewBox translation. Material Symbols are Google assets under Apache-2.0: [upstream](https://github.com/google/material-design-icons). A full license is bundled at `core/designsystem/src/main/assets/licenses/MaterialSymbols-LICENSE.txt`. The launcher remains the Android Studio template icon.
 
 Google Sans Flex is bundled unmodified from [Google Fonts](https://github.com/google/fonts/tree/main/ofl/googlesansflex). Font Git blob: `1d8d8ae5a7c6d0e48312d2a0a478bad92caee73a`; SHA-256: `a9ac770798857d5e8ac593ced42b22e40a7c08cec98319f92b0eccc2783a77ba`. Its SIL Open Font License and upstream trademark notice are bundled in the same licenses directory. The font is not relicensed under the application's GPL.
@@ -34,4 +36,4 @@ Host rendering uses Robolectric 4.17 (MIT) and Roborazzi 1.76.0 (Apache-2.0); th
 
 ## Public release gate
 
-Before distributing a public APK, produce a complete inventory from the resolved release dependency graph, preserve every required license/NOTICE text, add attribution for any assets reused in later stages, and publish the exact corresponding source and build instructions. No public distribution or account sign-in is performed by Stage 2.
+Before distributing a public APK, produce a complete inventory from the resolved release dependency graph, preserve every required license/NOTICE text, and publish the exact corresponding source and build instructions. The app now includes the Spotify session connector; its availability depends on Spotify's private web-player flow.

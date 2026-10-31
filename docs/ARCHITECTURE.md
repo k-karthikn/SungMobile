@@ -34,6 +34,8 @@ The arrows mean “depends on.” Keep dependencies pointed toward the small, re
 | `core:designsystem` | Theme, icons, artwork and reusable Compose controls. | Feature state, repositories, app-specific navigation. |
 | `app` | Android entry points, dependency assembly, feature screens/ViewModels, navigation and platform permissions. | Duplicated storage/provider rules that belong in a core module. |
 
+Spotify library import follows the same boundary: the account session store, validation, web requests and response parsing live in `core:data`; provider-neutral playlist and track models live in `core:model`; the import preview and matching UI live in `app/src/main/java/com/karthi/sungmobile/feature/spotify/`. The importer resolves Spotify track metadata against the YouTube Music catalog, then writes matched songs through `LibraryRepository`. It does not download Spotify audio or retain unmatched Spotify-only tracks in the local library.
+
 Do not add a module just to shorten a file. Add one when it creates a real ownership boundary or allows an independently reusable/testable component.
 
 ## Runtime ownership
@@ -55,6 +57,7 @@ A feature should call a narrow repository or playback contract. It should not in
 - Room owns durable queue/library/history records and schema migrations. DataStore owns preferences. Preserve exported schemas and migration paths; do not use destructive fallbacks for user data.
 - Android Auto Backup and device transfer are excluded. The explicit JSON backup/restore flow validates imported data and applies its documented merge rules.
 - Streaming URLs and other short-lived playback details stay transient. Do not persist or expose them in diagnostics.
+- Spotify's web session cookie and short-lived personal access token are encrypted with an Android Keystore key and kept under `noBackupFilesDir`; they are not included in app backup. Disconnecting clears both. This integration uses private Spotify web-player interfaces, so account validation and import can stop working if those interfaces change.
 
 ## Feature organization
 

@@ -17,7 +17,7 @@ fun LyricsSettingsSection(value: LyricsSettings, onChange: (LyricsSettings) -> U
     SungSettingsGroup("Lyrics") {
             SungSettingsToggle("Find lyrics online", value.lrclibEnabled,
                 { onChange(value.copy(lrclibEnabled = it)) },
-                "Shares song details with LRCLIB")
+                "Checks BetterLyrics and LRCLIB using the song title and artist")
             HorizontalDivider()
             SungSettingsToggle("Save lyrics offline", value.cacheEnabled,
                 { onChange(value.copy(cacheEnabled = it)) },

@@ -7,6 +7,7 @@ Thanks for taking the time to improve SungMobile. This guide covers the project 
 - Read the [README](README.md) for the app overview and setup requirements.
 - Read the [architecture guide](docs/ARCHITECTURE.md) before moving code across modules.
 - Check the relevant plan or report under [`docs/`](docs/) before changing an existing feature. Historical reports may mention artifacts that are no longer in the repository.
+- Check the [active TODO list](docs/TODO.md) and [readiness review](docs/PRODUCTION_READINESS_REVIEW.md) for known follow-up work. Avoid duplicating tracked issues or treating historical stage plans as current tasks.
 - For larger changes, open an issue or discussion first so the intended behavior and scope are clear.
 
 ## Set up the project

@@ -9,10 +9,13 @@ The source version is declared in [`app/build.gradle.kts`](app/build.gradle.kts)
 - Browse Home recommendations, search songs, albums, artists and playlists, and play collections through a service-owned queue.
 - Control playback from the Now Playing screen, mini-player and Android media controls. The player supports queue editing, shuffle, repeat, playback speed, a sleep timer and resume points.
 - Save likes and playlists; browse local audio and downloads; review recent listening, smart mixes and listening statistics.
+- Connect a Spotify account to preview and import saved tracks or playlists. SungMobile matches tracks to its playable YouTube Music catalog and saves the matches as a SungMobile playlist or likes; Spotify audio is not imported.
 - View synced or plain lyrics when a source is available. The Now Playing lyric preview is hidden when none can be found.
 - Choose Material 3 colors, artwork accents and other appearance options in Settings.
 - Export and import a JSON backup of preferences, likes, playlists, smart playlists and qualified listening history. The backup does **not** contain audio files or downloaded music; keep those files separately. Import keeps existing library items.
 - Send feedback through an installed email app, with an optional app diagnostic log. Logs are attached only when the user selects that option.
+
+Spotify connection uses Spotify's web sign-in and private web-player library interfaces, which may change without notice. The Spotify session cookie and short-lived access token are encrypted with an Android Keystore key and stored in the app's no-backup storage. Disconnecting removes both credentials. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for attribution and external-service notes.
 
 The **For you** Home row uses likes and listening signals to rank music on the device. It can request related songs from YouTube using a liked song as a seed. Private mode hides this row and pauses history-based personalization. The ordinary Home rows remain available. Recommendation choices can be cleared in Settings.
 

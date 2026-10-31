@@ -78,13 +78,13 @@ fun LocalSongsContent(repository: LocalAudioRepository, connected: Boolean,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             FilledTonalButton({ permission.launch(repository.audioPermission()) }) { Text("Allow music access") }
         }
-        if (result.unreadableFolders > 0) Text("Some folders could not be read. Manage them in Settings → Local songs.",
+        if (result.unreadableFolders > 0) Text("Some previously selected folders could not be read.",
             color = MaterialTheme.colorScheme.error)
         message?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
         else if (shown.isEmpty()) Text(if (filter.isNotBlank()) "No matching songs."
-            else if (result.needsAudioPermission) "Allow music access to show songs in Music/SungMobile."
-            else "No audio found. Add files to Music/SungMobile or select a folder in Settings.",
+            else if (result.needsAudioPermission) "Allow music access to show audio on this device."
+            else "No audio found on this device.",
             Modifier.padding(vertical = 20.dp), style = MaterialTheme.typography.bodyLarge)
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 24.dp)) {
             itemsIndexed(shown, key = { _, song -> song.identity }) { index, song ->

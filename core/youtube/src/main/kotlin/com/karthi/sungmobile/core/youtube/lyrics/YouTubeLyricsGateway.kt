@@ -22,6 +22,8 @@ class YouTubeLyricsGateway(
         .connectTimeout(8, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS)
         .callTimeout(15, TimeUnit.SECONDS).followRedirects(false).build(),
 ) : LyricsGateway {
+    private val wordTimedProvider = BetterLyricsGateway(client)
+
     override suspend fun youtube(track: CatalogItem): LyricsDocument? {
         val videoId = track.lyricsVideoId() ?: return null
         val context = """{"client":{"clientName":"WEB_REMIX","clientVersion":"1.20261001.01.00","hl":"en","gl":"IN"}}"""
@@ -56,6 +58,8 @@ class YouTubeLyricsGateway(
             ?: return null
         return runCatching { parseLrclib(response, track.title, artist, duration) }.getOrNull()
     }
+
+    override suspend fun betterLyrics(track: CatalogItem): LyricsDocument? = wordTimedProvider.fetch(track)
 
     private suspend fun post(url: String, json: String): String = request(Request.Builder().url(url)
         .header("Origin", "https://music.youtube.com")

@@ -1,18 +1,13 @@
 package com.karthi.sungmobile.feature.library
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.karthi.sungmobile.R
 import com.karthi.sungmobile.core.designsystem.component.SungLoading
 import com.karthi.sungmobile.core.designsystem.icon.*
-import com.karthi.sungmobile.feature.home.HomeMixCard
 import com.karthi.sungmobile.feature.home.HomeState
 
 /** The Mixes destination contains real local mixes and saved smart lists only. */
@@ -30,12 +25,9 @@ internal fun LibraryMixesContent(home: HomeState, smart: SmartOverview, connecte
         val liked = home.likedMix.takeIf { it.size >= 2 }
         val recent = home.recentMix.takeIf { !home.data.privateMode && it.size >= 2 }
         if (liked != null || recent != null) {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (liked != null) HomeMixCard(stringResource(R.string.liked_shuffle), liked, connected,
-                    actions::playTracks, save, Modifier.width(208.dp))
-                if (recent != null) HomeMixCard(stringResource(R.string.recent_mix), recent, connected,
-                    actions::playTracks, save, Modifier.width(208.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                liked?.let { LibraryMixRow("Liked shuffle", it, connected, actions::playTracks, save) }
+                recent?.let { LibraryMixRow("Recently played", it, connected, actions::playTracks, save) }
             }
         } else if (home.loading) {
             SungLoading(label = "Loading mixes…")

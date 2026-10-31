@@ -18,6 +18,7 @@ import com.karthi.sungmobile.core.designsystem.theme.SungSpacing
 import com.karthi.sungmobile.core.model.CatalogKind
 import com.karthi.sungmobile.core.playback.PlaybackState
 import com.karthi.sungmobile.feature.appearance.AppearanceScreen
+import com.karthi.sungmobile.feature.appearance.SpotifySettingsScreen
 import com.karthi.sungmobile.feature.feedback.FeedbackScreen
 import com.karthi.sungmobile.feature.home.HomeScreen
 import com.karthi.sungmobile.feature.library.LibraryScreen
@@ -27,7 +28,7 @@ import com.karthi.sungmobile.feature.lyrics.*
 import com.karthi.sungmobile.core.data.settings.LyricsSettings
 import kotlinx.coroutines.delay
 
-private enum class Overlay { NONE, PLAYER, APPEARANCE, FEEDBACK, HISTORY, COLLECTION, LYRICS, SESSIONS }
+private enum class Overlay { NONE, PLAYER, APPEARANCE, SPOTIFY, FEEDBACK, HISTORY, COLLECTION, LYRICS, SESSIONS }
 
 /** Navigation belongs to the UI. Playback is observed from the service across destination changes. */
 @Composable
@@ -46,8 +47,8 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     onLoadLyrics: () -> Unit = {}, onRetryLyrics: () -> Unit = {}, onLyricsSettings: (LyricsSettings) -> Unit = {},
     onCancelLyrics: () -> Unit = {},
     onLyricsOffset: (Int) -> Unit = {}, onClearLyricsCache: () -> Unit = {},
-    localFoldersContent: @Composable () -> Unit = {},
     backupContent: @Composable () -> Unit = {},
+    spotifyContent: @Composable () -> Unit = {},
     recommendationsContent: @Composable () -> Unit = {},
     resumeContent: @Composable (PlaybackState) -> Unit = {},
     playerMoreContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
@@ -63,7 +64,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     var miniQueueRequest by remember { mutableStateOf(false) }
     var frozenBackdropUrl by rememberSaveable { mutableStateOf<String?>(null) }
     LaunchedEffect(appearance.ambientBackdrop, appearance.backdropFollowsMusic, playback.track?.artworkUrl) {
-        if (appearance.ambientBackdrop && (appearance.backdropFollowsMusic || frozenBackdropUrl == null)) {
+        if (!appearance.ambientBackdrop || appearance.backdropFollowsMusic || frozenBackdropUrl == null) {
             frozenBackdropUrl = playback.track?.artworkUrl
         }
     }
@@ -100,6 +101,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
             overlay == Overlay.FEEDBACK -> overlay = Overlay.APPEARANCE
             overlay == Overlay.SESSIONS -> overlay = if (sessionsFromPlayer && playback.track != null) Overlay.PLAYER else Overlay.NONE
             overlay == Overlay.HISTORY -> overlay = Overlay.APPEARANCE
+            overlay == Overlay.SPOTIFY -> overlay = Overlay.APPEARANCE
             overlay == Overlay.COLLECTION -> { closeDetail(); overlay = Overlay.NONE }
             overlay == Overlay.PLAYER && detailId != null -> overlay = Overlay.COLLECTION
             overlay != Overlay.NONE -> overlay = Overlay.NONE
@@ -177,9 +179,11 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                             Overlay.FEEDBACK -> FeedbackScreen(back, content)
                             Overlay.APPEARANCE -> AppearanceScreen(appearance, onAppearance, back, content,
                                 lyricsSettings, onLyricsSettings, lyricsState.cacheBytes, onClearLyricsCache,
-                                onHistory = { overlay = Overlay.HISTORY }, localFolders = localFoldersContent,
+                                onHistory = { overlay = Overlay.HISTORY },
                                 onFeedback = { overlay = Overlay.FEEDBACK }, backupContent = backupContent,
+                                onSpotify = { overlay = Overlay.SPOTIFY },
                                 recommendationsContent = recommendationsContent)
+                            Overlay.SPOTIFY -> SpotifySettingsScreen(back, content) { spotifyContent() }
                             Overlay.NONE -> when (destination) {
                                 Destination.HOME -> screenState.SaveableStateProvider("home") { if (homeContent != null) homeContent(Modifier.weight(1f),
                                     { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { overlay = Overlay.APPEARANCE }, { destination = Destination.LIBRARY })

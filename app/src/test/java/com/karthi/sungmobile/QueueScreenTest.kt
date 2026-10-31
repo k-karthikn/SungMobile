@@ -36,22 +36,20 @@ class QueueScreenTest {
     private val entries = listOf(QueueEntry("first", song), QueueEntry("second", song))
     private val state = PlaybackState(track = song, queue = QueueState(entries, "first"), canUndo = true)
 
-    @Test fun artworkPreviewsUseQueueOccurrencesAndHideMissingNeighbors() {
-        var jumped: String? = null
-        val third = QueueEntry("third", song.copy(id = "other", title = "Other song"))
-        val queue = QueueState(listOf(third, entries[1], entries[0]), "second", shuffled = true)
-        compose.setContent { SungTheme { PlayerScreen(state.copy(queue = queue),
-            PlayerActions({}, {}, {}, jump = { jumped = it }), {}) } }
-        compose.onNodeWithContentDescription("Previous: Other song").performClick()
-        assertEquals("third", jumped)
-        compose.onNodeWithTag("artwork_next").performClick()
-        assertEquals("first", jumped)
-    }
-    @Test fun firstOccurrenceHasOnlyNextPreviewAndMoreRetainsStop() {
-        var stopped = false
-        compose.setContent { SungTheme { PlayerScreen(state, PlayerActions({}, {}, { stopped = true }), {}) } }
+    @Test fun nowPlayingUsesArtworkBackdropWithoutQueueArtworkCards() {
+        compose.setContent { SungTheme { PlayerScreen(state, PlayerActions({}, {}, {}), {}) } }
         compose.onNodeWithTag("artwork_previous").assertDoesNotExist()
-        compose.onNodeWithTag("artwork_next").assertExists()
+        compose.onNodeWithTag("artwork_next").assertDoesNotExist()
+        compose.onNodeWithTag("player_swipe_area").assertExists()
+    }
+    @Test fun queueSwipeAreaSkipsToNextAndMoreRetainsStop() {
+        var stopped = false
+        var movedNext = false
+        val firstQueue = QueueState(listOf(QueueEntry("first", song), QueueEntry("second", song)), "first")
+        compose.setContent { SungTheme { PlayerScreen(state.copy(queue = firstQueue),
+            PlayerActions({}, {}, { stopped = true }, next = { movedNext = true }), {}) } }
+        compose.onNodeWithTag("player_swipe_area").performTouchInput { swipeLeft() }
+        assertTrue(movedNext)
         compose.onNodeWithTag("player_more").performClick()
         compose.onNodeWithTag("stop").performScrollTo().performClick()
         assertTrue(stopped)

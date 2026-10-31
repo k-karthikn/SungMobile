@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.*
 
 data class Appearance(val theme: ThemeMode = ThemeMode.SYSTEM, val colors: ColorMode = ColorMode.BLUE,
     val reduceMotion: Boolean = false, val useArtworkAccent: Boolean = false,
-    val accentColor: Int = 0xFF006C91.toInt(), val ambientBackdrop: Boolean = false,
+    val accentColor: Int = 0xFF006C91.toInt(), val ambientBackdrop: Boolean = true,
     val backdropFollowsMusic: Boolean = true, val colorScheme: ColorSchemeStyle = ColorSchemeStyle.BALANCED)
 
 /** Maps persisted settings to UI types; writes remain ordered even during rapid selections. */
@@ -44,5 +44,10 @@ class AppearanceStore(private val repository: SettingsRepository, scope: Corouti
             }
         }
     }
-    fun update(value: Appearance) { changes.trySend(value) }
+    fun update(value: Appearance) {
+        // Reflect control changes immediately; the channel still serializes the
+        // durable write, while the settings screen does not feel like a dead button.
+        mutableState.value = value
+        changes.trySend(value)
+    }
 }

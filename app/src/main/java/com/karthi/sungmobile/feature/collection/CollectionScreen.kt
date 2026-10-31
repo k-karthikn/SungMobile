@@ -24,15 +24,15 @@ fun CollectionScreen(state: CollectionState, model: CollectionViewModel, operati
     val playback by player.state.collectAsStateWithLifecycle()
     val library = LocalLibraryUi.current
     val motion = LocalSungMotionEnabled.current
-    LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
-        top = 8.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item("collection_header") {
             CollectionHeader(state, playback.track != null,
                 { operations.cancel(); model.close() },
                 { operations.cancel(); model.refresh() }, showPlayer)
         }
         item("collection_actions") {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 CollectionActionRow(state.entries.isNotEmpty(), state.loading, playback.connected) {
                     operations.begin(state, it)
                 }
@@ -48,7 +48,7 @@ fun CollectionScreen(state: CollectionState, model: CollectionViewModel, operati
         val notice = state.page?.notice
         if (notice != null || state.error != null || state.loading ||
             (state.page != null && state.entries.isEmpty())) item("collection_status") {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (notice is CatalogNotice.ArtistBrowseUnavailable) {
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
                         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -77,14 +77,15 @@ fun CollectionScreen(state: CollectionState, model: CollectionViewModel, operati
         }
         if (state.entries.isNotEmpty()) item("collection_song_heading") {
             Text(if (state.displayKind() == CatalogKind.ARTIST) "Videos" else "Songs",
-                style = MaterialTheme.typography.titleMedium)
+                Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.titleMedium)
         }
         itemsIndexed(state.entries, key = { _, entry -> entry.id }) { index, entry ->
             LibrarySongRow(LibrarySong(entry.id, entry.track, entry.track.libraryKeyOrNull() in library.liked),
                 false, {}, { if (playback.connected) { operations.cancel(); player.select(state.entries.map { it.track }, index) } },
                 { if (playback.connected) player.enqueue(entry.track, true) },
                 { if (playback.connected) player.enqueue(entry.track, false) }, null, null,
-                modifier = if (motion) Modifier.animateItem() else Modifier, playbackEnabled = playback.connected)
+                modifier = (if (motion) Modifier.animateItem() else Modifier).padding(horizontal = 16.dp),
+                playbackEnabled = playback.connected)
         }
         items(state.page?.unavailable.orEmpty()) { entry ->
             Text("${entry.title} · ${entry.reason}", style = MaterialTheme.typography.bodyMedium)

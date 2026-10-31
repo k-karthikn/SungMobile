@@ -52,12 +52,18 @@ internal class CatalogExtractor {
             val channel = ChannelInfo.getInfo(service, link.url)
             val details = CatalogDetails(link.url, CatalogKind.ARTIST, artworkUrl = channel.avatars.maxByOrNull { it.height }?.url, channelVideos = true)
             val tab = channel.tabs.firstOrNull { it.contentFilters.contains("videos") }
-            if (tab == null) CatalogPage(channel.name, emptyList(), notice = CatalogNotice.ArtistBrowseUnavailable(channel.name), details = details)
-            else {
-                val extractor = service.getChannelTabExtractor(tab)
-                extractor.fetchPage()
-                pages.page("${channel.name} · channel videos", extractor.initialPage, CatalogKind.SONG, details) { extractor.getPage(it) }
+            val channelPage = tab?.let {
+                runCatching {
+                    val extractor = service.getChannelTabExtractor(it)
+                    extractor.fetchPage()
+                    pages.page("${channel.name} · channel videos", extractor.initialPage, CatalogKind.SONG, details) { extractor.getPage(it) }
+                }.getOrNull()
             }
+            val songs = channelPage?.takeIf { it.items.isNotEmpty() } ?:
+                runCatching { search(channel.name, CatalogKind.SONG) }.getOrNull()
+                    ?.takeIf { it.items.isNotEmpty() }
+            songs?.copy(title = "${channel.name} · songs", details = details)
+                ?: CatalogPage(channel.name, emptyList(), notice = CatalogNotice.ArtistBrowseUnavailable(channel.name), details = details)
         }
         is YouTubeLink.Browse -> {
             if (link.browseId.startsWith("UC")) open("https://www.youtube.com/channel/${link.browseId}")

@@ -55,23 +55,12 @@ internal class LocalAudioScanner(
     private fun scanDefault(result: MutableMap<String, LocalSong>) {
         val columns = mutableListOf(AudioMedia._ID, AudioMedia.DISPLAY_NAME, AudioMedia.TITLE, AudioMedia.ARTIST,
             AudioMedia.ALBUM, AudioMedia.DURATION, AudioMedia.MIME_TYPE)
-        val selection: String
-        val args: Array<String>
-        if (Build.VERSION.SDK_INT >= 29) {
-            columns += MediaStore.MediaColumns.RELATIVE_PATH
-            selection = "${MediaStore.MediaColumns.RELATIVE_PATH} LIKE ? AND ${MediaStore.MediaColumns.IS_PENDING}=0"
-            args = arrayOf("$SUNG_MUSIC_PATH%")
-        } else {
-            // API 26–28 has no RELATIVE_PATH. DATA is used only to identify this folder;
-            // the path is never opened or passed to playback.
-            columns += AudioMedia.DATA
-            val folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)
-                .resolve("SungMobile").absolutePath.trimEnd('/')
-            selection = "${AudioMedia.DATA} LIKE ?"
-            args = arrayOf("$folder/%")
-        }
+        // Match Audilux: local songs means the device audio library, including Music/songs
+        // and files indexed from other folders. The old RELATIVE_PATH filter silently hid
+        // everything outside Music/SungMobile.
+        val selection = if (Build.VERSION.SDK_INT >= 29) "${MediaStore.MediaColumns.IS_PENDING}=0" else null
         resolver.query(AudioMedia.EXTERNAL_CONTENT_URI, columns.toTypedArray(), selection,
-            args, "${AudioMedia.TITLE} COLLATE NOCASE ASC")?.use { cursor ->
+            null, "${AudioMedia.TITLE} COLLATE NOCASE ASC")?.use { cursor ->
             val id = cursor.getColumnIndexOrThrow(AudioMedia._ID)
             val display = cursor.getColumnIndexOrThrow(AudioMedia.DISPLAY_NAME)
             val title = cursor.getColumnIndexOrThrow(AudioMedia.TITLE)
@@ -79,14 +68,12 @@ internal class LocalAudioScanner(
             val album = cursor.getColumnIndexOrThrow(AudioMedia.ALBUM)
             val duration = cursor.getColumnIndexOrThrow(AudioMedia.DURATION)
             val mime = cursor.getColumnIndexOrThrow(AudioMedia.MIME_TYPE)
-            val legacyPath = if (Build.VERSION.SDK_INT < 29) cursor.getColumnIndexOrThrow(AudioMedia.DATA) else -1
             while (cursor.moveToNext()) {
                 val mediaType = cursor.getString(mime).orEmpty()
                 if (!mediaType.startsWith("audio/", ignoreCase = true)) continue
                 val mediaId = cursor.getLong(id)
                 val uri = ContentUris.withAppendedId(AudioMedia.EXTERNAL_CONTENT_URI, mediaId)
-                val identity = if (legacyPath >= 0) cursor.getString(legacyPath)?.let { "path:$it" }
-                    ?: "media:$mediaId" else "media:$mediaId"
+                val identity = "media:$mediaId"
                 val name = cursor.getString(display).orEmpty()
                 val item = CatalogItem("local:$uri", CatalogKind.SONG,
                     cursor.getString(title)?.takeIf(String::isNotBlank) ?: filenameTitle(name),

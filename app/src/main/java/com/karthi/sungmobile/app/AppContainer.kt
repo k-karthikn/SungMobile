@@ -14,6 +14,9 @@ import com.karthi.sungmobile.core.data.lyrics.LocalLyricsReader
 import com.karthi.sungmobile.core.data.queue.RoomQueueStore
 import com.karthi.sungmobile.core.data.recommendation.RoomRecommendationProfileSource
 import com.karthi.sungmobile.core.data.settings.SettingsRepository
+import com.karthi.sungmobile.core.data.spotify.SpotifySessionStore
+import com.karthi.sungmobile.core.data.spotify.SpotifySessionValidator
+import com.karthi.sungmobile.core.data.spotify.SpotifyLibraryImporter
 import com.karthi.sungmobile.core.youtube.YouTubeSource
 import com.karthi.sungmobile.core.youtube.lyrics.YouTubeLyricsGateway
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +38,9 @@ class AppContainer(context: Context) {
     val home by lazy { RoomHomeRepository(database) }
     val recommendationProfile by lazy { RoomRecommendationProfileSource(database) }
     val settings by lazy { SettingsRepository(context) }
+    val spotifySession by lazy { SpotifySessionStore(context) }
+    val spotifySessionValidator by lazy { SpotifySessionValidator(spotifySession) }
+    val spotifyLibraryImporter by lazy { SpotifyLibraryImporter(spotifySession, spotifySessionValidator) }
     val backup by lazy { BackupRepository(database, settings) }
     val appearance by lazy { AppearanceStore(settings, applicationScope) }
     val lyricsGateway by lazy { YouTubeLyricsGateway() }

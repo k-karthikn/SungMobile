@@ -14,13 +14,14 @@ import com.karthi.sungmobile.feature.home.*
 import com.karthi.sungmobile.core.model.CatalogKind
 import com.karthi.sungmobile.feature.library.*
 import com.karthi.sungmobile.feature.local.LocalSongsContent
-import com.karthi.sungmobile.feature.local.LocalFoldersSettingsSection
 import com.karthi.sungmobile.feature.download.DownloadHost
 import com.karthi.sungmobile.navigation.*
 import com.karthi.sungmobile.playback.PlaybackConnection
 import com.karthi.sungmobile.feature.lyrics.LyricsViewModel
 import com.karthi.sungmobile.feature.convenience.*
 import com.karthi.sungmobile.feature.backup.BackupSettingsSection
+import com.karthi.sungmobile.feature.appearance.SpotifyConnectionSettingsSection
+import com.karthi.sungmobile.feature.spotify.SpotifyLibraryImportViewModel
 import com.karthi.sungmobile.core.model.discovery.RecommendationPreferences
 import kotlinx.coroutines.launch
 
@@ -30,7 +31,8 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
     libraryActions: LibraryActionsViewModel, advancedLibrary: AdvancedLibraryViewModel,
     history: HistoryViewModel, home: HomeViewModel, discovery: DiscoveryFeedViewModel,
     collection: CollectionViewModel, collectionActions: CollectionActionsViewModel, links: LinkIntakeViewModel,
-    lyrics: LyricsViewModel, convenience: ConvenienceViewModel) {
+    lyrics: LyricsViewModel, convenience: ConvenienceViewModel,
+    spotifyLibraryImport: SpotifyLibraryImportViewModel) {
     val catalog by model.catalogState.collectAsStateWithLifecycle()
     val chrome = remember(model.player) { model.player.state.chromeUpdates() }
     val initialPlayback = remember(model.player) { model.player.state.value.withoutClock() }
@@ -108,7 +110,11 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                                 val index = songs.indexOfFirst { it.id == item.id }
                                 if (index >= 0) model.player.select(songs, index)
                             } else collection.open(CollectionRoute(item.url, item.title, item.kind, artworkUrl = item.artworkUrl))
-                        }, player.connected, modifier, discovery::setRecommendationFeedback)
+                        }, player.connected, modifier,
+                        onRecommendationFeedback = discovery::setRecommendationFeedback,
+                        onHomeChipSelected = discovery::selectHomeChip,
+                        artistSignals = homeState.data,
+                        onArtistSelected = { artist -> model.searchArtistSongs(artist); searchRequest++ })
                 }, searchRequest = searchRequest,
                 lyricsState = lyricsState, lyricsSettings = lyricsSettings,
                 onLoadLyrics = { lyrics.load(player.track, policy?.privateMode == true) },
@@ -117,8 +123,9 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 onLyricsSettings = lyrics::setPreferences,
                 onLyricsOffset = { player.track?.let { track -> lyrics.setOffset(track, it) } },
                 onClearLyricsCache = lyrics::clearCache,
-                localFoldersContent = { LocalFoldersSettingsSection(container.localAudio) },
                 backupContent = { BackupSettingsSection(container.backup) },
+                spotifyContent = { SpotifyConnectionSettingsSection(container.spotifySession,
+                    container.spotifySessionValidator, spotifyLibraryImport) },
                 recommendationsContent = {
                     RecommendationSettingsSection(recommendations,
                         { enabled -> settingsScope.launch { container.settings.setRecommendationsEnabled(enabled) } },
