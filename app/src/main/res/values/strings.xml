@@ -68,7 +68,6 @@
     <string name="clear_upcoming">Clear upcoming</string>
     <string name="clear_upcoming_body">Remove all songs after the current song? You can undo this.</string>
     <string name="clear">Clear</string>
-    <string name="cancel">Cancel</string>
     <string name="undo">Undo</string>
     <string name="options">Options</string>
     <string name="move_up">Move up</string>
@@ -81,7 +80,6 @@
     <string name="repeat_off">Repeat: off</string>
     <string name="repeat_all">Repeat: all</string>
     <string name="repeat_one">Repeat: one</string>
-    <string name="queue_actions">Queue actions</string>
     <string name="play_next">Play next</string>
     <string name="add_queue">Add to queue</string>
     <string name="player_connecting">Connecting to playback…</string>
@@ -97,12 +95,7 @@
     <string name="reduce_motion">Reduce motion</string>
     <string name="lyrics">Lyrics</string>
     <string name="lyrics_missing">No lyrics available for this song.</string>
-    <string name="lyrics_follow">Return to current line</string>
-    <string name="home_tagline">Music for your moments</string>
     <string name="home_listen_title">Listen</string>
-    <string name="home_mixes_title">Your mixes</string>
-    <string name="refresh_mixes">Refresh mixes</string>
-    <string name="view_all">View all</string>
     <plurals name="home_song_count">
         <item quantity="one">%1$d song</item>
         <item quantity="other">%1$d songs</item>
@@ -113,12 +106,5 @@
     <string name="like_song">Like %1$s</string>
     <string name="unlike_song">Unlike %1$s</string>
     <string name="song_actions">Actions for %1$s</string>
-    <string name="liked_shuffle">Liked shuffle</string>
-    <string name="recent_mix">Recent mix</string>
-    <string name="recently_played">Recently played</string>
-    <string name="pinned_playlists">Pinned playlists</string>
-    <string name="liked_songs">Liked songs</string>
-    <string name="home_read_error">Could not read Home data.</string>
-    <string name="discovery_empty">Find a song to get started. Like songs and pin playlists to make them available here.</string>
     <string name="close">Close</string>
 </resources>

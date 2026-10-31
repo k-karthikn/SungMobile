@@ -1,24 +1,20 @@
-# Sung design foundation
+# Design system
 
-Stage 1 builds the visual foundation around the Stage 0 core. Production screens receive real provider results. Offline screenshot fixtures live under `app/src/test` and are not APK resources.
+`core:designsystem` owns shared visual foundations and controls. Feature-specific screens stay in `app/src/main/java/com/karthi/sungmobile/feature/`; keep navigation, catalog behavior, persistence, and playback out of this module.
 
 ## Where to work
 
-| Location | Purpose |
+| Location | Responsibility |
 | --- | --- |
-| `core/designsystem/.../theme` | Complete light/dark blue M3 color roles, Google Sans Flex typography, spacing, expressive motion and theme options. |
-| `core/designsystem/.../icon` | Typed Material Symbols Rounded vocabulary. Add vectors here when needed. |
-| `core/designsystem/.../artwork` | One Coil loader; reusable tile, circle, pill and flower masks; layered artwork composition. |
-| `core/designsystem/.../component` | Shared expressive button, section heading and accessible loading presentation. |
-| `app/.../app/SungApp.kt` | Home/Search/Library navigation, mini-player, Now Playing and Appearance routes. |
-| `app/.../feature` | Stateless feature screens. Data enters through parameters; actions leave through callbacks. |
-| `app/.../app/SungViewModel.kt` | Existing search/playback coordinator wiring, renamed from `StageZeroViewModel`. |
+| `core/designsystem/.../theme` | Color schemes, typography, spacing, shapes, and motion settings. |
+| `core/designsystem/.../icon` | Typed `SungSymbol` icons and the `SungIcon` composable. |
+| `core/designsystem/.../artwork` | Artwork loading, reusable masks, and layered artwork effects. |
+| `core/designsystem/.../component` | Shared Compose controls and settings components. |
+| `app/.../feature/<feature>` | Feature screens, controls, and presentation state. |
 
-The design-system module has no catalog, provider or player dependencies. Do not put network searches or playback ownership in composables. Keep new screens in feature packages and pass provider-neutral models from `core:model`.
+## Theme and motion
 
-## Use the foundation
-
-Wrap the app once in `SungTheme`. The default is the system light/dark setting with Sung blue colors. Appearance allows explicit light/dark, wallpaper colors on Android 12+, and reduced motion. Artwork-derived palettes remain a later appearance feature. These preferences persist locally. Android's disabled animation setting is also observed while the UI is active.
+Wrap the app in `SungTheme`. Use `MaterialTheme.colorScheme`, `typography`, `shapes`, and `motionScheme`, together with `SungSpacing`; avoid screen-specific copies of shared colors, type, or animation values. The theme supports light and dark modes, wallpaper-derived palettes, and reduced motion. Keep controls usable with Android's system animation scale and larger font sizes.
 
 ```kotlin
 SungTheme {
@@ -29,35 +25,16 @@ SungTheme {
 }
 ```
 
-Use `MaterialTheme.colorScheme`, `typography`, `shapes`, and `motionScheme`, plus `SungSpacing`. The official expressive theme supplies the shape and motion tokens. All 30 normal/emphasized typography roles use the bundled variable font; Android supplies missing-script glyphs through its font fallback chain.
+## Icons and artwork
 
-```kotlin
-SungArtwork(
-    model = song.artworkUrl,
-    modifier = Modifier.size(144.dp),
-    mask = ArtworkMask.PILL,
-)
-```
+Use `SungSymbol` for shared vector icons. Add or change an icon in the design-system module so feature screens keep a consistent icon API.
 
-The pill mask is rotated, not the bitmap. `ArtworkComposition` layers three masks using supplied artwork identities. Adjacent text already names the song, so these images are decorative to TalkBack. Supply `description` when an image carries information not available elsewhere. Missing, loading and failed images retain a neutral disc placeholder. No random art or object segmentation is used.
+Use `SungArtwork` for catalog artwork. It uses the shared Coil loader and supports reusable masks; missing, loading, and failed images should retain a stable placeholder. Treat artwork as decorative when adjacent text already identifies the item. Provide a content description when an image communicates information unavailable elsewhere.
 
-Coil resolves target size from layout constraints, center-crops, shares requests and caches, and cancels disposed requests. Cache budgets are 32 MiB memory and 96 MiB disk. Crossfades and continuous decorative animation are intentionally absent. Coil 3.3.0 matches the Kotlin 2.2 toolchain; the current 3.6 line requires newer Kotlin metadata.
+## Components and accessibility
 
-## Extend screens
+Add a shared component only when it is feature-neutral and has a clear reuse case. Keep feature labels, actions, and state in the feature package. Preserve at least 48 dp touch targets, readable contrast, text wrapping, scrolling, and system/keyboard insets. Do not use color alone to communicate selection or playback state.
 
-Use `CatalogActions` for search, pagination and collection selection; `PlayerActions` for toggle/seek/stop. `SungApp` owns navigation only. A song selection calls the existing coordinator, and every player surface reads the same `PlaybackState`.
+## Review changes
 
-The Home shelf is explicitly “From your search” or “From this collection.” Fresh installs show a search invitation. Library explains that saving is not yet available. No generated recommendations, account controls, likes, queue, lyrics, or automatic next-song controls pretend to work.
-
-New layouts must allow text wrapping and scrolling, reserve system/keyboard insets, and maintain 48 dp touch targets. Home stacks its hero at narrow widths or large font scales. Expanded windows use a rail and bounded content width. Player controls scroll into view at large font sizes.
-
-## Verify changes
-
-```bash
-JAVA_HOME=/opt/android-studio/jbr ./gradlew :app:testDebugUnitTest
-JAVA_HOME=/opt/android-studio/jbr ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:lintDebug
-```
-
-`DesignFoundationTest` uses Robolectric native graphics and Roborazzi to render actual Compose UI, with test-only local YouTube thumbnail fixtures. The host uses Coil's BitmapFactory decoder because Robolectric cannot run Android ImageDecoder's file-descriptor decoding path; production retains Coil's default decoder. Images are written to `app/build/outputs/design-foundation/`. Review Home and Player in light/dark, 200% text, reduced motion, and narrow/expanded widths. These tests render current artifacts, not approved pixel-diff baselines. Review the PNGs when changing the design. Android Studio also has six offline `@Preview` configurations in `app/src/debug/.../preview/DesignPreviews.kt`.
-
-Device testing remains necessary for GPU rendering, TalkBack traversal, wallpaper color extraction, system bars/keyboard and OEM behavior. Stage 1 does not change the existing foreground-only playback lifecycle. Stage 2 owns the service, notification, queue and automatic next song.
+Run `./gradlew :app:lintDebug` and the relevant unit or UI tests when requested for a visual change. The Android Studio previews are in `app/src/debug/.../preview/DesignPreviews.kt`; the Compose rendering test is `DesignFoundationTest`. Review light and dark themes, large text, reduced motion, and narrow and expanded layouts. Device checks are still needed for GPU rendering, TalkBack traversal, wallpaper colors, system bars, keyboard behavior, and OEM differences.

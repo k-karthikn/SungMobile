@@ -9,11 +9,11 @@ This file is the short, current entry point for continuing work. See [`docs/READ
 - Debug application ID: `com.karthi.sungmobile.stage0`. Debug and production installs have separate app data.
 - License: GPL-3.0-or-later. See [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
-Check `git status` before editing so existing work is not overwritten. The `Stages/` evidence archive and deferred Stage 7 prototype were removed from the working tree on 30 October 2026 at the owner's direction. Old milestone reports remain in `docs/`; their deleted artifact references are historical.
+Check `git status` before editing so existing work is not overwritten. Historical stage, UI-refresh, and desktop-reference documents were removed to keep the repository's documentation focused on current development and maintenance.
 
 ## Product and architecture
 
-SungMobile is an Android music player with YouTube discovery and playback, local audio, downloads, playlists, listening history, lyrics, and settings. It can also import Spotify saved tracks and playlists by matching them to playable YouTube Music catalog entries; it does not import Spotify audio. The Android app is the maintained project. The Linux desktop documentation is retained as reference material under [`docs/reference/sung-linux/`](docs/reference/sung-linux/), not as an Android implementation specification.
+SungMobile is an Android music player with YouTube discovery and playback, local audio, downloads, playlists, listening history, lyrics, and settings. It can also import Spotify saved tracks and playlists by matching them to playable YouTube Music catalog entries; it does not import Spotify audio. The Android app is the maintained project.
 
 The modules separate provider-neutral models, YouTube access, persistence, playback, shared Compose design, and app features. The app is the composition root; the playback service owns the live player. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) before moving code between modules.
 
@@ -26,7 +26,7 @@ The production signing configuration is expected at `~/.android/sungmobile-relea
 
 ## Open work
 
-The current review tracks device checks for interrupted downloads and release flows, performance profiling, an accessibility audit, lint-warning cleanup, and a gradual split of complex app wiring. The previous instrumentation install was blocked with `INSTALL_FAILED_USER_RESTRICTED`; no phone acceptance should be inferred from host tests or lint. Use the review document for the latest detailed status rather than treating old stage plans as current.
+The current review tracks device checks for interrupted downloads and release flows, performance profiling, an accessibility audit, lint-warning cleanup, and a gradual split of complex app wiring. The previous instrumentation install was blocked with `INSTALL_FAILED_USER_RESTRICTED`; no phone acceptance should be inferred from host tests or lint. See the [readiness review](docs/PRODUCTION_READINESS_REVIEW.md) and [TODO list](docs/TODO.md) for current status.
 
 ## Suggested reading order
 

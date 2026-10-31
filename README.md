@@ -63,7 +63,7 @@ If you already have a signed production APK, `python3 scripts/production_build.p
 | [`core:designsystem`](core/designsystem) | Theme, icons, artwork and shared Compose controls. |
 | [`app`](app) | Android app wiring, navigation and feature screens under `app/src/main/java/com/karthi/sungmobile/feature/`. |
 
-Keep feature UI in its feature package and reusable storage/data logic in `core:data`; see [`AGENTS.md`](AGENTS.md). Earlier milestone notes live under [`docs`](docs). The old `Stages/` artifacts and deferred Stage 7 source snapshot were removed from the working tree on 30 October 2026; milestone reports may still describe those historical files.
+Keep feature UI in its feature package and reusable storage/data logic in `core:data`; see [`AGENTS.md`](AGENTS.md). Current contributor and maintainer guidance is indexed in [`docs/README.md`](docs/README.md).
 
 New contributors can start with [`CONTRIBUTE.md`](CONTRIBUTE.md) for setup and checks, then use the [documentation index](docs/README.md) and [architecture guide](docs/ARCHITECTURE.md) for code ownership and dependency direction.
 

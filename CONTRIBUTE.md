@@ -6,8 +6,7 @@ Thanks for taking the time to improve SungMobile. This guide covers the project 
 
 - Read the [README](README.md) for the app overview and setup requirements.
 - Read the [architecture guide](docs/ARCHITECTURE.md) before moving code across modules.
-- Check the relevant plan or report under [`docs/`](docs/) before changing an existing feature. Historical reports may mention artifacts that are no longer in the repository.
-- Check the [active TODO list](docs/TODO.md) and [readiness review](docs/PRODUCTION_READINESS_REVIEW.md) for known follow-up work. Avoid duplicating tracked issues or treating historical stage plans as current tasks.
+- Check the [active TODO list](docs/TODO.md) and [readiness review](docs/PRODUCTION_READINESS_REVIEW.md) before starting known follow-up work. Avoid duplicating an existing tracked issue or pull request.
 - For larger changes, open an issue or discussion first so the intended behavior and scope are clear.
 
 ## Set up the project
@@ -46,6 +45,7 @@ The GitHub Actions workflow runs `test` and `:app:lintDebug` for pull requests a
 - Keep app wiring in `app/AppContainer.kt` and `app/SungRoot.kt` small. Put feature behavior in its feature package.
 - Follow existing module boundaries and reuse existing models and helpers instead of duplicating behavior.
 - Prefer clear names, small functions, and explicit data models. Avoid unrelated formatting or dependency changes in a feature fix.
+- Before removing an Android resource, search Kotlin, XML, the manifest, and resource-to-resource references. Keep source assets when they document or generate runtime assets, even if the app does not load the source file directly.
 - Update user-facing documentation when behavior, setup, privacy, or limitations change.
 
 See [`AGENTS.md`](AGENTS.md) for the repository's code-organization rules.

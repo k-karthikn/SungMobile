@@ -1,6 +1,6 @@
 # Project TODO list
 
-This is the active, contributor-facing list of known follow-up work for the current Android project. Check items here off only after the change is implemented and its stated evidence is recorded. The [production readiness review](PRODUCTION_READINESS_REVIEW.md) has the detailed background and acceptance criteria; older stage plans and reports are historical records, not additional active work lists.
+This is the active, contributor-facing list of known follow-up work for the current Android project. Check items here off only after the change is implemented and its stated evidence is recorded. The [production readiness review](PRODUCTION_READINESS_REVIEW.md) has the detailed background and acceptance criteria.
 
 ## Device verification
 
