@@ -15,7 +15,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-/** Keeps the Spotify web session cookie encrypted with a key held by Android Keystore. */
+/** Encrypts the web cookie and short-lived token under noBackupFilesDir using an Android Keystore key. */
 class SpotifySessionStore(context: Context) {
     private val file = File(context.applicationContext.noBackupFilesDir, FILE_NAME)
     private val tokenFile = File(context.applicationContext.noBackupFilesDir, TOKEN_FILE_NAME)
@@ -30,6 +30,7 @@ class SpotifySessionStore(context: Context) {
             "Spotify session cookie is invalid"
         }
         encrypt(file, clean)
+        // A new cookie must not keep an access token minted for the previous session.
         tokenFile.delete()
     }
 
@@ -59,6 +60,7 @@ class SpotifySessionStore(context: Context) {
         val encoded = Base64.encodeToString(cipher.iv + encrypted, Base64.NO_WRAP)
         val temporary = File(target.parentFile, "${target.name}.tmp")
         temporary.writeText(encoded, Charsets.UTF_8)
+        // Replace the target only after the ciphertext is complete so a crash cannot truncate credentials.
         Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
     }
 

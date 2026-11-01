@@ -53,6 +53,7 @@ data class QueueState(
 
     fun shuffle(enabled: Boolean, random: Random = Random.Default): QueueState {
         if (enabled == shuffled) return this
+        // Shuffle upcoming entries only; the current occurrence stays in place.
         val updated = if (enabled) entries.take(currentIndex + 1) + entries.drop(currentIndex + 1).shuffled(random)
         else originalOrder.map { id -> entries.first { it.id == id } }
         return copy(entries = updated, shuffled = enabled)

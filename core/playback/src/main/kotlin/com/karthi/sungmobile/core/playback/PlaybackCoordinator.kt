@@ -107,6 +107,7 @@ class PlaybackCoordinator(
         insert(if (next) queue.currentIndex + 1 else queue.entries.size, tracks.map { QueueEntry(track = it) })
     }
 
+    /** Queue and position only; process restart must not resume audio. */
     fun restore(snapshot: QueueSnapshot) {
         cancelNetworkRecovery()
         cancelResolution()
@@ -168,6 +169,7 @@ class PlaybackCoordinator(
         engine.stop()
         resumePositionMs = position.coerceAtLeast(0)
         val updated = queue.copy(currentId = id)
+        // A new passId starts a separate listening record so skip/retry is not merged into the previous play.
         mutableState.update { it.copy(track = updated.current?.track, queue = updated, sourceError = null, passId = UUID.randomUUID().toString(),
             resolving = false, engine = EngineSnapshot(positionMs = resumePositionMs,
                 durationMs = updated.current?.track?.durationMs ?: 0)) }
@@ -305,6 +307,7 @@ class PlaybackCoordinator(
         if (wasRecovering || state.value.sourceError != null || state.value.engine.error != null) networkRecoveries = 0
         val current = state.value
         wantsPlayback = true
+        // Replay after natural end is a new listen, not a continuation of the completed pass.
         if (current.track != null && (current.passId == null || current.engine.ended))
             mutableState.update { it.copy(passId = UUID.randomUUID().toString()) }
         if (current.resolving && !wasRecovering) return
@@ -344,6 +347,7 @@ class PlaybackCoordinator(
     override fun next() { state.value.queue.nextId(automatic = false)?.let { activate(it, wantsPlayback) } }
     override fun previous() {
         val queue = state.value.queue
+        // Restart the current track once playback is underway so Previous is not an accidental skip.
         if (state.value.engine.positionMs > 3_000) {
             if (loaded) seekTo(0) else activate(queue.currentId ?: return, wantsPlayback)
         } else {

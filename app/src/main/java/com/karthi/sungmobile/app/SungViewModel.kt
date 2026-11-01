@@ -42,6 +42,7 @@ class SungViewModel(private val catalog: CatalogSource, val player: PlaybackCont
     private fun invalidate() { generation++; job?.cancel() }
     private fun schedule() {
         val current = catalogState.value
+        // Debounce typing; pasted URLs are opened as links, not catalog queries.
         if (!active || current.query.trim().length < 2 || MusicLinks.looksLikeLink(current.query)) return
         val request = generation
         job = viewModelScope.launch { delay(350); if (request == generation) search(record = false) }
@@ -68,6 +69,7 @@ class SungViewModel(private val catalog: CatalogSource, val player: PlaybackCont
     fun open(item: CatalogItem) {
         commit()
         if (item.kind == CatalogKind.SONG) {
+            // Queue the currently loaded page; a later search must not replace this snapshot.
             val songs = catalogState.value.page?.items.orEmpty().filter { it.kind == CatalogKind.SONG }
             val index = songs.indexOfFirst { it.id == item.id }
             if (index >= 0) player.select(songs, index) else player.select(listOf(item), 0)

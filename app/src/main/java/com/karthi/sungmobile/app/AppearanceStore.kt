@@ -45,8 +45,7 @@ class AppearanceStore(private val repository: SettingsRepository, scope: Corouti
         }
     }
     fun update(value: Appearance) {
-        // Reflect control changes immediately; the channel still serializes the
-        // durable write, while the settings screen does not feel like a dead button.
+        // Optimistic UI; the conflated channel still serializes the durable write.
         mutableState.value = value
         changes.trySend(value)
     }

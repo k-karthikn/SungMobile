@@ -27,6 +27,7 @@ import kotlinx.coroutines.SupervisorJob
 /** Application-lifetime dependencies. The playback service creates and releases its own engine. */
 class AppContainer(context: Context) {
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    /** Previous service instance drains queue/history writes here; the next restore waits on this job. */
     var playbackShutdown: Job? = null
         internal set
     val catalog by lazy { YouTubeSource() }

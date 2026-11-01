@@ -25,6 +25,7 @@ class YouTubeSource : CatalogSource, StreamResolver, DownloadStreamResolver, Rel
     override suspend fun nextPage(token: PageToken) = catalogExecution.run { catalog.nextPage(token) }
     override suspend fun open(url: String): CatalogPage {
         val browse = runCatching { YouTubeLink.parse(url) }.getOrNull() as? YouTubeLink.Browse
+        // Music browse IDs (albums, playlists, channels) are not interchangeable with watch URLs.
         if (browse != null && (browse.browseId.startsWith("MPRE") || browse.browseId.startsWith("VL") ||
                 browse.browseId.startsWith("MPSPPL") || browse.browseId.startsWith("UC"))) {
             val kind = when {
@@ -35,6 +36,7 @@ class YouTubeSource : CatalogSource, StreamResolver, DownloadStreamResolver, Rel
             return try {
                 musicBrowse.openCollection(browse.browseId, url, kind)
             } catch (error: SourceException) {
+                // Artist Music browse is often empty; the YouTube channel page still lists uploads.
                 if (kind != CatalogKind.ARTIST) throw error
                 catalogExecution.run { catalog.open("https://www.youtube.com/channel/${browse.browseId}") }
             }

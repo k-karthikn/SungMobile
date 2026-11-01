@@ -26,7 +26,7 @@ data class AdvancedPlaybackSettings(val smartShuffle: Boolean = false, val relat
     fun trimFor(videoId: String?) = videoId?.let { trimsDb[it] } ?: 0
 }
 
-/** One DataStore per application; imports the Stage 1 preferences on first read. */
+/** One DataStore per application; first read migrates the original "appearance" SharedPreferences. */
 class SettingsRepository(context: Context) : PortableSettingsStore, RecommendationSettingsStore {
     private val store = context.applicationContext.sungSettings
     private val theme = stringPreferencesKey("theme")

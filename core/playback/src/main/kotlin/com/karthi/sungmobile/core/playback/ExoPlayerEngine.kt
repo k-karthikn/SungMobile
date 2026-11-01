@@ -46,6 +46,7 @@ class ExoPlayerEngine(private val context: Context, scope: CoroutineScope) : Pla
             val http = generateSequence<Throwable>(error) { it.cause }
                 .filterIsInstance<HttpDataSource.InvalidResponseCodeException>().firstOrNull()
             failure = when {
+                // Signed YouTube URLs fail with 403/410; those are refreshable rather than fatal HTTP errors.
                 http?.responseCode in setOf(403, 410) -> EngineFailure.EXPIRED_STREAM
                 error.errorCode in 2000..2999 -> EngineFailure.NETWORK
                 error.errorCode in 3000..4999 -> EngineFailure.DECODING

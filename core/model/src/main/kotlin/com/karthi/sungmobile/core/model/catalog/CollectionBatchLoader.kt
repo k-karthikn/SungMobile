@@ -24,6 +24,7 @@ class CollectionBatchLoader(private val source: CatalogSource, private val maxEn
                     if (!visited.add(token)) return@withTimeoutOrNull CollectionBatch(page, BatchStop.PAGE_LOOP)
                     val next = source.nextPage(token)
                     requests++
+                    // An empty page that still advertises a continuation is a provider loop, not more data.
                     if (next.items.isEmpty() && next.next != null) return@withTimeoutOrNull CollectionBatch(page, BatchStop.PAGE_LOOP)
                     val remaining = maxEntries - page.items.size
                     page = page.copy(items = page.items + next.items.take(remaining), next = next.next,

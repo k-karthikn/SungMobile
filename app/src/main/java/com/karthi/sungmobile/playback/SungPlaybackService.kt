@@ -61,6 +61,7 @@ class SungPlaybackService : MediaSessionService() {
             }.distinctUntilChanged().collect { playback.setRelatedAutoplayEnabled(it) }
         }
         serviceScope.launch {
+            // A rapid destroy/create must not restore until the previous writer's flush has finished.
             container.playbackShutdown?.join()
             persistence.restore()
             historyRecording = com.karthi.sungmobile.core.playback.history.HistoryRecording(

@@ -3,7 +3,7 @@ package com.karthi.sungmobile.core.data.db
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-/** Additive migration: the accepted Stage 2 queue remains intact. */
+/** Additive: library and history tables are created without rewriting existing queue rows. */
 object LibraryMigration : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE queue_header ADD COLUMN playbackPassId TEXT")

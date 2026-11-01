@@ -5,11 +5,12 @@ import androidx.room.Room
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-/** Schema 4 omits the deferred device-audio feature. Existing tables are left intact on upgrade. */
+/** Skip unpublished intermediate schemas; no table rewrite, including unused device-audio tables. */
 private object Stage2ToOnlineOnly : Migration(2, 4) {
     override fun migrate(db: SupportSQLiteDatabase) = Unit
 }
 
+/** Same no-op from schema 3; that version also never shipped extra tables. */
 private object Stage7ToOnlineOnly : Migration(3, 4) {
     override fun migrate(db: SupportSQLiteDatabase) = Unit
 }
@@ -21,7 +22,7 @@ object DatabaseProvider {
             BackupRestoreJournalMigration).build()
 }
 
-/** Add Stage 9's local definitions without altering existing library or history rows. */
+/** Add smart playlists and playlist revisions without rewriting library or history rows. */
 internal object Stage8ToStage9 : Migration(4, 5) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `smart_playlists` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `requireLiked` INTEGER NOT NULL, `minPlays` INTEGER NOT NULL, `recentDays` INTEGER NOT NULL, `sort` TEXT NOT NULL, `maxSongs` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))")

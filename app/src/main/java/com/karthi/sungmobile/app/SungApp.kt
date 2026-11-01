@@ -91,6 +91,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     LaunchedEffect(lyricsVisible, playback.track?.id, lyricsSettings.lrclibEnabled, privateMode) {
         if (lyricsVisible && playback.track != null) {
             onCancelLyrics()
+            // Wait out a brief Now Playing peek so lyrics are not fetched on every mini-player tap.
             if (overlay == Overlay.PLAYER) delay(300)
             onLoadLyrics()
         } else onCancelLyrics()

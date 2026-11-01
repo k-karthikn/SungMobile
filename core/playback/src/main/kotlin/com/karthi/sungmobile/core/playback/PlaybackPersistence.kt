@@ -37,7 +37,9 @@ class PlaybackPersistence(
         observer = serviceScope.launch {
             player.state.distinctUntilChangedBy {
                 listOf(it.passId, it.queue, it.engine.positionMs / 5_000, it.engine.playRequested, it.engine.ended)
-            }.drop(if (readFailed) 1 else 0).collect {
+            }
+            // After a failed read, skip the first in-memory snapshot so an empty restore cannot overwrite disk.
+            .drop(if (readFailed) 1 else 0).collect {
                 writable = true
                 writes.send(QueueSnapshot(it.queue, it.engine.positionMs, it.passId))
             }
