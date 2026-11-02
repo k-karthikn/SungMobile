@@ -1,5 +1,6 @@
 package com.karthi.sungmobile.feature.spotify
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.karthi.sungmobile.core.data.spotify.SpotifyLibraryImporter
@@ -82,9 +83,13 @@ class SpotifyLibraryImportViewModel(
             error = null, message = null) }
         viewModelScope.launch {
             try {
+                val fetchStartedAt = System.nanoTime()
                 val collection = load()
+                Log.i(TAG, "Fetched ${collection.tracks.size} Spotify tracks in ${elapsedMs(fetchStartedAt)} ms")
                 mutableState.update { it.copy(previewTitle = collection.title, matchingTotal = collection.tracks.size) }
+                val matchingStartedAt = System.nanoTime()
                 val results = matchTracks(collection.tracks)
+                Log.i(TAG, "Matched ${collection.tracks.size} Spotify tracks in ${elapsedMs(matchingStartedAt)} ms")
                 mutableState.update { it.copy(matches = results, working = false,
                     error = if (results.isEmpty()) "Spotify returned no tracks in this collection." else null) }
             } catch (cancelled: CancellationException) {
@@ -96,29 +101,40 @@ class SpotifyLibraryImportViewModel(
     }
 
     private suspend fun matchTracks(tracks: List<SpotifyLibraryTrack>): List<SpotifyTrackMatch> = coroutineScope {
+        val groups = tracks.groupBy { searchQuery(it).lowercase().replace(Regex("\\s+"), " ").trim() }
         val limiter = Semaphore(MATCH_CONCURRENCY)
-        tracks.map { spotifyTrack ->
+        val matchesByQuery = groups.map { (queryKey, groupedTracks) ->
             async(Dispatchers.IO) {
                 limiter.withPermit {
-                    val best = try {
-                        val query = listOf(spotifyTrack.title, spotifyTrack.artist).filter(String::isNotBlank).joinToString(" ")
-                        catalog.search(query, CatalogKind.SONG).items
-                            .asSequence().filter { it.kind == CatalogKind.SONG }
-                            .map { candidate -> candidate to matchScore(spotifyTrack, candidate) }
-                            .maxByOrNull { it.second }
-                            ?.takeIf { (_, score) -> score >= MATCH_THRESHOLD }
-                            ?.first
+                    val candidates = try {
+                        catalog.searchSongsForMatching(searchQuery(groupedTracks.first()))
+                            .items.filter { it.kind == CatalogKind.SONG }
                     } catch (cancelled: CancellationException) {
                         throw cancelled
                     } catch (_: Exception) {
-                        null
+                        emptyList()
                     }
-                    mutableState.update { current -> current.copy(matchingProgress = (current.matchingProgress + 1).coerceAtMost(tracks.size)) }
-                    SpotifyTrackMatch(spotifyTrack, best)
+                    mutableState.update { current -> current.copy(
+                        matchingProgress = (current.matchingProgress + groupedTracks.size).coerceAtMost(tracks.size)) }
+                    queryKey to groupedTracks.map { spotifyTrack ->
+                        val best = candidates.asSequence()
+                            .map { candidate -> candidate to matchScore(spotifyTrack, candidate) }
+                            .maxByOrNull { it.second }
+                            ?.takeIf { it.second >= MATCH_THRESHOLD }
+                            ?.first
+                        SpotifyTrackMatch(spotifyTrack, best)
+                    }
                 }
             }
-        }.awaitAll()
+        }.awaitAll().toMap()
+        tracks.map { track ->
+            val queryKey = searchQuery(track).lowercase().replace(Regex("\\s+"), " ").trim()
+            matchesByQuery[queryKey].orEmpty().first { it.spotifyTrack == track }
+        }
     }
+
+    private fun searchQuery(track: SpotifyLibraryTrack): String =
+        listOf(track.title, track.artist).filter(String::isNotBlank).joinToString(" ")
 
     fun importPreview() {
         val snapshot = mutableState.value
@@ -179,8 +195,11 @@ class SpotifyLibraryImportViewModel(
         .replace(Regex("[^\\p{L}\\p{N}]+"), " ")
         .trim().replace(Regex("\\s+"), " ")
 
+    private fun elapsedMs(startedAt: Long): Long = (System.nanoTime() - startedAt) / 1_000_000
+
     private companion object {
-        const val MATCH_CONCURRENCY = 3
+        const val TAG = "SpotifyLibraryImport"
+        const val MATCH_CONCURRENCY = 4
         const val MATCH_THRESHOLD = .64
     }
 }

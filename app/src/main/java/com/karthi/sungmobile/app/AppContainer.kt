@@ -13,6 +13,7 @@ import com.karthi.sungmobile.core.data.lyrics.LyricsCache
 import com.karthi.sungmobile.core.data.lyrics.LocalLyricsReader
 import com.karthi.sungmobile.core.data.queue.RoomQueueStore
 import com.karthi.sungmobile.core.data.recommendation.RoomRecommendationProfileSource
+import com.karthi.sungmobile.core.data.recommendation.PlaylistCandidateRepository
 import com.karthi.sungmobile.core.data.settings.SettingsRepository
 import com.karthi.sungmobile.core.data.spotify.SpotifySessionStore
 import com.karthi.sungmobile.core.data.spotify.SpotifySessionValidator
@@ -38,6 +39,7 @@ class AppContainer(context: Context) {
     val history by lazy { RoomHistoryRepository(database) }
     val home by lazy { RoomHomeRepository(database) }
     val recommendationProfile by lazy { RoomRecommendationProfileSource(database) }
+    val playlistCandidates by lazy { PlaylistCandidateRepository(catalog, catalog) }
     val settings by lazy { SettingsRepository(context) }
     val spotifySession by lazy { SpotifySessionStore(context) }
     val spotifySessionValidator by lazy { SpotifySessionValidator(spotifySession) }

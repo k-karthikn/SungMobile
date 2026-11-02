@@ -185,26 +185,25 @@ class DesignFoundationTest {
         compose.onNodeWithTag("open_queue").assertContentDescriptionContains("Collapse queue, Queue (2)")
     }
 
-    @Test fun statisticsPageHidesMiniPlayerAndNavigation() {
+    @Test fun statisticsOpensFromHomeAndHidesPlaybackControls() {
         var statisticsOpen by mutableStateOf(false)
+        var statisticsClosed by mutableStateOf(false)
         compose.setContent {
             SungTheme {
                 SungApp(catalog, player, catalogActions, playerActions, Appearance(), {},
-                    homeContent = { _, _, _, _, openLibrary ->
-                        androidx.compose.material3.Button({ statisticsOpen = true; openLibrary() }) {
-                            androidx.compose.material3.Text("Open statistics")
-                        }
-                    },
-                    libraryContent = { _, _, _, _ ->
-                        androidx.compose.material3.Text("Statistics page")
-                    }, statisticsPageOpen = statisticsOpen)
+                    onStatisticsSelected = { statisticsOpen = true },
+                    onStatisticsClosed = { statisticsClosed = true },
+                    statisticsContent = { _, _ -> androidx.compose.material3.Text("Statistics page") })
             }
         }
         compose.onNodeWithTag("mini_player").assertIsDisplayed()
-        compose.onNodeWithText("Open statistics").performClick()
+        compose.onNodeWithTag("nav_stats").performClick()
         compose.onNodeWithText("Statistics page").assertIsDisplayed()
         compose.onNodeWithTag("mini_player").assertDoesNotExist()
         compose.onNodeWithTag("nav_library").assertDoesNotExist()
+        compose.onNodeWithTag("stats_back").performClick()
+        assertTrue(statisticsOpen)
+        assertTrue(statisticsClosed)
     }
 
     private fun render(name: String, dark: Boolean = false, fontScale: Float = 1f,

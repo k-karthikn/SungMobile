@@ -32,6 +32,7 @@ private enum class Overlay { NONE, PLAYER, APPEARANCE, SPOTIFY, FEEDBACK, HISTOR
 
 /** Navigation belongs to the UI. Playback is observed from the service across destination changes. */
 @Composable
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: CatalogActions,
     playerActions: PlayerActions, appearance: Appearance, onAppearance: (Appearance) -> Unit, settingsError: Boolean = false,
     libraryContent: (@Composable (Modifier, () -> Unit, () -> Unit, () -> Unit) -> Unit)? = null,
@@ -41,7 +42,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     hasRecentSearches: Boolean = false,
     detailId: String? = null, closeDetail: () -> Unit = {},
     collectionContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
-    homeContent: (@Composable (Modifier, () -> Unit, () -> Unit, () -> Unit, () -> Unit) -> Unit)? = null,
+    homeContent: (@Composable (Modifier, () -> Unit, () -> Unit, () -> Unit, () -> Unit, () -> Unit) -> Unit)? = null,
     searchRequest: Int = 0,
     lyricsState: LyricsUiState = LyricsUiState(), lyricsSettings: LyricsSettings = LyricsSettings(),
     onLoadLyrics: () -> Unit = {}, onRetryLyrics: () -> Unit = {}, onLyricsSettings: (LyricsSettings) -> Unit = {},
@@ -50,11 +51,13 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     backupContent: @Composable () -> Unit = {},
     spotifyContent: @Composable () -> Unit = {},
     recommendationsContent: @Composable () -> Unit = {},
+    onStatisticsSelected: () -> Unit = {},
+    onStatisticsClosed: () -> Unit = {},
+    statisticsContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
     resumeContent: @Composable (PlaybackState) -> Unit = {},
     playerMoreContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
     volumeContent: @Composable (PlaybackState) -> Unit = {},
     sessionsContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
-    statisticsPageOpen: Boolean = false,
     livePlayback: kotlinx.coroutines.flow.StateFlow<PlaybackState>? = null) {
     val screenState = rememberSaveableStateHolder()
     var destination by rememberSaveable { mutableStateOf(Destination.HOME) }
@@ -63,6 +66,14 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     var miniVolume by rememberSaveable { mutableStateOf(false) }
     var miniQueueRequest by remember { mutableStateOf(false) }
     var frozenBackdropUrl by rememberSaveable { mutableStateOf<String?>(null) }
+    val navigateTo: (Destination) -> Unit = { target ->
+        if (destination != target) {
+            val leavingStatistics = destination == Destination.STATS
+            destination = target
+            if (target == Destination.STATS) onStatisticsSelected()
+            else if (leavingStatistics) onStatisticsClosed()
+        }
+    }
     LaunchedEffect(appearance.ambientBackdrop, appearance.backdropFollowsMusic, playback.track?.artworkUrl) {
         if (!appearance.ambientBackdrop || appearance.backdropFollowsMusic || frozenBackdropUrl == null) {
             frozenBackdropUrl = playback.track?.artworkUrl
@@ -83,7 +94,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
         if (detailId != null) overlay = Overlay.COLLECTION
         else if (overlay == Overlay.COLLECTION) overlay = Overlay.NONE
     }
-    LaunchedEffect(searchRequest) { if (searchRequest > 0) { destination = Destination.SEARCH; overlay = Overlay.NONE } }
+    LaunchedEffect(searchRequest) { if (searchRequest > 0) { navigateTo(Destination.SEARCH); overlay = Overlay.NONE } }
     LaunchedEffect(playback.track, overlay) {
         if (playback.track == null && (overlay == Overlay.PLAYER || overlay == Overlay.LYRICS)) overlay = Overlay.NONE
     }
@@ -107,7 +118,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
             overlay == Overlay.PLAYER && detailId != null -> overlay = Overlay.COLLECTION
             overlay != Overlay.NONE -> overlay = Overlay.NONE
             destination == Destination.SEARCH && catalog.inCollection -> catalogActions.back()
-            else -> destination = Destination.HOME
+            else -> navigateTo(Destination.HOME)
         }
     }
     BackHandler(overlay != Overlay.NONE || destination != Destination.HOME, back)
@@ -115,10 +126,10 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
         val wide = maxWidth >= 840.dp
         val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
         Row(Modifier.fillMaxSize()) {
-            if (wide && overlay == Overlay.NONE && !statisticsPageOpen) {
+            if (wide && overlay == Overlay.NONE && destination != Destination.STATS) {
                 NavigationRail(Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))) {
-                    Destination.entries.forEach { target ->
-                        NavigationRailItem(destination == target, { destination = target },
+                    listOf(Destination.HOME, Destination.SEARCH, Destination.LIBRARY).forEach { target ->
+                        NavigationRailItem(destination == target, { navigateTo(target) },
                             icon = { SungIcon(if (destination == target) target.selectedIcon else target.icon) },
                             label = { Text(stringResource(target.label)) }, modifier = Modifier.testTag("nav_${target.name.lowercase()}"))
                     }
@@ -126,7 +137,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
             }
             Scaffold(Modifier.weight(1f).imePadding(), contentWindowInsets = WindowInsets.safeDrawing,
                 bottomBar = {
-                    if (((overlay == Overlay.NONE && !statisticsPageOpen) ||
+                    if (destination != Destination.STATS && (overlay == Overlay.NONE ||
                         (overlay == Overlay.COLLECTION && playback.track != null)) && !keyboardVisible) {
                         Column(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars)
                             .padding(horizontal = 12.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally,
@@ -137,7 +148,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                                 { miniVolume = true },
                                 Modifier.widthIn(max = SungSpacing.contentMaxWidth), livePlayback)
                             if (!wide && overlay == Overlay.NONE) {
-                                SungNavigationBar(destination) { destination = it }
+                                SungNavigationBar(destination, navigateTo)
                             }
                         }
                     }
@@ -187,15 +198,35 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                             Overlay.SPOTIFY -> SpotifySettingsScreen(back, content) { spotifyContent() }
                             Overlay.NONE -> when (destination) {
                                 Destination.HOME -> screenState.SaveableStateProvider("home") { if (homeContent != null) homeContent(Modifier.weight(1f),
-                                    { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { overlay = Overlay.APPEARANCE }, { destination = Destination.LIBRARY })
+                                    { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER },
+                                    { overlay = Overlay.APPEARANCE }, { destination = Destination.LIBRARY },
+                                    { navigateTo(Destination.STATS) })
                                     else HomeScreen(playback.track, catalog.page?.items.orEmpty(), catalog.inCollection,
                                     { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { item ->
                                         catalogActions.open(item)
                                         if (item.kind != CatalogKind.SONG) destination = Destination.SEARCH
-                                    }, { overlay = Overlay.APPEARANCE }, content) }
+                                    }, { overlay = Overlay.APPEARANCE }, content,
+                                        { navigateTo(Destination.STATS) }) }
                                 Destination.SEARCH -> screenState.SaveableStateProvider("search") {
                                     SearchScreen(catalog, playback.track?.id, catalogActions, Modifier.weight(1f),
                                         playback.connected, recentSearches, hasRecentSearches, playback.engine.playing)
+                                }
+                                Destination.STATS -> screenState.SaveableStateProvider("stats") {
+                                    Column(Modifier.weight(1f)) {
+                                        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                            FilledTonalIconButton(onClick = { navigateTo(Destination.HOME) },
+                                                shapes = IconButtonDefaults.shapes(),
+                                                modifier = Modifier.size(48.dp).testTag("stats_back")) {
+                                                SungIcon(SungSymbol.Back, "Back to Home")
+                                            }
+                                            Text("Listening statistics", style = MaterialTheme.typography.headlineSmall,
+                                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                                        }
+                                        statisticsContent?.invoke(Modifier.weight(1f)) { navigateTo(Destination.HOME) }
+                                            ?: Text("Listening statistics are unavailable.", Modifier.padding(24.dp))
+                                    }
                                 }
                                 Destination.LIBRARY -> Column(Modifier.weight(1f)) {
                                     if (libraryContent == null) TextButton({ sessionsFromPlayer = false; overlay = Overlay.SESSIONS },

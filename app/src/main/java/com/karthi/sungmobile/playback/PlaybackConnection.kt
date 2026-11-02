@@ -96,6 +96,16 @@ class PlaybackConnection(private val context: Context, private val scope: Corout
             .setExtras(Bundle().apply { putBoolean(PlaybackCommands.COLLECTION_SHUFFLE, shuffle) }).build()).build()
         controller?.apply { setMediaItems(items, 0, 0); prepare(); play() }
     }
+    override fun playRadio(tracks: List<CatalogItem>) {
+        if (!state.value.connected || tracks.isEmpty()) return
+        val items = tracks.map { QueueEntry(track = it).toMediaItem() }.toMutableList()
+        items[0] = items[0].buildUpon().setRequestMetadata(androidx.media3.common.MediaItem.RequestMetadata.Builder()
+            .setExtras(Bundle().apply {
+                putBoolean(PlaybackCommands.COLLECTION_SHUFFLE, false)
+                putBoolean(PlaybackCommands.COLLECTION_RADIO, true)
+            }).build()).build()
+        controller?.apply { setMediaItems(items, 0, 0); prepare(); play() }
+    }
     override fun enqueueAll(tracks: List<CatalogItem>, next: Boolean) {
         controller?.apply {
             val index = if (next) (currentMediaItemIndex + 1).coerceIn(0, mediaItemCount) else mediaItemCount

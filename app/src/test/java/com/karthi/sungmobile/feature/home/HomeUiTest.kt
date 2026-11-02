@@ -44,7 +44,6 @@ class HomeUiTest {
     private var opened: CatalogItem? = null
     private var mood: String? = null
     private var refreshed = 0
-    private var statisticsOpened = false
 
     @OptIn(coil3.annotation.DelicateCoilApi::class)
     @Before fun images() {
@@ -80,11 +79,9 @@ class HomeUiTest {
         compose.onNodeWithText("Recently played").assertDoesNotExist()
         compose.onNodeWithText("Pinned playlists").assertDoesNotExist()
         compose.onNodeWithText("Liked songs").assertDoesNotExist()
-        compose.onNodeWithTag("discovery_home").performScrollToKey("header")
         compose.onNodeWithContentDescription("Refresh Home").performClick()
         assertEquals(1, refreshed)
-        compose.onNodeWithTag("home_listening_statistics").performClick()
-        assertTrue(statisticsOpened)
+        compose.onNodeWithTag("home_listening_statistics").assertDoesNotExist()
     }
 
     @Test fun personalizedRowAddsToHomeWithoutReplacingProviderRows() {
@@ -103,6 +100,7 @@ class HomeUiTest {
 
     @Test fun moodShortcutAndOfflineStateKeepNavigationUsable() {
         show()
+        compose.onNodeWithTag("discovery_home").performScrollToKey("moods")
         compose.onNodeWithTag("mood_focus").performClick()
         assertEquals("instrumental focus", mood)
         compose.runOnIdle { feed = DiscoveryFeedState(initialLoading = false, error = SourceFailure.NETWORK) }
@@ -121,10 +119,10 @@ class HomeUiTest {
                     SungApp(CatalogState(), PlaybackState(),
                         CatalogActions({}, {}, {}, {}, {}, {}, {}, {}),
                         PlayerActions({}, {}, {}), Appearance(), {},
-                        homeContent = { modifier, search, _, appearance, library ->
+                        homeContent = { modifier, search, _, appearance, library, statistics ->
                             DiscoveryHomeScreen(feed, { refreshed++ }, {}, search, appearance, library,
-                                { statisticsOpened = true },
-                                { mood = it }, { _, item -> opened = item }, true, modifier)
+                                { mood = it }, { _, item -> opened = item }, true, modifier,
+                                openStatistics = statistics)
                         })
                 }
             }

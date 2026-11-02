@@ -8,9 +8,10 @@ import com.karthi.sungmobile.core.model.library.libraryKeyOrNull
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** Keeps provider expansion and local ranking out of Compose and the ordinary Home fetch path. */
 internal class PersonalizedHomeController(
@@ -37,12 +38,14 @@ internal class PersonalizedHomeController(
                 profile to preferences
             }.collect { (updatedProfile, updatedPreferences) ->
                 val previousMore = preferences.feedback.filterValues { it == RecommendationFeedback.MORE }.keys
+                val previousLiked = profile.liked.mapNotNull { it.libraryKeyOrNull() }.toSet()
+                val previousSaved = profile.saved.mapNotNull { it.libraryKeyOrNull() }.toSet()
                 profile = updatedProfile
                 preferences = updatedPreferences
                 ready = true
                 val chosenMore = preferences.feedback.filterValues { it == RecommendationFeedback.MORE }.keys
-                val allowedSeeds = profile.liked.mapNotNull { it.libraryKeyOrNull() }.toSet() + chosenMore
-                if (seedKeys.any { it !in allowedSeeds }) {
+                val allowedSeeds = profileSeedKeys() + chosenMore
+                if (seedKeys.isNotEmpty() && seedKeys.any { it !in allowedSeeds }) {
                     fetch?.cancel()
                     seedKeys = emptyList()
                     fetchedAt = 0L
@@ -60,8 +63,10 @@ internal class PersonalizedHomeController(
                 publishRanked()
                 if (eligible() && provider.isNotEmpty()) {
                     when {
-                        chosenMore.any { it !in previousMore } -> fetchRelated(force = true)
-                        fetchedAt == 0L -> fetchRelated(force = false)
+                        chosenMore.any { it !in previousMore } ||
+                            profile.liked.mapNotNull { it.libraryKeyOrNull() }.any { it !in previousLiked } ||
+                            profile.saved.mapNotNull { it.libraryKeyOrNull() }.any { it !in previousSaved } -> fetchRelated(force = true)
+                        fetchedAt == 0L || seedKeys.isEmpty() -> fetchRelated(force = false)
                     }
                 }
             }
@@ -74,7 +79,7 @@ internal class PersonalizedHomeController(
             .distinctBy { it.libraryKeyOrNull() }
             .mapIndexed { index, item -> RecommendationCandidate(item, index * 2) }.take(70).toList()
         publishRanked()
-        if (eligible()) fetchRelated(force = true)
+        if (eligible()) fetchRelated(force = false)
     }
 
     fun setFeedback(item: CatalogItem, feedback: RecommendationFeedback?) {
@@ -83,7 +88,8 @@ internal class PersonalizedHomeController(
         scope.launch { settings.setRecommendationFeedback(key, feedback) }
     }
 
-    private fun eligible() = ready && preferences.enabled && !profile.policy.privateMode && profile.hasSignals
+    private fun eligible() = ready && preferences.enabled && !profile.policy.privateMode &&
+        (profile.hasSignals || preferences.feedback.values.any { it == RecommendationFeedback.MORE })
 
     private fun publishRanked() {
         val items = PersonalizedFeedRanker.rank(expanded + provider, profile, preferences)
@@ -95,26 +101,49 @@ internal class PersonalizedHomeController(
         if (!eligible()) return
         val seeds = selectSeeds()
         if (seeds.isEmpty()) { fetchGeneral(force); return }
-        val keys = seeds.mapNotNull { it.libraryKeyOrNull() }
-        if (!force && (fetch?.isActive == true || keys == seedKeys && clock() - fetchedAt < 20 * 60_000)) return
+        val requests = seeds.mapIndexedNotNull { seedIndex, seed ->
+            seed.libraryKeyOrNull()?.let { key -> SeedRequest(seedIndex, key, seed) }
+        }
+        if (requests.isEmpty()) { fetchGeneral(force); return }
+        val keys = requests.map { it.key }
+        if (!force && (fetch?.isActive == true ||
+                fetchedAt > 0L && clock() - fetchedAt < RELATED_CACHE_TTL_MS)) return
         fetch?.cancel()
         seedKeys = keys
         fetch = scope.launch {
-            val results = mutableListOf<RecommendationCandidate>()
-            for (seed in seeds) {
-                val key = seed.libraryKeyOrNull() ?: continue
-                val found = try { withTimeout(20_000) { related.related(seed, 5) } }
-                catch (cancelled: CancellationException) { throw cancelled }
-                catch (_: Exception) { emptyList() }
-                found.asSequence().filter { it.kind == CatalogKind.SONG && it.libraryKeyOrNull() != null }
-                    .filter { it.libraryKeyOrNull() != key }.take(5).forEach { item ->
-                        results += RecommendationCandidate(item, provider.size + results.size, key)
+            val results = expanded.toMutableList()
+            val completed = Channel<Pair<Int, List<CatalogItem>?>>(capacity = requests.size)
+            requests.forEach { (seedIndex, key, seed) ->
+                launch {
+                    val found = try { withTimeoutOrNull(RELATED_TIMEOUT_MS) { related.related(seed, RELATED_LIMIT) } }
+                    catch (cancelled: CancellationException) { throw cancelled }
+                    catch (_: Exception) { null }
+                    val playable = found?.let { tracks ->
+                        tracks.filter { item ->
+                            item.kind == CatalogKind.SONG && item.libraryKeyOrNull() != null &&
+                                item.libraryKeyOrNull() != key
+                        }.distinctBy { it.libraryKeyOrNull() }.take(RELATED_LIMIT)
                     }
+                    completed.send(seedIndex to playable)
+                }
+            }
+            repeat(requests.size) {
+                val (seedIndex, found) = completed.receive()
+                val seedRequest = requests.firstOrNull { it.index == seedIndex } ?: return@repeat
+                if (found != null) {
+                    results.removeAll { it.relatedTo == seedRequest.key }
+                    found.forEachIndexed { itemIndex, item ->
+                        results += RecommendationCandidate(item,
+                            provider.size + seedIndex * RELATED_LIMIT + itemIndex, seedRequest.key)
+                    }
+                    if (!eligible() || keys != seedKeys) return@launch
+                    expanded = results.sortedBy { it.sourcePosition }
+                    publishRanked()
+                }
             }
             if (!eligible() || keys != seedKeys) return@launch
-            expanded = results
             fetchedAt = clock()
-            publishRanked()
+            if (results.isEmpty()) publishRanked()
         }
     }
 
@@ -124,7 +153,7 @@ internal class PersonalizedHomeController(
         if (!force && (fetch?.isActive == true || fetchedAt > 0 && clock() - fetchedAt < 20 * 60_000)) return
         fetch?.cancel()
         fetch = scope.launch {
-            val songs = try { withTimeout(20_000) { source.extraHomeSongs() } }
+            val songs = try { withTimeoutOrNull(RELATED_TIMEOUT_MS) { source.extraHomeSongs() }.orEmpty() }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { emptyList() }
             if (!eligible() || selectSeeds().isNotEmpty()) return@launch
@@ -138,7 +167,9 @@ internal class PersonalizedHomeController(
 
     private fun selectSeeds(): List<CatalogItem> {
         val more = preferences.feedback.filterValues { it == RecommendationFeedback.MORE }.keys
-        val known = (provider + expanded).map { it.item } + profile.liked
+        // Listening history ranks candidates; explicit library signals seed related-track requests.
+        // History-only profiles use the general provider continuation below.
+        val known = (provider + expanded).map { it.item } + profile.liked + profile.saved
         val explicit = more.mapNotNull { key ->
             known.firstOrNull { it.libraryKeyOrNull() == key } ?: key.removePrefix("youtube:")
                 .takeIf { key.startsWith("youtube:") && it.length == 11 }?.let { id ->
@@ -154,7 +185,39 @@ internal class PersonalizedHomeController(
             val offset = ((clock() / 86_400_000L) % items.size).toInt()
             return items.drop(offset) + items.take(offset)
         }
-        val chosen = rotate(explicit).take(2)
-        return chosen + rotate(liked).take(2 - chosen.size)
+        val chosen = linkedMapOf<String, CatalogItem>()
+        fun add(items: List<CatalogItem>, count: Int) {
+            var added = 0
+            for (item in rotate(items)) {
+                val key = item.libraryKeyOrNull() ?: continue
+                if (key in chosen) continue
+                chosen[key] = item
+                added++
+                if (added >= count || chosen.size >= MAX_SEEDS) break
+            }
+        }
+        add(explicit, 1)
+        add(liked, 1)
+        add(profile.saved, 1)
+        add(explicit + liked + profile.saved, MAX_SEEDS - chosen.size)
+        return chosen.values.toList()
     }
+
+    private fun profileSeedKeys(): Set<String> = buildSet {
+        profile.liked.mapNotNullTo(this) { it.libraryKeyOrNull() }
+        profile.saved.mapNotNullTo(this) { it.libraryKeyOrNull() }
+        if (profile.policy.listening) {
+            profile.topSongs.mapNotNullTo(this) { it.track.libraryKeyOrNull() }
+            profile.recentEvents.mapNotNullTo(this) { it.track.libraryKeyOrNull() }
+        }
+    }
+
+    private companion object {
+        const val RELATED_LIMIT = 5
+        const val MAX_SEEDS = 4
+        const val RELATED_TIMEOUT_MS = 20_000L
+        const val RELATED_CACHE_TTL_MS = 20 * 60_000L
+    }
+
+    private data class SeedRequest(val index: Int, val key: String, val item: CatalogItem)
 }

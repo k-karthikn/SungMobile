@@ -26,7 +26,8 @@ import com.karthi.sungmobile.core.model.CatalogItem
 @Composable
 fun HomeScreen(track: CatalogItem?, items: List<CatalogItem>, inCollection: Boolean,
     onSearch: () -> Unit, onPlayer: () -> Unit, onOpen: (CatalogItem) -> Unit,
-    onAppearance: () -> Unit, modifier: Modifier = Modifier) {
+    onAppearance: () -> Unit, modifier: Modifier = Modifier,
+    onStatistics: () -> Unit = {}) {
     val spaciousText = LocalDensity.current.fontScale > 1.3f
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = SungSpacing.page),
         verticalArrangement = Arrangement.spacedBy(SungSpacing.page)) {
@@ -34,6 +35,9 @@ fun HomeScreen(track: CatalogItem?, items: List<CatalogItem>, inCollection: Bool
             Row(Modifier.fillMaxWidth().padding(horizontal = SungSpacing.page),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMediumEmphasized)
+                FilledTonalIconButton(onStatistics, Modifier.size(48.dp).testTag("nav_stats")) {
+                    SungIcon(SungSymbol.Equalizer, "Listening statistics")
+                }
                 FilledTonalIconButton(onAppearance, Modifier.size(48.dp).testTag("appearance")) {
                     SungIcon(SungSymbol.Settings, stringResource(R.string.appearance))
                 }

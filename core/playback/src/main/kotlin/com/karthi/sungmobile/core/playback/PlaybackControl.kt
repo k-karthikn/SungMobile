@@ -10,6 +10,8 @@ interface PlaybackControl {
     fun select(tracks: List<CatalogItem>, index: Int)
     fun playAt(track: CatalogItem, positionMs: Long)
     fun playCollection(tracks: List<CatalogItem>, shuffle: Boolean)
+    /** Starts a queue that keeps requesting related songs when its current entries run out. */
+    fun playRadio(tracks: List<CatalogItem>) = playCollection(tracks, shuffle = false)
     fun enqueueAll(tracks: List<CatalogItem>, next: Boolean)
     fun toggle()
     fun seekTo(positionMs: Long)

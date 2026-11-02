@@ -40,13 +40,14 @@ fun MiniPlayer(state: PlaybackState, actions: PlayerActions, onOpen: () -> Unit,
                     }
                     if (!compact) MiniSkipButton(SungSymbol.SkipPrevious, R.string.previous_track,
                         actions.previous, state.connected && state.queue.current != null, "mini_previous")
-                    ExpressivePlayButton(state, actions.toggle, Modifier.testTag("mini_play_pause"))
-                    if (!compact) MiniSkipButton(SungSymbol.SkipNext, R.string.next_track,
+                    ExpressivePlayButton(state, actions.toggle, Modifier.testTag("mini_play_pause"),
+                        size = 46.dp, iconSize = 22.dp)
+                    MiniSkipButton(SungSymbol.SkipNext, R.string.next_track,
                         actions.next, state.connected && state.queue.nextId(false) != null, "mini_next")
                     MiniPlayerMenu(state, actions, onLyrics, onQueue, onVolume)
                 }
             }
-            MiniPlayerProgress(state, updates, actions.seek)
+            MiniPlayerProgress(state, updates, actions.seek, compact = true)
         }
     }
 }
@@ -54,7 +55,7 @@ fun MiniPlayer(state: PlaybackState, actions: PlayerActions, onOpen: () -> Unit,
 @Composable
 private fun MiniSkipButton(symbol: SungSymbol, label: Int, action: () -> Unit,
     enabled: Boolean, tag: String) {
-    IconButton(action, modifier = Modifier.size(48.dp).testTag(tag), enabled = enabled) {
+    IconButton(action, modifier = Modifier.size(44.dp).testTag(tag), enabled = enabled) {
         SungIcon(symbol, stringResource(label), Modifier.size(22.dp))
     }
 }

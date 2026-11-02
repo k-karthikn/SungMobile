@@ -25,6 +25,7 @@ data class DiscoveryFeedState(val shelves: List<HomeShelf> = emptyList(),
     val selectedHomeChip: HomeChip? = null,
     val chipShelves: List<HomeShelf> = emptyList(),
     val chipLoading: Boolean = false,
+    val chipError: Boolean = false,
     val personalizedShelf: HomeShelf? = null,
     val recommendationFeedback: Map<String, RecommendationFeedback> = emptyMap(),
     val initialLoading: Boolean = true,
@@ -57,7 +58,7 @@ class DiscoveryFeedViewModel(private val source: HomeFeedSource,
         job?.cancel()
         chipJob?.cancel()
         mutable.update { it.copy(initialLoading = it.shelves.isEmpty(), refreshing = it.shelves.isNotEmpty(),
-            selectedHomeChip = null, chipShelves = emptyList(), chipLoading = false, error = null) }
+            selectedHomeChip = null, chipShelves = emptyList(), chipLoading = false, chipError = false, error = null) }
         job = viewModelScope.launch {
             try {
                 val page = source.homePage { partial ->
@@ -67,6 +68,7 @@ class DiscoveryFeedViewModel(private val source: HomeFeedSource,
                 }
                 mutable.update { it.copy(shelves = page.shelves, homeChips = page.chips,
                     selectedHomeChip = null, chipShelves = emptyList(), chipLoading = false,
+                    chipError = false,
                     initialLoading = false, refreshing = false,
                     lastSuccessMs = clock(), error = null) }
                 personalized?.updateProviderShelves(page.shelves)
@@ -81,9 +83,22 @@ class DiscoveryFeedViewModel(private val source: HomeFeedSource,
     fun selectHomeChip(chip: HomeChip?) {
         val selected = chip?.takeUnless { it.key == mutable.value.selectedHomeChip?.key }
         chipJob?.cancel()
+        if (selected == null) {
+            mutable.update { it.copy(selectedHomeChip = null, chipShelves = emptyList(),
+                chipLoading = false, chipError = false) }
+            return
+        }
+        loadHomeChip(selected)
+    }
+
+    fun retryHomeChip() {
+        mutable.value.selectedHomeChip?.let(::loadHomeChip)
+    }
+
+    private fun loadHomeChip(selected: HomeChip) {
+        chipJob?.cancel()
         mutable.update { it.copy(selectedHomeChip = selected, chipShelves = emptyList(),
-            chipLoading = selected != null) }
-        if (selected == null) return
+            chipLoading = true, chipError = false) }
         chipJob = viewModelScope.launch {
             try {
                 val page = source.homeChip(selected)
@@ -95,7 +110,8 @@ class DiscoveryFeedViewModel(private val source: HomeFeedSource,
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) {
                 mutable.update { current ->
-                    if (current.selectedHomeChip?.key == selected.key) current.copy(chipLoading = false)
+                    if (current.selectedHomeChip?.key == selected.key) current.copy(
+                        chipLoading = false, chipError = true)
                     else current
                 }
             }

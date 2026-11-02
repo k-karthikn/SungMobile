@@ -12,6 +12,8 @@ import com.karthi.sungmobile.core.model.discovery.HomeFeedPage
 import com.karthi.sungmobile.core.model.discovery.HomeShelf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.HttpUrl
@@ -35,6 +37,8 @@ class MusicBrowseGateway(
         .addPathSegments("youtubei/v1/browse").build(),
 ) : HomeFeedSource, HomeCandidateSource {
     @Volatile private var extraPage: Pair<String, String?>? = null
+    @Volatile private var cachedSearchConfig: SearchConfig? = null
+    private val searchConfigMutex = Mutex()
 
     override suspend fun homeShelves(): List<HomeShelf> = fetchHomeFeed(MAX_LEGACY_HOME_SHELVES).shelves
 
@@ -112,6 +116,66 @@ class MusicBrowseGateway(
         catch (error: Exception) { throw SourceException(SourceFailure.EXTRACTION, error) }
     }
 
+    /** One direct YouTube Music search request, used by bulk library matching. */
+    suspend fun searchSongsForMatching(query: String): CatalogPage {
+        require(query.isNotBlank())
+        val config = getSearchConfig()
+        val body = JsonObject().apply {
+            add("context", JsonObject().apply {
+                add("client", JsonObject().apply {
+                    addProperty("clientName", "WEB_REMIX")
+                    addProperty("clientVersion", config.clientVersion)
+                    addProperty("hl", "en")
+                    addProperty("gl", "IN")
+                    config.visitorData?.let { addProperty("visitorData", it) }
+                })
+            })
+            addProperty("query", query.trim())
+            addProperty("params", MUSIC_SONG_SEARCH_PARAMS)
+        }
+        val url = HttpUrl.Builder().scheme("https").host("music.youtube.com")
+            .addPathSegments("youtubei/v1/search").addQueryParameter("key", config.apiKey)
+            .addQueryParameter("prettyPrint", "false").build()
+        val request = Request.Builder().url(url)
+            .header("Origin", "https://music.youtube.com")
+            .header("User-Agent", MUSIC_USER_AGENT)
+            .header("X-YouTube-Client-Name", WEB_REMIX_CLIENT_ID)
+            .header("X-YouTube-Client-Version", config.clientVersion)
+            .header("Accept-Language", "en-IN,en;q=0.9")
+            .post(body.toString().toRequestBody("application/json".toMediaType())).build()
+        val response = execute(request)
+        return try {
+            MusicBrowseParser.searchSongs(response, query)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            throw SourceException(SourceFailure.EXTRACTION, error)
+        }
+    }
+
+    private suspend fun getSearchConfig(): SearchConfig {
+        cachedSearchConfig?.let { return it }
+        return searchConfigMutex.withLock {
+            cachedSearchConfig?.let { return@withLock it }
+            val request = Request.Builder().url("https://music.youtube.com/")
+                .header("User-Agent", MUSIC_USER_AGENT)
+                .header("Accept-Language", "en-IN,en;q=0.9")
+                .build()
+            val html = execute(request)
+            val apiKey = findConfig(html, "INNERTUBE_API_KEY")
+                ?: throw SourceException(SourceFailure.EXTRACTION)
+            val clientVersion = findConfig(html, "INNERTUBE_CONTEXT_CLIENT_VERSION")
+                ?: throw SourceException(SourceFailure.EXTRACTION)
+            SearchConfig(apiKey, clientVersion, findConfig(html, "VISITOR_DATA")).also {
+                cachedSearchConfig = it
+            }
+        }
+    }
+
+    private fun findConfig(html: String, key: String): String? = Regex(
+        "[\\\"']${Regex.escape(key)}[\\\"']\\s*:\\s*[\\\"']([^\\\"']{1,500})[\\\"']"
+    ).find(html)?.groupValues?.getOrNull(1)
+
     private suspend fun post(browseId: String, continuation: String? = null,
         visitorData: String? = null, params: String? = null): String {
         val body = JsonObject().apply {
@@ -136,6 +200,10 @@ class MusicBrowseGateway(
             .header("User-Agent", "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/131.0 Mobile Safari/537.36")
             .apply { if (visitorData != null) header("X-Goog-Visitor-Id", visitorData) }
             .post(body.toString().toRequestBody("application/json".toMediaType())).build()
+        return execute(request)
+    }
+
+    private suspend fun execute(request: Request): String {
         return suspendCancellableCoroutine { continuationResult ->
             val call = client.newCall(request)
             continuationResult.invokeOnCancellation { call.cancel() }
@@ -179,5 +247,10 @@ class MusicBrowseGateway(
         const val MAX_RESPONSE_BYTES = 2_097_152L
         const val MAX_HOME_SHELVES = 15
         const val MAX_LEGACY_HOME_SHELVES = 5
+        const val WEB_REMIX_CLIENT_ID = "67"
+        const val MUSIC_SONG_SEARCH_PARAMS = "EgWKAQIIAWoKEAkQBRAKEAMQBA=="
+        const val MUSIC_USER_AGENT = "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 Chrome/131.0 Mobile Safari/537.36"
     }
+
+    private data class SearchConfig(val apiKey: String, val clientVersion: String, val visitorData: String?)
 }

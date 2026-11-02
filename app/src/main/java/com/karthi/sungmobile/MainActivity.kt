@@ -16,6 +16,7 @@ import com.karthi.sungmobile.feature.library.*
 import com.karthi.sungmobile.feature.lyrics.LyricsViewModel
 import com.karthi.sungmobile.feature.convenience.ConvenienceViewModel
 import com.karthi.sungmobile.feature.spotify.SpotifyLibraryImportViewModel
+import com.karthi.sungmobile.feature.playlistgenerator.PlaylistGeneratorViewModel
 import com.karthi.sungmobile.navigation.LinkIntakeViewModel
 import com.karthi.sungmobile.playback.PlaybackConnection
 import kotlinx.coroutines.*
@@ -55,6 +56,10 @@ class MainActivity : ComponentActivity() {
     private val spotifyLibraryImport by lazy { obtain(SpotifyLibraryImportViewModel::class.java) {
         SpotifyLibraryImportViewModel(container.spotifyLibraryImporter, container.catalog, container.library)
     } }
+    private val playlistGenerator by lazy { obtain(PlaylistGeneratorViewModel::class.java) {
+        PlaylistGeneratorViewModel(container.catalog, container.playlistCandidates,
+            container.recommendationProfile, container.settings, container.library, catalog.player)
+    } }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,7 +69,7 @@ class MainActivity : ComponentActivity() {
         catalog.onOpenCollection = { collection.open(CollectionRoute(it.url, it.title, it.kind, artworkUrl = it.artworkUrl)) }
         if (savedInstanceState == null) links.receive(intent)
         setContent { SungRoot(window, container, catalog, library, libraryActions, advancedLibrary, history, home,
-            discovery, collection, collectionActions, links, lyrics, convenience, spotifyLibraryImport) }
+            discovery, collection, collectionActions, links, lyrics, convenience, spotifyLibraryImport, playlistGenerator) }
     }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)

@@ -245,22 +245,27 @@ class PlaybackCoordinatorTest {
     @Test fun relatedAutoplayAddsOnlyNewSongsAtNaturalQueueEnd() = runTest {
         val resolver = DeferredResolver()
         val engine = FakeEngine()
+        fun playableTrack(id: String, videoId: String) = track(id).copy(
+            url = "https://www.youtube.com/watch?v=$videoId")
+        fun playableStream(id: String, videoId: String) = ResolvedStream(
+            playableTrack(id, videoId), "https://example.test/audio", "audio/webm", emptyMap(), 128, null)
         val related = object : RelatedSource {
             var requests = 0
             override suspend fun related(seed: CatalogItem, limit: Int): List<CatalogItem> {
                 requests++
-                return listOf(track("one"), track("two"), track("two"), track("three"))
+                return listOf(playableTrack("one", "AAAAAAAAAAA"), playableTrack("two", "BBBBBBBBBBB"),
+                    playableTrack("two", "BBBBBBBBBBB"), playableTrack("three", "CCCCCCCCCCC"))
             }
         }
         val player = PlaybackCoordinator(resolver, engine, backgroundScope, relatedSource = related)
         player.setRelatedAutoplayEnabled(true)
-        player.select(track("one")); runCurrent()
-        resolver.requests[0].complete(stream("one")); runCurrent()
+        player.select(playableTrack("one", "AAAAAAAAAAA")); runCurrent()
+        resolver.requests[0].complete(playableStream("one", "AAAAAAAAAAA")); runCurrent()
         engine.state.value = engine.state.value.copy(ended = true, playing = false); runCurrent()
         assertEquals(1, related.requests)
         assertEquals(listOf("one", "two", "three"), player.state.value.queue.entries.map { it.track.id })
         assertEquals("two", player.state.value.track?.id)
-        resolver.requests[1].complete(stream("two")); runCurrent()
+        resolver.requests[1].complete(playableStream("two", "BBBBBBBBBBB")); runCurrent()
         assertEquals(listOf("one", "two"), engine.loaded)
     }
 

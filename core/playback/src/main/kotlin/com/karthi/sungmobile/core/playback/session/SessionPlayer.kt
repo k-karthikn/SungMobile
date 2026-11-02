@@ -74,9 +74,15 @@ class SessionPlayer(private val playback: PlaybackCoordinator, scope: CoroutineS
     override fun handleSetShuffleModeEnabled(shuffleModeEnabled: Boolean) = done { playback.setShuffle(shuffleModeEnabled) }
     override fun handleSetMediaItems(mediaItems: List<MediaItem>, startIndex: Int, startPositionMs: Long) = done {
         val entries = mediaItems.mapNotNull { it.toQueueEntry() }
-        if (entries.size == mediaItems.size && entries.distinctBy { it.id }.size == entries.size)
-            playback.replace(entries, startIndex.coerceAtLeast(0), startPositionMs.coerceAtLeast(0), play = playback.state.value.engine.playRequested,
-                startShuffled = mediaItems.firstOrNull()?.requestMetadata?.extras?.takeIf { it.containsKey(PlaybackCommands.COLLECTION_SHUFFLE) }?.getBoolean(PlaybackCommands.COLLECTION_SHUFFLE))
+        if (entries.size == mediaItems.size && entries.distinctBy { it.id }.size == entries.size) {
+            val extras = mediaItems.firstOrNull()?.requestMetadata?.extras
+            if (extras?.getBoolean(PlaybackCommands.COLLECTION_RADIO) == true) {
+                playback.playRadio(entries.map { it.track })
+            } else {
+                playback.replace(entries, startIndex.coerceAtLeast(0), startPositionMs.coerceAtLeast(0), play = playback.state.value.engine.playRequested,
+                    startShuffled = extras?.takeIf { it.containsKey(PlaybackCommands.COLLECTION_SHUFFLE) }?.getBoolean(PlaybackCommands.COLLECTION_SHUFFLE))
+            }
+        }
     }
     override fun handleAddMediaItems(index: Int, mediaItems: List<MediaItem>) = done {
         val entries = mediaItems.mapNotNull { it.toQueueEntry() }

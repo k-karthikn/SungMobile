@@ -24,7 +24,7 @@ internal fun PlayerTrackDetails(state: PlaybackState) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(state.track?.title.orEmpty(), Modifier.testTag("player_title").semantics { heading() },
                 style = MaterialTheme.typography.headlineLarge, minLines = 2, maxLines = 2,
-                overflow = TextOverflow.Ellipsis)
+                color = MaterialTheme.colorScheme.onSurface, overflow = TextOverflow.Ellipsis)
             Text(state.track?.subtitle.orEmpty(), style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
                 overflow = TextOverflow.Ellipsis)

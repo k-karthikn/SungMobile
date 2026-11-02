@@ -2,6 +2,7 @@ package com.karthi.sungmobile.core.playback
 
 import com.karthi.sungmobile.core.model.*
 import com.karthi.sungmobile.core.model.lyrics.lyricsVideoId
+import com.karthi.sungmobile.core.model.library.libraryKeyOrNull
 import java.util.UUID
 import kotlin.math.pow
 import kotlinx.coroutines.*
@@ -28,6 +29,8 @@ class PlaybackCoordinator(
     private var networkRecoveries = 0
     private var relatedGeneration = 0L
     private var relatedAutoplayEnabled = false
+    private var radioSessionActive = false
+    private var radioAttemptedCurrentId: String? = null
     private var generation = 0L
     private var refreshes = 0
     private var wantsPlayback = false
@@ -48,6 +51,7 @@ class PlaybackCoordinator(
             resumePositionMs = snapshot.positionMs
             mutableState.update { it.copy(engine = snapshot) }
             prepareNextIfNearEnd(snapshot)
+            if (radioSessionActive) prefetchRadioIfNeeded()
             watchBuffering(snapshot)
             when {
                 snapshot.error == EngineFailure.EXPIRED_STREAM && wantsPlayback && refreshes == 0 -> {
@@ -76,10 +80,12 @@ class PlaybackCoordinator(
     fun select(track: CatalogItem) = select(listOf(track), 0)
     override fun select(tracks: List<CatalogItem>, index: Int) {
         if (tracks.isEmpty() || index !in tracks.indices) return
+        radioSessionActive = false
         replace(tracks.map { QueueEntry(track = it) }, index, 0, play = true)
     }
 
     fun replace(entries: List<QueueEntry>, index: Int, position: Long, play: Boolean, startShuffled: Boolean? = null) {
+        radioSessionActive = false
         resetUndo()
         val old = state.value.queue
         val queue = if (startShuffled == true && entries.isNotEmpty()) {
@@ -97,10 +103,22 @@ class PlaybackCoordinator(
     }
 
     override fun playAt(track: CatalogItem, positionMs: Long) {
+        radioSessionActive = false
         replace(listOf(QueueEntry(track = track)), 0, positionMs.coerceIn(0, track.durationMs ?: 86_400_000), true, false)
     }
     override fun playCollection(tracks: List<CatalogItem>, shuffle: Boolean) {
-        if (tracks.isNotEmpty()) replace(tracks.map { QueueEntry(track = it) }, 0, 0, true, shuffle)
+        if (tracks.isNotEmpty()) {
+            radioSessionActive = false
+            replace(tracks.map { QueueEntry(track = it) }, 0, 0, true, shuffle)
+        }
+    }
+    override fun playRadio(tracks: List<CatalogItem>) {
+        val playable = tracks.filter { it.kind == CatalogKind.SONG && it.libraryKeyOrNull() != null }
+        if (playable.isEmpty()) return
+        radioAttemptedCurrentId = null
+        mutableState.update { it.copy(queue = it.queue.copy(repeat = RepeatMode.OFF)) }
+        replace(playable.map { QueueEntry(track = it) }, 0, 0, true, false)
+        radioSessionActive = true
     }
     override fun enqueueAll(tracks: List<CatalogItem>, next: Boolean) {
         val queue = state.value.queue
@@ -109,6 +127,7 @@ class PlaybackCoordinator(
 
     /** Queue and position only; process restart must not resume audio. */
     fun restore(snapshot: QueueSnapshot) {
+        radioSessionActive = false
         cancelNetworkRecovery()
         cancelResolution()
         cancelPreparation()
@@ -148,7 +167,7 @@ class PlaybackCoordinator(
     }
     fun setRelatedAutoplayEnabled(enabled: Boolean) {
         relatedAutoplayEnabled = enabled
-        if (!enabled) cancelRelated()
+        if (!enabled && !radioSessionActive) cancelRelated()
     }
     private fun applyVolume() { engine.setVolume((10.0.pow(trimDb / 20.0) * fadeVolume).toFloat()) }
     fun setConnected(ready: Boolean) { mutableState.update { it.copy(connected = ready) } }
@@ -267,23 +286,38 @@ class PlaybackCoordinator(
     private fun requestRelated(queue: QueueState) {
         val source = relatedSource ?: return
         val seed = queue.current?.track ?: return
+        if ((!relatedAutoplayEnabled && !radioSessionActive) || queue.repeat != RepeatMode.OFF || relatedJob != null) return
+        if (radioSessionActive) {
+            val currentId = queue.currentId ?: return
+            if (radioAttemptedCurrentId == currentId) return
+            radioAttemptedCurrentId = currentId
+        }
         if (seed.id.startsWith("local:")) return
-        if (!relatedAutoplayEnabled || queue.repeat != RepeatMode.OFF || relatedJob != null) return
+        val resumeWhenReady = state.value.engine.ended && queue.nextId(automatic = true) == null
         val request = ++relatedGeneration
         relatedJob = scope.launch {
             try {
                 val candidates = withTimeout(15_000) { source.related(seed, 5) }
-                if (request != relatedGeneration || !wantsPlayback || !relatedAutoplayEnabled ||
-                    state.value.queue != queue) return@launch
-                val existing = queue.entries.map { it.track.id }.toSet()
-                val usable = candidates.filter { it.kind == CatalogKind.SONG && it.id !in existing }
-                    .distinctBy { it.id }.take(5)
+                val latestQueue = state.value.queue
+                val sameSession = if (radioSessionActive) latestQueue.entries == queue.entries
+                    else latestQueue == queue && relatedAutoplayEnabled
+                if (request != relatedGeneration || !wantsPlayback ||
+                    (!relatedAutoplayEnabled && !radioSessionActive) || !sameSession) return@launch
+                val existingKeys = latestQueue.entries.mapNotNull { it.track.libraryKeyOrNull() }.toSet()
+                val usable = candidates.asSequence()
+                    .filter { it.kind == CatalogKind.SONG }
+                    .filter { candidate -> candidate.libraryKeyOrNull()?.let { it !in existingKeys } == true }
+                    .distinctBy { it.libraryKeyOrNull() }
+                    .take(5)
+                    .toList()
                 if (usable.isEmpty()) return@launch
                 val added = usable.map { QueueEntry(track = it) }
                 relatedJob = null
                 resetUndo()
-                editQueue(queue.insert(queue.entries.size, added))
-                activate(added.first().id, true)
+                editQueue(latestQueue.insert(latestQueue.entries.size, added))
+                if (resumeWhenReady) {
+                    activate(added.first().id, true)
+                }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
@@ -292,6 +326,13 @@ class PlaybackCoordinator(
                 if (request == relatedGeneration) relatedJob = null
             }
         }
+    }
+
+    private fun prefetchRadioIfNeeded() {
+        val queue = state.value.queue
+        if (queue.repeat != RepeatMode.OFF || queue.currentIndex < 0) return
+        val remaining = queue.entries.lastIndex - queue.currentIndex
+        if (remaining <= RADIO_PREFETCH_REMAINING) requestRelated(queue)
     }
 
     private fun cancelRelated() {
@@ -473,6 +514,7 @@ class PlaybackCoordinator(
         mutableState.update { it.copy(track = null, queue = QueueState(repeat = it.queue.repeat)) }
     }
     override fun stop() {
+        radioSessionActive = false
         onStopped?.invoke()
         cancelNetworkRecovery()
         cancelResolution()
@@ -489,5 +531,6 @@ class PlaybackCoordinator(
     private companion object {
         const val MAX_NETWORK_RECOVERIES = 2
         const val BUFFER_STALL_MS = 45_000L
+        const val RADIO_PREFETCH_REMAINING = 3
     }
 }

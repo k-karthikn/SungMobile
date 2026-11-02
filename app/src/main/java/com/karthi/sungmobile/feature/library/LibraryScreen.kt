@@ -23,9 +23,11 @@ fun LibraryScreen(browser: LibraryBrowserViewModel, page: LibraryPage, actions: 
     advanced: AdvancedLibraryViewModel, advancedState: AdvancedLibraryState,
     openSettings: () -> Unit, modifier: Modifier = Modifier, openSessions: () -> Unit = {},
     openSearch: () -> Unit = {}, home: HomeState = HomeState(), connected: Boolean = true,
-    localContent: @Composable (Modifier) -> Unit = {}, refreshMixes: () -> Unit = {}) {
+    localContent: @Composable (Modifier) -> Unit = {}, refreshMixes: () -> Unit = {},
+    playlistGeneratorContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null) {
     var mixesSelected by rememberSaveable { mutableStateOf(false) }
     var localSelected by rememberSaveable { mutableStateOf(false) }
+    var generatorOpen by rememberSaveable { mutableStateOf(false) }
     val smart by advanced.smartOverview.collectAsStateWithLifecycle()
     val collection = page.query.collection
     var filtersExpanded by rememberSaveable(collection?.toString()) { mutableStateOf(false) }
@@ -45,13 +47,18 @@ fun LibraryScreen(browser: LibraryBrowserViewModel, page: LibraryPage, actions: 
     LaunchedEffect(page.songs, page.loading) {
         if (!page.loading) selected = selected.intersect(page.songs.map { it.rowId }.toSet())
     }
-    BackHandler(playlist != null || selecting || mixesSelected || localSelected) {
+    BackHandler(playlist != null || selecting || mixesSelected || localSelected || generatorOpen) {
         when {
+            generatorOpen -> generatorOpen = false
             selecting -> { selecting = false; selected = emptySet() }
             localSelected -> localSelected = false
             mixesSelected -> { mixesSelected = false; browser.open(LibraryCollection.Likes) }
             else -> browser.open(null)
         }
+    }
+    if (generatorOpen && playlistGeneratorContent != null) {
+        playlistGeneratorContent(modifier.fillMaxSize()) { generatorOpen = false }
+        return
     }
     if (localSelected) {
         Column(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -95,6 +102,23 @@ fun LibraryScreen(browser: LibraryBrowserViewModel, page: LibraryPage, actions: 
                     }
                 }, openSettings, openSearch)
                 if (!mixesSelected) {
+                    if (collection == null && playlistGeneratorContent != null) {
+                        Surface(shape = MaterialTheme.shapes.extraLarge,
+                            color = MaterialTheme.colorScheme.secondaryContainer) {
+                            Row(Modifier.fillMaxWidth().padding(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                                SungIcon(SungSymbol.Shuffle, modifier = Modifier.size(28.dp))
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                    Text("Make a playlist for you", style = MaterialTheme.typography.titleMedium)
+                                    Text("A fresh mix shaped by your listening and starting songs.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                FilledTonalButton(onClick = { generatorOpen = true }) { Text("Create") }
+                            }
+                        }
+                    }
                     if (playlist != null) {
                         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                             IconButton({ browser.open(null) }) { SungIcon(SungSymbol.Back, "Back to playlists") }

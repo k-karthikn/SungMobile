@@ -20,16 +20,19 @@ import com.karthi.sungmobile.core.designsystem.icon.*
 internal enum class Destination(val label: Int, val icon: SungSymbol, val selectedIcon: SungSymbol) {
     HOME(R.string.home, SungSymbol.HomeOutline, SungSymbol.Home),
     SEARCH(R.string.search, SungSymbol.Search, SungSymbol.Search),
+    STATS(R.string.stats, SungSymbol.Equalizer, SungSymbol.Equalizer),
     LIBRARY(R.string.library, SungSymbol.LibraryOutline, SungSymbol.Library),
 }
 
-/** Shared by all three destinations: one selection owner and standard Material surface interactions. */
+private val primaryDestinations = listOf(Destination.HOME, Destination.SEARCH, Destination.LIBRARY)
+
+/** Shared by top-level destinations: one selection owner and standard Material surface interactions. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun SungNavigationBar(selected: Destination, select: (Destination) -> Unit) {
     Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainer) {
         Row(Modifier.fillMaxWidth().selectableGroup().padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Destination.entries.forEach { destination ->
+            primaryDestinations.forEach { destination ->
                 val active = destination == selected
                 val background by animateColorAsState(
                     if (active) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer,

@@ -41,7 +41,8 @@ import kotlin.math.roundToInt
 /** A read-only dashboard. Its controls change only the statistics view. */
 @Composable
 internal fun ListeningStatisticsScreen(state: AdvancedLibraryState, onBack: () -> Unit,
-    onRetry: () -> Unit, onLoadMore: () -> Unit, modifier: Modifier = Modifier) {
+    onRetry: () -> Unit, onLoadMore: () -> Unit, modifier: Modifier = Modifier,
+    showBackButton: Boolean = true, showHeading: Boolean = true) {
     var days by rememberSaveable { mutableIntStateOf(7) }
     var allTop by rememberSaveable { mutableStateOf(false) }
     var allRecent by rememberSaveable { mutableStateOf(false) }
@@ -49,10 +50,10 @@ internal fun ListeningStatisticsScreen(state: AdvancedLibraryState, onBack: () -
     LazyColumn(modifier.fillMaxSize().testTag("listening_statistics"),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 28.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item("heading") {
+        if (showHeading) item("heading") {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onBack) { SungIcon(SungSymbol.Back, "Back to Library") }
-                Text("Listening statistics", Modifier.weight(1f).padding(start = 8.dp),
+                if (showBackButton) IconButton(onBack) { SungIcon(SungSymbol.Back, "Back to Library") }
+                Text("Listening statistics", Modifier.weight(1f).padding(start = if (showBackButton) 8.dp else 0.dp),
                     style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
             }
         }

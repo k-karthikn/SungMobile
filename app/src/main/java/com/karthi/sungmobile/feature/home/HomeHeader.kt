@@ -15,24 +15,27 @@ import com.karthi.sungmobile.core.designsystem.icon.*
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-internal fun HomeHeader(search: () -> Unit, appearance: () -> Unit,
+internal fun HomeHeader(search: () -> Unit, appearance: () -> Unit, statistics: () -> Unit,
     refresh: () -> Unit, refreshing: Boolean) {
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            FilledTonalIconButton(onClick = appearance, shapes = IconButtonDefaults.shapes(),
-                modifier = Modifier.size(52.dp).testTag("appearance")) {
-                SungIcon(SungSymbol.Tune, "Settings", Modifier.size(26.dp))
-            }
-            SungSearchEntry(stringResource(R.string.home_search_short), search,
-                Modifier.weight(1f).testTag("home_search"))
-        }
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.home_listen_title), Modifier.weight(1f),
-                style = MaterialTheme.typography.headlineLargeEmphasized, fontWeight = FontWeight.SemiBold)
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.home), Modifier.weight(1f),
+                style = MaterialTheme.typography.headlineSmallEmphasized, fontWeight = FontWeight.SemiBold)
             IconButton(refresh, enabled = !refreshing, modifier = Modifier.testTag("home_refresh")) {
                 if (refreshing) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
                 else SungIcon(SungSymbol.Refresh, "Refresh Home")
             }
+            FilledTonalIconButton(onClick = statistics, shapes = IconButtonDefaults.shapes(),
+                modifier = Modifier.size(48.dp).testTag("nav_stats")) {
+                SungIcon(SungSymbol.Equalizer, "Listening statistics", Modifier.size(24.dp))
+            }
+            FilledTonalIconButton(onClick = appearance, shapes = IconButtonDefaults.shapes(),
+                modifier = Modifier.size(48.dp).testTag("appearance")) {
+                SungIcon(SungSymbol.Tune, "Settings", Modifier.size(24.dp))
+            }
         }
+        SungSearchEntry(stringResource(R.string.home_search_short), search,
+            Modifier.fillMaxWidth().testTag("home_search"))
     }
 }

@@ -20,7 +20,7 @@ data class RecommendationProfile(
     val topSongs: List<TopSong> = emptyList(),
     val recentEvents: List<ListeningEvent> = emptyList(),
 ) {
-    val hasSignals: Boolean get() = liked.isNotEmpty() ||
+    val hasSignals: Boolean get() = liked.isNotEmpty() || saved.isNotEmpty() ||
         policy.listening && (topSongs.isNotEmpty() || recentEvents.isNotEmpty())
 }
 

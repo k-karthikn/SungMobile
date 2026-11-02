@@ -37,12 +37,14 @@ internal fun PlayerSeek(state: PlaybackState, onSeek: (Long) -> Unit) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(formatTime(scrub?.toLong() ?: engine.positionMs), Modifier.weight(1f).testTag("player_position"),
-                style = MaterialTheme.typography.labelMedium)
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             SeekStep(stringResource(R.string.back_ten_short), stringResource(R.string.back_ten),
                 enabled = canSeek, onClick = { onSeek(engine.positionMs - 10_000) }, modifier = Modifier.testTag("seek_back"))
             SeekStep(stringResource(R.string.forward_ten_short), stringResource(R.string.forward_ten),
                 enabled = canSeek, onClick = { onSeek(engine.positionMs + 10_000) }, modifier = Modifier.testTag("seek_forward"))
             Text(formatTime(engine.durationMs), Modifier.weight(1f), style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.End)
         }
     }

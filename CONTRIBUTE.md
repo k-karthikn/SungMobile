@@ -28,11 +28,11 @@ The debug app uses application ID `com.karthi.sungmobile.stage0`; the production
 Run commands from the repository root:
 
 ```bash
-./gradlew :app:assembleDebug
+python3 scripts/debug_build.py
 ./gradlew test :app:lintDebug
 ```
 
-The first command builds the debug APK. The second runs host tests across the project and Android debug lint. Live provider probes are opt-in with `-Plive=true`; they need network access and may depend on external provider behavior. Do not enable them as part of routine checks unless the change needs that coverage.
+The debug-build script runs only `:app:assembleDebug`, then checks the APK package, signature, alignment and version. The second command runs host tests across the project and Android debug lint. Live provider probes are opt-in with `-Plive=true`; they need network access and may depend on external provider behavior. Do not enable them as part of routine checks unless the change needs that coverage.
 
 Changes involving Android lifecycle behavior, playback, downloads, permissions, installation, or accessibility may also need device checks. Record the device and Android version, the actions performed, and any limitations. Passing host tests or lint does not establish device behavior.
 

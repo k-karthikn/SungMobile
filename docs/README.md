@@ -6,8 +6,10 @@ This index contains current guidance for contributors and maintainers. Product s
 
 - [Architecture](ARCHITECTURE.md) — module ownership, runtime boundaries, and data flow.
 - [Contribution guide](../CONTRIBUTE.md) — setup, change expectations, and review workflow.
-- [Active TODO list](TODO.md) — actionable follow-up work.
+- [Project board](TODO.md) — backlog, prioritized work, verification, owners, milestones, and acceptance criteria.
 - [Production readiness review](PRODUCTION_READINESS_REVIEW.md) — reliability findings, release limits, and outstanding device checks.
+- [Infinite Radio](INFINITE_RADIO.md) — recommendation inputs, hero design, playback continuation, and verification notes.
+- [Spotify import performance](SPOTIFY_IMPORT_PERFORMANCE.md) — reference comparison, optimization details, and device measurement guidance.
 - [Project handoff](../PROJECT_HANDOFF.md) — current source version and maintainer setup notes.
 
 ## Feature and release guides

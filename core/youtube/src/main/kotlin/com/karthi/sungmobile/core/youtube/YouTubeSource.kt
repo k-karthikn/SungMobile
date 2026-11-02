@@ -22,6 +22,14 @@ class YouTubeSource : CatalogSource, StreamResolver, DownloadStreamResolver, Rel
     private val musicBrowse = MusicBrowseGateway()
     init { initializeExtractor() }
     override suspend fun search(query: String, kind: CatalogKind) = catalogExecution.run { catalog.search(query, kind) }
+    override suspend fun searchSongsForMatching(query: String) = try {
+        musicBrowse.searchSongsForMatching(query).takeIf { it.items.isNotEmpty() }
+            ?: catalogExecution.run { catalog.search(query, CatalogKind.SONG) }
+    } catch (error: kotlinx.coroutines.CancellationException) {
+        throw error
+    } catch (_: Exception) {
+        catalogExecution.run { catalog.search(query, CatalogKind.SONG) }
+    }
     override suspend fun nextPage(token: PageToken) = catalogExecution.run { catalog.nextPage(token) }
     override suspend fun open(url: String): CatalogPage {
         val browse = runCatching { YouTubeLink.parse(url) }.getOrNull() as? YouTubeLink.Browse

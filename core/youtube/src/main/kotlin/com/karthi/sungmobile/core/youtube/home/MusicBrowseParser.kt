@@ -149,6 +149,15 @@ internal object MusicBrowseParser {
         return CatalogPage(title, uniqueSongs, details = CatalogDetails(url, kind, creator, artwork))
     }
 
+    fun searchSongs(json: String, query: String): CatalogPage {
+        val root = JsonParser.parseString(json).obj() ?: error("Invalid search response")
+        val songs = collectRenderers(root, "musicResponsiveListItemRenderer")
+            .mapNotNull { responsiveSong(it) }
+            .distinctBy(CatalogItem::id)
+            .take(30)
+        return CatalogPage(query, songs)
+    }
+
     private fun homeItem(row: JsonElement): CatalogItem? {
         val twoRow = row.at("musicTwoRowItemRenderer")
         if (twoRow != null && podcastShowItem(twoRow) != null) return null

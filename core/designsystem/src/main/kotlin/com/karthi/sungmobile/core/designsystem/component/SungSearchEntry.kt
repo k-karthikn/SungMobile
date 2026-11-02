@@ -14,9 +14,9 @@ import com.karthi.sungmobile.core.designsystem.icon.*
 fun SungSearchEntry(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(onClick = onClick, modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-        Row(Modifier.heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            SungIcon(SungSymbol.Search, modifier = Modifier.size(28.dp))
+        Row(Modifier.heightIn(min = 52.dp).padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            SungIcon(SungSymbol.Search, modifier = Modifier.size(24.dp))
             Text(label, style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)

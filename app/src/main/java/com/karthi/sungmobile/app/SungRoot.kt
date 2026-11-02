@@ -22,6 +22,8 @@ import com.karthi.sungmobile.feature.convenience.*
 import com.karthi.sungmobile.feature.backup.BackupSettingsSection
 import com.karthi.sungmobile.feature.appearance.SpotifyConnectionSettingsSection
 import com.karthi.sungmobile.feature.spotify.SpotifyLibraryImportViewModel
+import com.karthi.sungmobile.feature.playlistgenerator.PlaylistGeneratorViewModel
+import com.karthi.sungmobile.feature.playlistgenerator.PlaylistGeneratorScreen
 import com.karthi.sungmobile.core.model.discovery.RecommendationPreferences
 import kotlinx.coroutines.launch
 
@@ -32,7 +34,7 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
     history: HistoryViewModel, home: HomeViewModel, discovery: DiscoveryFeedViewModel,
     collection: CollectionViewModel, collectionActions: CollectionActionsViewModel, links: LinkIntakeViewModel,
     lyrics: LyricsViewModel, convenience: ConvenienceViewModel,
-    spotifyLibraryImport: SpotifyLibraryImportViewModel) {
+    spotifyLibraryImport: SpotifyLibraryImportViewModel, playlistGenerator: PlaylistGeneratorViewModel) {
     val catalog by model.catalogState.collectAsStateWithLifecycle()
     val chrome = remember(model.player) { model.player.state.chromeUpdates() }
     val initialPlayback = remember(model.player) { model.player.state.value.withoutClock() }
@@ -90,6 +92,9 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                         localContent = { localModifier ->
                             LocalSongsContent(container.localAudio, player.connected, model.player::select,
                                 model.player::enqueue, localModifier)
+                        },
+                        playlistGeneratorContent = { generatorModifier, close ->
+                            PlaylistGeneratorScreen(playlistGenerator, player.track, close, generatorModifier)
                         })
                 },
                 historyContent = { modifier, back -> HistoryScreen(policy, history, back, modifier) },
@@ -99,10 +104,9 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 detailId = details.route?.id, closeDetail = collection::close,
                 collectionContent = { modifier, showPlayer -> CollectionScreen(details, collection, collectionActions, model.player,
                     { model.searchArtistSongs(it); searchRequest++ }, showPlayer, modifier) },
-                homeContent = { modifier, search, nowPlaying, appearance, showLibrary ->
+                homeContent = { modifier, search, nowPlaying, appearance, showLibrary, openStatistics ->
                     DiscoveryHomeScreen(discoveryState, discovery::refresh, discovery::ensureFresh,
                         search, appearance, showLibrary,
-                        { advancedLibrary.openStatistics(); showLibrary() },
                         { query -> model.recall(query, CatalogKind.SONG); searchRequest++ },
                         { shelf, item ->
                             if (item.kind == CatalogKind.SONG) {
@@ -113,8 +117,12 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                         }, player.connected, modifier,
                         onRecommendationFeedback = discovery::setRecommendationFeedback,
                         onHomeChipSelected = discovery::selectHomeChip,
+                        onRetryHomeChip = discovery::retryHomeChip,
                         artistSignals = homeState.data,
-                        onArtistSelected = { artist -> model.searchArtistSongs(artist); searchRequest++ })
+                        onArtistSelected = { artist -> model.searchArtistSongs(artist); searchRequest++ },
+                        onPlayRadio = model.player::playRadio,
+                        personalizationEnabled = recommendations.enabled,
+                        openStatistics = openStatistics)
                 }, searchRequest = searchRequest,
                 lyricsState = lyricsState, lyricsSettings = lyricsSettings,
                 onLoadLyrics = { lyrics.load(player.track, policy?.privateMode == true) },
@@ -130,6 +138,12 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                     RecommendationSettingsSection(recommendations,
                         { enabled -> settingsScope.launch { container.settings.setRecommendationsEnabled(enabled) } },
                         { settingsScope.launch { container.settings.clearRecommendationFeedback() } })
+                },
+                onStatisticsSelected = advancedLibrary::openStatistics,
+                onStatisticsClosed = advancedLibrary::close,
+                statisticsContent = { modifier, back ->
+                    ListeningStatisticsScreen(advancedLibraryState, back, advancedLibrary::retry,
+                        advancedLibrary::moreEvents, modifier, showHeading = false)
                 },
                 resumeContent = { state ->
                     PlayerResumeControls(state, convenienceState.resume,
@@ -155,8 +169,7 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 sessionsContent = { state, back ->
                     SessionsScreen(convenienceState, state, back, convenience::save, convenience::rename,
                         convenience::delete, convenience::restore, convenience::clearMessage)
-                }, statisticsPageOpen = advancedLibraryState.page == AdvancedPage.STATISTICS,
-                livePlayback = model.player.state)
+                }, livePlayback = model.player.state)
             CollectionOperationDialog(operation, collectionActions)
             LinkIntakeDialog(intake, links::dismiss) { link -> collection.open(CollectionRoute(link.url, link.label, startMs = link.startMs)) }
         } }

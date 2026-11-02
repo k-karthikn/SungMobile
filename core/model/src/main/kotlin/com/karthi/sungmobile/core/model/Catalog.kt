@@ -32,6 +32,8 @@ data class CatalogPage(
 
 interface CatalogSource {
     suspend fun search(query: String, kind: CatalogKind): CatalogPage
+    /** Search songs using a lightweight provider path when one is available. */
+    suspend fun searchSongsForMatching(query: String): CatalogPage = search(query, CatalogKind.SONG)
     suspend fun nextPage(token: PageToken): CatalogPage
     suspend fun open(url: String): CatalogPage
 }

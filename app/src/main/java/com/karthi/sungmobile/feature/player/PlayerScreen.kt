@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
@@ -73,7 +74,9 @@ fun PlayerScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Uni
                     if (ambientBackdrop && backdropArtworkUrl != null) {
                         Box(Modifier.matchParentSize().background(MaterialTheme.colorScheme.surface)) {
                             AsyncImage(model = backdropArtworkUrl, contentDescription = null,
-                                modifier = Modifier.matchParentSize(), contentScale = ContentScale.Crop)
+                                modifier = Modifier.matchParentSize().blur(26.dp), contentScale = ContentScale.Crop)
+                            Box(Modifier.matchParentSize().background(
+                                MaterialTheme.colorScheme.surface.copy(alpha = .42f)))
                             // Keep the artwork and its Material 3 fade in the scrolling hero.
                             // Scrolling lyrics therefore carries the fade upward with the image.
                             MaterialArtworkFade(Modifier.matchParentSize())
@@ -96,7 +99,7 @@ fun PlayerScreen(state: PlaybackState, actions: PlayerActions, onBack: () -> Uni
                                 SungIcon(SungSymbol.More, "More playback options")
                             }
                         }
-                        PlayerSwipeArea(state, actions.previous, actions.next,
+                        PlayerSwipeArea(state, actions.previous, actions.next, state.track?.artworkUrl,
                             Modifier.fillMaxWidth().weight(1f))
                         PlayerTrackDetails(state)
                         PlayerSeek(state, actions.seek)

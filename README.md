@@ -28,11 +28,11 @@ The **For you** Home row uses likes and listening signals to rank music on the d
 From the project root, build a debug APK and run the host tests and Android debug lint:
 
 ```bash
-./gradlew :app:assembleDebug
+python3 scripts/debug_build.py
 ./gradlew test :app:lintDebug
 ```
 
-The debug APK is `app/build/outputs/apk/debug/app-debug.apk`. Its application ID is `com.karthi.sungmobile.stage0`, so it installs separately from the production app (`com.karthi.sungmobile`) and has separate app data. If your terminal does not use Android Studio's JBR automatically, set `JAVA_HOME` to its `jbr` directory before running Gradle.
+The debug-build script runs only `:app:assembleDebug`, then checks the APK package, signature, alignment and version. The APK is `app/build/outputs/apk/debug/app-debug.apk`. Its application ID is `com.karthi.sungmobile.stage0`, so it installs separately from the production app (`com.karthi.sungmobile`) and has separate app data. If your terminal does not use Android Studio's JBR automatically, set `JAVA_HOME` to its `jbr` directory before building.
 
 Host tests do not require live network access. Live provider probes are opt-in with `-Plive=true`; see [`docs/PLAYBACK_GUIDE.md`](docs/PLAYBACK_GUIDE.md). Automated device tests require a connected device, and passing host tests or lint does not replace a phone acceptance check.
 

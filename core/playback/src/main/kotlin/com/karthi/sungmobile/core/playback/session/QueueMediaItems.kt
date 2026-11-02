@@ -29,6 +29,7 @@ fun MediaItem.toQueueEntry(): QueueEntry? {
 
 object PlaybackCommands {
     const val COLLECTION_SHUFFLE = "collectionShuffle"
+    const val COLLECTION_RADIO = "collectionRadio"
     const val HISTORY_ERROR = "historyError"
     const val UNDO = "sung.queue.undo"
     const val CLEAR_UPCOMING = "sung.queue.clearUpcoming"

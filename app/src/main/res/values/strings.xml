@@ -36,6 +36,7 @@
     <string name="error_page">These results have expired. Run the search again.</string>
     <string name="home">Home</string>
     <string name="search">Search</string>
+    <string name="stats">Stats</string>
     <string name="library">Library</string>
     <string name="searching">Searching…</string>
     <plurals name="search_results_shown">
@@ -95,7 +96,6 @@
     <string name="reduce_motion">Reduce motion</string>
     <string name="lyrics">Lyrics</string>
     <string name="lyrics_missing">No lyrics available for this song.</string>
-    <string name="home_listen_title">Listen</string>
     <plurals name="home_song_count">
         <item quantity="one">%1$d song</item>
         <item quantity="other">%1$d songs</item>
