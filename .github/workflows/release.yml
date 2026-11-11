@@ -4,6 +4,15 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing version tag to build and publish (for example v0.17.0)
+        required: true
+        type: string
+
+env:
+  RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
 
 permissions:
   contents: write
@@ -64,20 +73,31 @@ jobs:
 
       - name: Generate release metadata
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ env.RELEASE_TAG }}
         run: |
           python3 scripts/production_build.py \
             --apk app/build/outputs/apk/release/app-release.apk \
             --tag "$TAG" \
+            --build-tools-version 36.0.0 \
             --output-dir "release-assets/$TAG"
+
+      - name: Preserve release APK for diagnostics
+        if: failure() && hashFiles('app/build/outputs/apk/release/app-release.apk') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk-${{ inputs.release_tag || github.ref_name }}
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: ignore
 
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
           generate_release_notes: true
           draft: false
           prerelease: false
           files: |
-            release-assets/${{ github.ref_name }}/*.apk
-            release-assets/${{ github.ref_name }}/update.json
-            release-assets/${{ github.ref_name }}/build.json
+            release-assets/${{ inputs.release_tag || github.ref_name }}/*.apk
+            release-assets/${{ inputs.release_tag || github.ref_name }}/update.json
+            release-assets/${{ inputs.release_tag || github.ref_name }}/build.json
+            release-assets/${{ inputs.release_tag || github.ref_name }}/SHA256SUMS

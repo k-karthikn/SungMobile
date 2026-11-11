@@ -60,13 +60,16 @@ def sdk_root(explicit: Path | None) -> Path:
     return Path.home() / "Android/Sdk"
 
 
-def build_tools(sdk: Path) -> tuple[Path, Path, Path]:
+def build_tools(sdk: Path, version: str | None) -> tuple[Path, Path, Path]:
     parent = sdk / "build-tools"
-    candidates = sorted(
-        (folder for folder in parent.iterdir() if folder.is_dir()) if parent.is_dir() else (),
-        key=lambda folder: tuple(int(part) for part in re.findall(r"\d+", folder.name)),
-        reverse=True,
-    )
+    if version is not None:
+        candidates = [parent / version]
+    else:
+        candidates = sorted(
+            (folder for folder in parent.iterdir() if folder.is_dir()) if parent.is_dir() else (),
+            key=lambda folder: tuple(int(part) for part in re.findall(r"\d+", folder.name)),
+            reverse=True,
+        )
     for folder in candidates:
         tools = tuple(folder / name for name in ("aapt", "apksigner", "zipalign"))
         if all(tool.is_file() for tool in tools):
@@ -76,7 +79,8 @@ def build_tools(sdk: Path) -> tuple[Path, Path, Path]:
 
 def checked(command: list[str], *, environment: dict[str, str], capture: bool = False) -> str:
     result = subprocess.run(command, cwd=ROOT, env=environment, text=True,
-        stdout=subprocess.PIPE if capture else None, check=True)
+        stdout=subprocess.PIPE if capture else None,
+        stderr=subprocess.STDOUT if capture else None, check=True)
     return result.stdout or ""
 
 
@@ -104,7 +108,12 @@ def verify_apk(apk: Path, apksigner: Path, zipalign: Path, environment: dict[str
         environment=environment, capture=True)
     certificate = CERT_SHA256.search(signing)
     if certificate is None:
-        raise ReleaseError("Could not read the APK signing certificate")
+        version = checked([str(apksigner), "version"], environment=environment, capture=True).strip()
+        details = signing.strip()[-2_000:] or "<no output>"
+        raise ReleaseError(
+            f"Could not read the APK signing certificate using {apksigner} (version {version}); "
+            f"apksigner output: {details}"
+        )
     if certificate.group(1).lower() != SIGNER_SHA256:
         raise ReleaseError("APK is signed with a different key and cannot update the existing production app")
     checked([str(zipalign), "-c", "4", str(apk)], environment=environment, capture=True)
@@ -176,13 +185,15 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path,
         help="Asset directory (default: release-assets/<tag> under this project)")
     parser.add_argument("--sdk-root", type=Path, help="Android SDK directory if local.properties does not specify it")
+    parser.add_argument("--build-tools-version", help="Use this exact Android Build Tools version")
     parser.add_argument("--java-home", type=Path, help="Android Studio JBR directory if JAVA_HOME is not set")
     parser.add_argument("--replace", action="store_true",
         help="Replace a different local APK for this version before publication")
     args = parser.parse_args()
 
     environment = java_environment(args.java_home)
-    aapt, apksigner, zipalign = build_tools(sdk_root(args.sdk_root))
+    aapt, apksigner, zipalign = build_tools(sdk_root(args.sdk_root), args.build_tools_version)
+    print(f"Using Android Build Tools from {aapt.parent}", flush=True)
     if args.apk is None:
         print("Running production tests, lint and release assembly…", flush=True)
         checked([str(ROOT / "gradlew"), "--console=plain",
