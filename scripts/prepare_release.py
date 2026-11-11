@@ -91,7 +91,15 @@ def main() -> None:
         raise ReleasePreparationError(f"versionCode must exceed the current value {current_code}")
     if args.version_name == current_name:
         raise ReleasePreparationError("versionName must change for a new release")
-    if run("git", "rev-parse", "-q", "--verify", f"refs/tags/{tag}", capture=True).strip() or remote_tag_exists(tag):
+    local_tag = subprocess.run(
+        ("git", "rev-parse", "-q", "--verify", f"refs/tags/{tag}"),
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if local_tag.returncode == 0 or remote_tag_exists(tag):
         raise ReleasePreparationError(f"Tag {tag} already exists")
 
     print("Running host tests and release lint…", flush=True)
