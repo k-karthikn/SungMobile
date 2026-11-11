@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.unit.Density
@@ -129,7 +130,12 @@ class DesignFoundationTest {
             }
         }
         compose.onNodeWithTag("mini_play_pause").performClick()
-        compose.onNodeWithTag("mini_player").performClick()
+        compose.onNodeWithTag("mini_player").performTouchInput {
+            click(Offset(30.dp.toPx(), 30.dp.toPx()))
+        }
+        compose.waitUntil(2_000) {
+            compose.onAllNodesWithTag("player_title").fetchSemanticsNodes().isNotEmpty()
+        }
         compose.onNodeWithTag("player_title").assertTextEquals("The Scientist")
         compose.onNodeWithTag("play_pause").performScrollTo().performClick()
         compose.onNodeWithTag("seek_forward").performScrollTo().performClick()
@@ -156,8 +162,9 @@ class DesignFoundationTest {
         compose.onNodeWithTag("mini_previous").performClick()
         compose.onNodeWithTag("mini_next").performClick()
         compose.onNodeWithTag("player_title").assertDoesNotExist()
-        compose.onNodeWithText("1:42").assertIsDisplayed()
-        compose.onNodeWithText("4:28").assertIsDisplayed()
+        compose.onNodeWithTag("mini_progress", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("mini_seek", useUnmergedTree = true)
+            .assertContentDescriptionEquals("Seek in The Scientist")
         compose.onNodeWithTag("mini_more").performClick()
         compose.onNodeWithText("Shuffle").performClick()
         compose.runOnIdle {
