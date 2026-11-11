@@ -6,6 +6,7 @@ import com.karthi.sungmobile.core.data.convenience.ConvenienceRepository
 import com.karthi.sungmobile.core.data.db.DatabaseProvider
 import com.karthi.sungmobile.core.data.discovery.RoomHomeRepository
 import com.karthi.sungmobile.core.data.history.RoomHistoryRepository
+import com.karthi.sungmobile.core.data.history.RoomConsistencyStreakRepository
 import com.karthi.sungmobile.core.data.library.RoomAdvancedLibraryRepository
 import com.karthi.sungmobile.core.data.library.RoomLibraryRepository
 import com.karthi.sungmobile.core.data.local.LocalAudioRepository
@@ -37,6 +38,7 @@ class AppContainer(context: Context) {
     val library by lazy { RoomLibraryRepository(database) }
     val advancedLibrary by lazy { RoomAdvancedLibraryRepository(database) }
     val history by lazy { RoomHistoryRepository(database) }
+    val streaks by lazy { RoomConsistencyStreakRepository(database) }
     val home by lazy { RoomHomeRepository(database) }
     val recommendationProfile by lazy { RoomRecommendationProfileSource(database) }
     val playlistCandidates by lazy { PlaylistCandidateRepository(catalog, catalog) }

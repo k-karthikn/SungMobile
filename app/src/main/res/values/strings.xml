@@ -37,6 +37,7 @@
     <string name="home">Home</string>
     <string name="search">Search</string>
     <string name="stats">Stats</string>
+    <string name="streak">Streak</string>
     <string name="library">Library</string>
     <string name="searching">Searching…</string>
     <plurals name="search_results_shown">

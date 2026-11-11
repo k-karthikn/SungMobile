@@ -10,8 +10,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,6 +24,7 @@ import com.karthi.sungmobile.core.model.discovery.HomeChip
 import com.karthi.sungmobile.core.model.discovery.HomeData
 import com.karthi.sungmobile.core.model.discovery.RecommendationFeedback
 import com.karthi.sungmobile.core.model.library.libraryKeyOrNull
+import com.karthi.sungmobile.core.model.library.StreakProgress
 
 private val moods = listOf("Feel good" to "feel good songs", "Focus" to "instrumental focus",
     "Unwind" to "chill evening", "Energize" to "workout energy")
@@ -37,11 +40,14 @@ fun DiscoveryHomeScreen(state: DiscoveryFeedState, refresh: () -> Unit, ensureFr
     artistSignals: HomeData = HomeData(),
     onArtistSelected: (String) -> Unit = {}, onPlayRadio: (List<CatalogItem>) -> Unit = {},
     personalizationEnabled: Boolean = true,
-    openStatistics: () -> Unit = {}) {
+    openStatistics: () -> Unit = {}, streak: StreakProgress = StreakProgress(),
+    streakColor: Color = Color.Unspecified, openStreak: () -> Unit = {}) {
     LaunchedEffect(Unit) { ensureFresh() }
     val selectedChipKey = state.selectedHomeChip?.key
 
-    BoxWithConstraints(modifier.fillMaxSize()) {
+    PullToRefreshBox(isRefreshing = state.refreshing, onRefresh = refresh,
+        modifier = modifier.fillMaxSize().testTag("home_pull_refresh")) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
         val wideLayout = maxWidth >= 720.dp
         val listState = rememberLazyListState()
         var previousChipKey by remember { mutableStateOf(selectedChipKey) }
@@ -69,8 +75,7 @@ fun DiscoveryHomeScreen(state: DiscoveryFeedState, refresh: () -> Unit, ensureFr
         Column(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxWidth().padding(start = 16.dp, top = 4.dp, end = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                HomeHeader(search, appearance, openStatistics, refresh,
-                    state.initialLoading || state.refreshing)
+                HomeHeader(search, appearance, openStatistics, streak, streakColor, openStreak)
                 if (state.homeChips.isNotEmpty()) {
                     LazyRow(
                         modifier = Modifier.fillMaxWidth().testTag("pinned_home_chips"),
@@ -188,6 +193,7 @@ fun DiscoveryHomeScreen(state: DiscoveryFeedState, refresh: () -> Unit, ensureFr
             }
         }
         }
+    }
     }
 }
 

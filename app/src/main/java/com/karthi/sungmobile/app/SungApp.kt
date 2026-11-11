@@ -42,7 +42,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     hasRecentSearches: Boolean = false,
     detailId: String? = null, closeDetail: () -> Unit = {},
     collectionContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
-    homeContent: (@Composable (Modifier, () -> Unit, () -> Unit, () -> Unit, () -> Unit, () -> Unit) -> Unit)? = null,
+    homeContent: (@Composable (Modifier, () -> Unit, () -> Unit, () -> Unit, () -> Unit, () -> Unit, () -> Unit) -> Unit)? = null,
     searchRequest: Int = 0,
     lyricsState: LyricsUiState = LyricsUiState(), lyricsSettings: LyricsSettings = LyricsSettings(),
     onLoadLyrics: () -> Unit = {}, onRetryLyrics: () -> Unit = {}, onLyricsSettings: (LyricsSettings) -> Unit = {},
@@ -54,6 +54,8 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
     onStatisticsSelected: () -> Unit = {},
     onStatisticsClosed: () -> Unit = {},
     statisticsContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
+    onStreakSelected: () -> Unit = {},
+    streakContent: (@Composable (Modifier, () -> Unit) -> Unit)? = null,
     resumeContent: @Composable (PlaybackState) -> Unit = {},
     playerMoreContent: @Composable (PlaybackState, () -> Unit) -> Unit = { _, _ -> },
     volumeContent: @Composable (PlaybackState) -> Unit = {},
@@ -71,7 +73,8 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
             val leavingStatistics = destination == Destination.STATS
             destination = target
             if (target == Destination.STATS) onStatisticsSelected()
-            else if (leavingStatistics) onStatisticsClosed()
+            if (target == Destination.STREAK) onStreakSelected()
+            if (leavingStatistics && target != Destination.STATS) onStatisticsClosed()
         }
     }
     LaunchedEffect(appearance.ambientBackdrop, appearance.backdropFollowsMusic, playback.track?.artworkUrl) {
@@ -126,7 +129,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
         val wide = maxWidth >= 840.dp
         val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
         Row(Modifier.fillMaxSize()) {
-            if (wide && overlay == Overlay.NONE && destination != Destination.STATS) {
+            if (wide && overlay == Overlay.NONE && destination != Destination.STATS && destination != Destination.STREAK) {
                 NavigationRail(Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))) {
                     listOf(Destination.HOME, Destination.SEARCH, Destination.LIBRARY).forEach { target ->
                         NavigationRailItem(destination == target, { navigateTo(target) },
@@ -137,7 +140,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
             }
             Scaffold(Modifier.weight(1f).imePadding(), contentWindowInsets = WindowInsets.safeDrawing,
                 bottomBar = {
-                    if (destination != Destination.STATS && (overlay == Overlay.NONE ||
+                    if (destination != Destination.STATS && destination != Destination.STREAK && (overlay == Overlay.NONE ||
                         (overlay == Overlay.COLLECTION && playback.track != null)) && !keyboardVisible) {
                         Column(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars)
                             .padding(horizontal = 12.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally,
@@ -200,7 +203,7 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                                 Destination.HOME -> screenState.SaveableStateProvider("home") { if (homeContent != null) homeContent(Modifier.weight(1f),
                                     { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER },
                                     { overlay = Overlay.APPEARANCE }, { destination = Destination.LIBRARY },
-                                    { navigateTo(Destination.STATS) })
+                                    { navigateTo(Destination.STATS) }, { navigateTo(Destination.STREAK) })
                                     else HomeScreen(playback.track, catalog.page?.items.orEmpty(), catalog.inCollection,
                                     { destination = Destination.SEARCH }, { overlay = Overlay.PLAYER }, { item ->
                                         catalogActions.open(item)
@@ -227,6 +230,10 @@ fun SungApp(catalog: CatalogState, playback: PlaybackState, catalogActions: Cata
                                         statisticsContent?.invoke(Modifier.weight(1f)) { navigateTo(Destination.HOME) }
                                             ?: Text("Listening statistics are unavailable.", Modifier.padding(24.dp))
                                     }
+                                }
+                                Destination.STREAK -> screenState.SaveableStateProvider("streak") {
+                                    streakContent?.invoke(Modifier.weight(1f)) { navigateTo(Destination.HOME) }
+                                        ?: Text("Listening streak is unavailable.", Modifier.padding(24.dp))
                                 }
                                 Destination.LIBRARY -> Column(Modifier.weight(1f)) {
                                     if (libraryContent == null) TextButton({ sessionsFromPlayer = false; overlay = Overlay.SESSIONS },

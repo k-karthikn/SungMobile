@@ -19,7 +19,7 @@ enum class SungSymbol(@param:DrawableRes val resource: Int) {
     SkipNext(R.drawable.ic_skip_next), SkipPrevious(R.drawable.ic_skip_previous),
     Shuffle(R.drawable.ic_shuffle), Repeat(R.drawable.ic_repeat),
     Check(R.drawable.ic_check), ExpandMore(R.drawable.ic_expand_more), Clock(R.drawable.ic_clock),
-    Code(R.drawable.ic_code), OpenInNew(R.drawable.ic_open_in_new),
+    Code(R.drawable.ic_code), OpenInNew(R.drawable.ic_open_in_new), Fire(R.drawable.ic_fire),
 }
 
 /** Null description for decorative icons whose parent already has a label. */

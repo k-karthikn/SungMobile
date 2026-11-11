@@ -1,30 +1,47 @@
 package com.karthi.sungmobile.feature.home
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.karthi.sungmobile.R
 import com.karthi.sungmobile.core.designsystem.component.SungSearchEntry
 import com.karthi.sungmobile.core.designsystem.icon.*
+import com.karthi.sungmobile.core.model.library.StreakProgress
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun HomeHeader(search: () -> Unit, appearance: () -> Unit, statistics: () -> Unit,
-    refresh: () -> Unit, refreshing: Boolean) {
+    streak: StreakProgress, streakColor: Color, openStreak: () -> Unit) {
+    val ember = if (streakColor == Color.Unspecified) MaterialTheme.colorScheme.tertiary else streakColor
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(stringResource(R.string.home), Modifier.weight(1f),
                 style = MaterialTheme.typography.headlineSmallEmphasized, fontWeight = FontWeight.SemiBold)
-            IconButton(refresh, enabled = !refreshing, modifier = Modifier.testTag("home_refresh")) {
-                if (refreshing) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-                else SungIcon(SungSymbol.Refresh, "Refresh Home")
+            Surface(onClick = openStreak, shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                modifier = Modifier.heightIn(min = 48.dp).testTag("home_streak").semantics(mergeDescendants = true) {
+                    contentDescription = "${streak.currentDays}-day listening streak"
+                }) {
+                Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    CompositionLocalProvider(LocalContentColor provides ember) {
+                        SungIcon(SungSymbol.Fire, null, Modifier.size(22.dp))
+                    }
+                    Text(streak.currentDays.toString(), style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold)
+                }
             }
             FilledTonalIconButton(onClick = statistics, shapes = IconButtonDefaults.shapes(),
                 modifier = Modifier.size(48.dp).testTag("nav_stats")) {

@@ -24,6 +24,7 @@ import com.karthi.sungmobile.feature.appearance.SpotifyConnectionSettingsSection
 import com.karthi.sungmobile.feature.spotify.SpotifyLibraryImportViewModel
 import com.karthi.sungmobile.feature.playlistgenerator.PlaylistGeneratorViewModel
 import com.karthi.sungmobile.feature.playlistgenerator.PlaylistGeneratorScreen
+import com.karthi.sungmobile.feature.streak.*
 import com.karthi.sungmobile.core.model.discovery.RecommendationPreferences
 import kotlinx.coroutines.launch
 
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, browser: LibraryBrowserViewModel,
     libraryActions: LibraryActionsViewModel, advancedLibrary: AdvancedLibraryViewModel,
     history: HistoryViewModel, home: HomeViewModel, discovery: DiscoveryFeedViewModel,
+    streak: StreakViewModel,
     collection: CollectionViewModel, collectionActions: CollectionActionsViewModel, links: LinkIntakeViewModel,
     lyrics: LyricsViewModel, convenience: ConvenienceViewModel,
     spotifyLibraryImport: SpotifyLibraryImportViewModel, playlistGenerator: PlaylistGeneratorViewModel) {
@@ -48,6 +50,7 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
     val searches by history.searches.collectAsStateWithLifecycle()
     val homeState by home.state.collectAsStateWithLifecycle()
     val discoveryState by discovery.state.collectAsStateWithLifecycle()
+    val streakState by streak.state.collectAsStateWithLifecycle()
     val details by collection.state.collectAsStateWithLifecycle()
     val operation by collectionActions.state.collectAsStateWithLifecycle()
     val saveBatch by collectionActions.save.collectAsStateWithLifecycle()
@@ -104,7 +107,7 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 detailId = details.route?.id, closeDetail = collection::close,
                 collectionContent = { modifier, showPlayer -> CollectionScreen(details, collection, collectionActions, model.player,
                     { model.searchArtistSongs(it); searchRequest++ }, showPlayer, modifier) },
-                homeContent = { modifier, search, nowPlaying, appearance, showLibrary, openStatistics ->
+                homeContent = { modifier, search, nowPlaying, appearance, showLibrary, openStatistics, openStreak ->
                     DiscoveryHomeScreen(discoveryState, discovery::refresh, discovery::ensureFresh,
                         search, appearance, showLibrary,
                         { query -> model.recall(query, CatalogKind.SONG); searchRequest++ },
@@ -122,7 +125,10 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                         onArtistSelected = { artist -> model.searchArtistSongs(artist); searchRequest++ },
                         onPlayRadio = model.player::playRadio,
                         personalizationEnabled = recommendations.enabled,
-                        openStatistics = openStatistics)
+                        openStatistics = openStatistics,
+                        streak = streakState.progress,
+                        streakColor = emberColor(streakState.progress.currentDays),
+                        openStreak = openStreak)
                 }, searchRequest = searchRequest,
                 lyricsState = lyricsState, lyricsSettings = lyricsSettings,
                 onLoadLyrics = { lyrics.load(player.track, policy?.privateMode == true) },
@@ -144,6 +150,10 @@ fun SungRoot(window: Window, container: AppContainer, model: SungViewModel, brow
                 statisticsContent = { modifier, back ->
                     ListeningStatisticsScreen(advancedLibraryState, back, advancedLibrary::retry,
                         advancedLibrary::moreEvents, modifier, showHeading = false)
+                },
+                onStreakSelected = streak::retry,
+                streakContent = { modifier, back ->
+                    StreakDetailsScreen(streakState, back, streak::retry, modifier)
                 },
                 resumeContent = { state ->
                     PlayerResumeControls(state, convenienceState.resume,

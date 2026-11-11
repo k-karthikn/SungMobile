@@ -21,6 +21,7 @@ internal enum class Destination(val label: Int, val icon: SungSymbol, val select
     HOME(R.string.home, SungSymbol.HomeOutline, SungSymbol.Home),
     SEARCH(R.string.search, SungSymbol.Search, SungSymbol.Search),
     STATS(R.string.stats, SungSymbol.Equalizer, SungSymbol.Equalizer),
+    STREAK(R.string.streak, SungSymbol.Fire, SungSymbol.Fire),
     LIBRARY(R.string.library, SungSymbol.LibraryOutline, SungSymbol.Library),
 }
 

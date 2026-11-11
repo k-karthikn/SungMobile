@@ -79,8 +79,10 @@ class HomeUiTest {
         compose.onNodeWithText("Recently played").assertDoesNotExist()
         compose.onNodeWithText("Pinned playlists").assertDoesNotExist()
         compose.onNodeWithText("Liked songs").assertDoesNotExist()
-        compose.onNodeWithContentDescription("Refresh Home").performClick()
-        assertEquals(1, refreshed)
+        compose.onNodeWithTag("home_pull_refresh").assertExists()
+        compose.onNodeWithContentDescription("Refresh Home").assertDoesNotExist()
+        compose.onNodeWithContentDescription("0-day listening streak").performClick()
+        compose.onNodeWithText("Listening streak").assertExists()
         compose.onNodeWithTag("home_listening_statistics").assertDoesNotExist()
     }
 
@@ -119,11 +121,12 @@ class HomeUiTest {
                     SungApp(CatalogState(), PlaybackState(),
                         CatalogActions({}, {}, {}, {}, {}, {}, {}, {}),
                         PlayerActions({}, {}, {}), Appearance(), {},
-                        homeContent = { modifier, search, _, appearance, library, statistics ->
+                        homeContent = { modifier, search, _, appearance, library, statistics, streak ->
                             DiscoveryHomeScreen(feed, { refreshed++ }, {}, search, appearance, library,
                                 { mood = it }, { _, item -> opened = item }, true, modifier,
-                                openStatistics = statistics)
-                        })
+                                openStatistics = statistics, openStreak = streak)
+                        },
+                        streakContent = { _, _ -> androidx.compose.material3.Text("Listening streak") })
                 }
             }
         }
