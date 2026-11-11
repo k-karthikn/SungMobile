@@ -38,19 +38,18 @@ Host tests do not require live network access. Live provider probes are opt-in w
 
 ## Build a production APK and update manifest
 
-The production build requires the existing signing configuration at `~/.android/sungmobile-release/signing.properties`. Keep that configuration and its private key outside the repository. An update must use the same production application ID and signing key as the installed app.
+Local production builds use the signing configuration at `~/.android/sungmobile-release/signing.properties`; the GitHub workflow uses repository secrets instead. Keep both the configuration and its private key outside the repository. An update must use the same production application ID and signing key as the installed app.
 
-1. Increase `versionCode` and set `versionName` in [`app/build.gradle.kts`](app/build.gradle.kts). Never reuse a production version code.
-2. In Android Studio's Terminal, run:
+1. From a clean `main` checkout, run the release helper with the new version name:
 
    ```bash
-   python3 scripts/production_build.py
+   python3 scripts/prepare_release.py 0.16.1
    ```
 
-3. The script runs unit tests and release lint, builds the signed APK, verifies its package, version, signing certificate and ZIP alignment, then writes a versioned APK, `update.json` and `SHA256SUMS` to `release-assets/v<versionName>/`. It does **not** publish a GitHub release.
-4. After checking the APK on a device, upload the APK and `update.json` from that same directory as assets of the matching stable GitHub release tag. Rebuild or rename the APK only if you also regenerate `update.json`.
+2. The helper runs host tests and release lint, increments `versionCode`, updates `versionName`, commits the change, and pushes a matching `v<versionName>` tag. Use `--version-code` when a higher production code is needed. Never reuse a production version code.
+3. The pushed tag triggers the GitHub Actions release workflow. It builds the signed APK, verifies its package, version, signing certificate and ZIP alignment, and publishes the versioned APK, `update.json`, and `build.json` as a stable GitHub release. The updater consumes `update.json`; `build.json` is provenance for the same APK.
 
-If you already have a signed production APK, `python3 scripts/production_build.py --apk app/build/outputs/apk/release/app-release.apk` verifies and packages it without rerunning Gradle. The script refuses to overwrite different assets for the same version unless `--replace` is supplied before publication. See the [release and update guide](docs/updates/VERSIONING_AND_RELEASES.md) for updater behavior and signing precautions.
+If you already have a signed production APK, `python3 scripts/production_build.py --apk app/build/outputs/apk/release/app-release.apk` still verifies and packages it without rerunning Gradle. The script refuses to overwrite different assets for the same version unless `--replace` is supplied. See the [release and update guide](docs/updates/VERSIONING_AND_RELEASES.md) for updater behavior and signing precautions.
 
 ## Code layout
 

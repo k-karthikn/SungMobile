@@ -10,6 +10,14 @@ val productionSigning = Properties().apply {
     val settings = File(System.getProperty("user.home"), ".android/sungmobile-release/signing.properties")
     if (settings.isFile) settings.inputStream().use(::load)
 }
+val productionStoreFile = System.getenv("KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
+    ?: productionSigning.getProperty("storeFile")
+val productionStorePassword = System.getenv("KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() }
+    ?: productionSigning.getProperty("storePassword")
+val productionKeyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotBlank() }
+    ?: productionSigning.getProperty("keyAlias")
+val productionKeyPassword = System.getenv("KEY_PASSWORD")?.takeIf { it.isNotBlank() }
+    ?: productionSigning.getProperty("keyPassword")
 android {
     namespace = "com.karthi.sungmobile"
     compileSdk {
@@ -28,11 +36,12 @@ android {
 
     signingConfigs {
         create("production") {
-            if (productionSigning.isNotEmpty()) {
-                storeFile = file(productionSigning.getProperty("storeFile"))
-                storePassword = productionSigning.getProperty("storePassword")
-                keyAlias = productionSigning.getProperty("keyAlias")
-                keyPassword = productionSigning.getProperty("keyPassword")
+            if (productionStoreFile != null && productionStorePassword != null &&
+                productionKeyAlias != null && productionKeyPassword != null) {
+                storeFile = file(productionStoreFile)
+                storePassword = productionStorePassword
+                keyAlias = productionKeyAlias
+                keyPassword = productionKeyPassword
             }
         }
     }

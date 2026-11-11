@@ -135,25 +135,36 @@ def prepare_assets(source: Path, destination: Path, tag: str, aapt: Path, apksig
     verify_apk(destination, apksigner, zipalign, environment)
 
     manifest = destination.parent / "update.json"
+    build_manifest = destination.parent / "build.json"
     temporary_manifest = destination.parent / "update.json.tmp"
+    temporary_build_manifest = destination.parent / "build.json.tmp"
     try:
         checked([sys.executable, str(ROOT / "scripts/make_update_manifest.py"),
             "--apk", str(destination), "--tag", tag, "--package-name", PACKAGE,
-            "--aapt", str(aapt), "--output", str(temporary_manifest)],
+            "--aapt", str(aapt), "--output", str(temporary_manifest),
+            "--build-output", str(temporary_build_manifest)],
             environment=environment, capture=True)
         data = json.loads(temporary_manifest.read_text(encoding="utf-8"))
         if (data.get("versionCode") != version_code or data.get("versionName") != version_name
             or data.get("packageName") != PACKAGE or data.get("sha256") != source_digest
             or not data.get("apkUrl", "").endswith(f"/{tag}/{destination.name}")):
             raise ReleaseError("Generated update.json does not match the packaged APK")
+        build_data = json.loads(temporary_build_manifest.read_text(encoding="utf-8"))
+        if (build_data.get("schemaVersion") != 1 or build_data.get("tag") != tag
+            or build_data.get("apkName") != destination.name
+            or any(build_data.get(key) != value for key, value in data.items())):
+            raise ReleaseError("Generated build.json does not match the packaged APK")
+        os.replace(temporary_build_manifest, build_manifest)
         os.replace(temporary_manifest, manifest)
     finally:
         temporary_manifest.unlink(missing_ok=True)
+        temporary_build_manifest.unlink(missing_ok=True)
     (destination.parent / "SHA256SUMS").write_text(
         f"{source_digest}  {destination.name}\n", encoding="utf-8")
     print(f"\nReady to upload to GitHub release {tag}:")
     print(f"  {destination}")
     print(f"  {manifest}")
+    print(f"  {build_manifest}")
     print(f"  SHA-256: {source_digest}")
     print("Publish them as assets of the matching stable release; this script does not publish it.")
 
@@ -188,6 +199,8 @@ def main() -> None:
     tag = args.tag or f"v{version_name}"
     if SIMPLE_NAME.fullmatch(tag) is None:
         raise ReleaseError(f"Invalid release tag: {tag}")
+    if tag != f"v{version_name}":
+        raise ReleaseError(f"Release tag {tag} must match the APK version v{version_name}")
     directory = (args.output_dir.expanduser().resolve() if args.output_dir
         else ROOT / "release-assets" / tag)
     destination = directory / f"SungMobile-{version_name}-code{version_code}-release.apk"

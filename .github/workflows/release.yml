@@ -1,0 +1,83 @@
+name: Android release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android platform and build tools
+        run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
+
+      - name: Decode production signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE_BASE64"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/sungmobile-release.jks"
+          test -s "$RUNNER_TEMP/sungmobile-release.jks"
+
+      - name: Run unit tests and release lint
+        run: ./gradlew --no-daemon --stacktrace --console=plain test :app:lintRelease
+
+      - name: Build signed release APK
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/sungmobile-release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_ALIAS"
+          test -n "$KEY_PASSWORD"
+          ./gradlew --no-daemon --stacktrace --console=plain :app:assembleRelease
+
+      - name: Remove temporary signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/sungmobile-release.jks"
+
+      - name: Generate release metadata
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python3 scripts/production_build.py \
+            --apk app/build/outputs/apk/release/app-release.apk \
+            --tag "$TAG" \
+            --output-dir "release-assets/$TAG"
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: |
+            release-assets/${{ github.ref_name }}/*.apk
+            release-assets/${{ github.ref_name }}/update.json
+            release-assets/${{ github.ref_name }}/build.json

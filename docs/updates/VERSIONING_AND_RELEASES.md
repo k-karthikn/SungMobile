@@ -17,9 +17,13 @@ Sung's updater rejects equal or lower codes. Android also protects against norma
 
 ## Publish a future update
 
-1. Increase `versionCode` above every production APK already distributed and choose a new `versionName`.
-2. Run `python3 scripts/production_build.py` from the project root. It runs tests and release lint, builds the production APK, verifies its package and signing certificate, and generates the versioned APK, `update.json` and `SHA256SUMS` in `release-assets/v<versionName>/`. Local signing configuration is read from `~/.android/sungmobile-release/signing.properties`. Back up that file and the production private key securely; without the same key, future APKs cannot update an installed production app. Never commit either file. The debug APK and debug key remain separate.
-3. If packaging an already-built APK instead, run `python3 scripts/production_build.py --apk app/build/outputs/apk/release/app-release.apk`. This verifies and packages the APK but skips Gradle tests, lint and assembly. The script generates metadata from the APK's actual package, version and bytes.
+1. From a clean `main` checkout, choose a new `versionName` and run `python3 scripts/prepare_release.py <versionName>`. The helper increments `versionCode` by default; pass `--version-code` when the next code must be higher than a production APK already distributed. Never reuse or reduce a production version code.
+2. The helper runs host tests and release lint, writes the version change, commits it, creates the matching `v<versionName>` tag, and pushes the commit and tag to `origin`.
+3. The pushed tag runs `.github/workflows/release.yml`. GitHub Actions reads the production key from repository secrets, builds the signed APK, verifies its package and signing certificate, and publishes the versioned APK, `update.json`, and `build.json` in a normal stable GitHub release. Back up the production private key securely; without the same key, future APKs cannot update an installed production app. Never commit it or its passwords. The debug APK and debug key remain separate.
+
+The workflow requires these GitHub Actions secrets: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, and `KEY_PASSWORD`. `build.json` uses schema version 1 and records the tag, APK filename, and the five updater-manifest fields for the same APK. The app itself consumes only `update.json`.
+
+If packaging an already-built APK is needed for investigation, run `python3 scripts/production_build.py --apk app/build/outputs/apk/release/app-release.apk`. This verifies and packages the APK but skips Gradle tests, lint and assembly; it does not publish a release.
 
 The lower-level metadata generator is available if manual packaging is needed. Replace every example path and tag with the final APK's values:
 
@@ -32,7 +36,7 @@ python3 scripts/make_update_manifest.py \
   --output /absolute/path/update.json
 ```
 
-4. Create a release at https://github.com/k-karthikn/SungMobile/releases with the matching tag. Upload **both the exact APK and `update.json` as release assets**. Publish it as a normal stable release, not a draft or prerelease, and make it the latest release. A tag or source-code archive alone is insufficient.
+4. GitHub Actions creates the matching release with generated notes and uploads the exact APK, `update.json`, and `build.json` as release assets. It is published as a normal stable release, not a draft or prerelease.
 5. Do not rename/rebuild/replace the APK after generating the JSON. If you change it, regenerate the JSON. The SHA-256 must match the uploaded bytes.
 6. Test from the previous installed code: check/download, allow installation from Sung if Android asks, then confirm the update. Verify library data remains.
 
