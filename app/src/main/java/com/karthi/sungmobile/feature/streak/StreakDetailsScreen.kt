@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -57,7 +59,17 @@ private fun StreakHero(progress: StreakProgress) {
         Column(Modifier.fillMaxWidth()) {
             Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Box(Modifier.size(92.dp).background(palette.outer.copy(alpha = .22f), CircleShape),
+                Box(Modifier.size(92.dp)
+                    .background(palette.outer.copy(alpha = .14f), CircleShape)
+                    .drawBehind {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(palette.outer.copy(alpha = .34f), palette.outer.copy(alpha = 0f)),
+                                center = center,
+                                radius = size.minDimension * .62f,
+                            ),
+                        )
+                    },
                     contentAlignment = Alignment.Center) {
                     CompositionLocalProvider(LocalContentColor provides palette.body) {
                         SungIcon(SungSymbol.Fire, null, Modifier.size(58.dp))
